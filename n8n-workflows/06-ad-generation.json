@@ -1,0 +1,121 @@
+{
+  "name": "06 - Ad Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ad-generate",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "webhook-ad-generate",
+      "name": "Webhook: Ad Generate",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "ad-generate"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "tableId": "ad_swipes",
+        "filterType": "string",
+        "filterString": "=niche=eq.{{ $json.body.niche }}",
+        "options": {
+          "limit": 10
+        }
+      },
+      "id": "fetch-ad-swipes",
+      "name": "Fetch Ad Swipes",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhook = $('Webhook: Ad Generate').first().json.body;\nconst swipes = $('Fetch Ad Swipes').all();\n\n// Filter swipes by requested hook types\nconst hookTypes = webhook.hook_types || [];\nconst relevantSwipes = swipes.filter(s => \n  hookTypes.length === 0 || hookTypes.includes(s.json.hook_type)\n);\n\n// Format swipes for prompt\nconst swipeExamples = relevantSwipes.slice(0, 5).map(s => {\n  const data = s.json;\n  return `---\nHOOK TYPE: ${data.hook_type}\nHOOK: \"${data.hook_text}\"\nCONCEPT: ${data.concept}\nSTRUCTURE: ${JSON.stringify(data.structure)}\nCTA: ${data.cta_type}\nTRIGGERS: ${(data.triggers || []).join(', ')}\n---`;\n}).join('\\n\\n');\n\nreturn {\n  json: {\n    ...webhook,\n    swipe_examples: swipeExamples,\n    swipe_count: relevantSwipes.length\n  }\n};"
+      },
+      "id": "prepare-context",
+      "name": "Prepare Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=You are an expert direct response copywriter specializing in short-form video ads. Generate 3 different ad concepts based on the brief and swipe file patterns.\n\nPRODUCT/OFFER:\n{{ $json.product }}\n\nANGLE/BIG IDEA:\n{{ $json.angle || 'None specified - create a compelling angle' }}\n\nTARGET DURATION: {{ $json.duration }} seconds\nSTYLE: {{ $json.style }}\nNICHE: {{ $json.niche }}\nHOOK TYPES TO USE: {{ ($json.hook_types || []).join(', ') }}\n\n=== SWIPE FILE PATTERNS (use these as inspiration) ===\n{{ $json.swipe_examples || 'No swipes available - use your expertise' }}\n\n=== YOUR TASK ===\nGenerate 3 DIFFERENT ad concepts. Each should:\n1. Use a different hook type from the requested list\n2. Follow the structure patterns from the swipe file\n3. Be written for the specified duration and style\n4. Include production notes for filming\n\nOutput ONLY valid JSON (no markdown, no backticks):\n{\n  \"versions\": [\n    {\n      \"hook\": \"The exact opening line (first 5 seconds)\",\n      \"hook_type\": \"type used\",\n      \"script\": \"Full ad script with natural breaks indicated\",\n      \"shots\": [\n        {\"time\": \"0-5s\", \"desc\": \"What to film/show\"},\n        {\"time\": \"5-15s\", \"desc\": \"What to film/show\"},\n        // continue...\n      ],\n      \"tags\": [\"hook_type\", \"emotion\", \"style\"]\n    },\n    // 2 more versions with DIFFERENT approaches\n  ]\n}\n\nMAKE EACH VERSION DISTINCT - different hooks, different structures, different emotional angles. Give variety so the user can test multiple approaches."
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 4000
+        }
+      },
+      "id": "claude-generate-ads",
+      "name": "Claude: Generate Ads",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.message?.content || response.content || JSON.stringify(response);\n\nlet cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\ntry {\n  const parsed = JSON.parse(cleanText);\n  return {\n    json: {\n      success: true,\n      versions: parsed.versions || [],\n      swipes_used: $('Prepare Context').first().json.swipe_count\n    }\n  };\n} catch (e) {\n  return {\n    json: {\n      success: false,\n      error: 'Failed to parse generation',\n      raw: cleanText\n    }\n  };\n}"
+      },
+      "id": "parse-ad-output",
+      "name": "Parse Ad Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-ad-generate",
+      "name": "Respond: Generated",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Ad Generate": {
+      "main": [[{ "node": "Fetch Ad Swipes", "type": "main", "index": 0 }]]
+    },
+    "Fetch Ad Swipes": {
+      "main": [[{ "node": "Prepare Context", "type": "main", "index": 0 }]]
+    },
+    "Prepare Context": {
+      "main": [[{ "node": "Claude: Generate Ads", "type": "main", "index": 0 }]]
+    },
+    "Claude: Generate Ads": {
+      "main": [[{ "node": "Parse Ad Output", "type": "main", "index": 0 }]]
+    },
+    "Parse Ad Output": {
+      "main": [[{ "node": "Respond: Generated", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "ad-system" }]
+}

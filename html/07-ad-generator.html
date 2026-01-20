@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ad Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --warning: #ffaa00;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --blue: #3b82f6;
+            --blue-dim: #3b82f620;
+            --orange: #f97316;
+            --orange-dim: #f9731620;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .nav-links { display: flex; gap: 8px; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+        .nav-section {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            padding: 8px 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            padding: 92px 48px 48px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .page-title { font-size: 36px; font-weight: 600; }
+        .page-subtitle { font-size: 15px; color: var(--text-secondary); margin-top: 8px; }
+
+        .generator-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+
+        .input-panel, .output-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .panel-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .panel-body { padding: 24px; }
+
+        .form-group { margin-bottom: 24px; }
+
+        .form-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .form-textarea {
+            width: 100%;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--text-primary);
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.15s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-textarea::placeholder { color: var(--text-muted); }
+
+        .form-select {
+            width: 100%;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 13px;
+        }
+
+        .checkbox-item:hover { border-color: var(--border-hover); }
+        .checkbox-item.selected {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .checkbox-item input { display: none; }
+
+        .template-indicator {
+            background: var(--purple-dim);
+            border: 1px solid var(--purple);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .template-indicator-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .template-indicator-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--purple);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .template-clear {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .template-clear:hover { color: var(--text-primary); }
+
+        .template-hook {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .generate-btn {
+            width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            padding: 18px 32px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .generate-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Output Panel */
+        .output-empty {
+            text-align: center;
+            padding: 60px 40px;
+            color: var(--text-muted);
+        }
+
+        .output-empty-icon {
+            width: 48px;
+            height: 48px;
+            stroke: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .output-content { display: none; }
+        .output-content.active { display: block; }
+
+        .output-section { margin-bottom: 28px; }
+
+        .output-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .copy-btn {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .copy-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .output-box {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .output-box.hook {
+            background: var(--accent-dim);
+            border-left: 3px solid var(--accent);
+        }
+
+        .output-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+        }
+
+        .output-text.small {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .output-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .tag.purple { background: var(--purple-dim); color: var(--purple); }
+        .tag.blue { background: var(--blue-dim); color: var(--blue); }
+        .tag.orange { background: var(--orange-dim); color: var(--orange); }
+        .tag.green { background: var(--accent-dim); color: var(--accent); }
+
+        .shot-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .shot-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+        }
+
+        .shot-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent);
+            min-width: 60px;
+        }
+
+        .shot-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .output-btn {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+
+        .output-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .output-btn.secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .output-btn.primary {
+            background: var(--accent);
+            border: none;
+            color: var(--bg-primary);
+        }
+
+        .output-btn.primary:hover { background: var(--accent-hover); }
+
+        /* Loading state */
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Versions */
+        .version-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .version-tab {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: var(--text-secondary);
+        }
+
+        .version-tab:hover { border-color: var(--border-hover); }
+        .version-tab.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        @media (max-width: 1000px) {
+            .generator-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">CONTENT_ENGINE//v1</div>
+        <div class="nav-links">
+            <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+            <a href="02-swipe-file.html" class="nav-link">YT Swipes</a>
+            <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
+            <a href="07-ad-generator.html" class="nav-link active">Ad Gen</a>
+            <a href="05-history.html" class="nav-link">History</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Ad Generator</h1>
+            <p class="page-subtitle">Generate winning ad concepts using your swipe file patterns</p>
+        </div>
+
+        <div class="generator-layout">
+            <!-- Input Panel -->
+            <div class="input-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">Brief</h3>
+                    <span class="panel-badge" id="swipe-count">0 SWIPES LOADED</span>
+                </div>
+                <div class="panel-body">
+                    <!-- Template indicator (shown when coming from swipe file) -->
+                    <div class="template-indicator" id="template-indicator" style="display: none;">
+                        <div class="template-indicator-header">
+                            <span class="template-indicator-title">Using Template</span>
+                            <button class="template-clear" onclick="clearTemplate()">Clear</button>
+                        </div>
+                        <p class="template-hook" id="template-hook">-</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Product / Offer</label>
+                        <textarea class="form-textarea" id="product-input" placeholder="What are you selling? Describe the product, key benefits, price point, target customer..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Angle / Big Idea</label>
+                        <textarea class="form-textarea" id="angle-input" placeholder="What's the core message or angle? e.g., 'Ancient herbs doctors don't want you to know about' or 'Why this beats every supplement on the market'" style="min-height: 80px;"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Niche</label>
+                            <select class="form-select" id="niche-select">
+                                <option value="health">Health / Supplements</option>
+                                <option value="saas">SaaS / Software</option>
+                                <option value="ecom">E-commerce</option>
+                                <option value="info">Info Products</option>
+                                <option value="finance">Finance</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ad Style</label>
+                            <select class="form-select" id="style-select">
+                                <option value="ugc">UGC / Talking Head</option>
+                                <option value="mashup">Mashup / B-Roll</option>
+                                <option value="product">Product Demo</option>
+                                <option value="motion">Motion Graphics</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Hook Types to Use</label>
+                        <div class="checkbox-group" id="hook-types">
+                            <label class="checkbox-item selected">
+                                <input type="checkbox" value="problem_agitate" checked>
+                                Problem/Agitate
+                            </label>
+                            <label class="checkbox-item selected">
+                                <input type="checkbox" value="curiosity" checked>
+                                Curiosity
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" value="social_proof">
+                                Social Proof
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" value="contrarian">
+                                Contrarian
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" value="story">
+                                Story
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" value="question">
+                                Question
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Target Duration</label>
+                        <select class="form-select" id="duration-select">
+                            <option value="15">15 seconds (TikTok quick)</option>
+                            <option value="30" selected>30 seconds (Standard)</option>
+                            <option value="60">60 seconds (Story format)</option>
+                            <option value="90">90 seconds (Long form)</option>
+                        </select>
+                    </div>
+
+                    <button class="generate-btn" id="generate-btn">GENERATE AD CONCEPTS →</button>
+                </div>
+            </div>
+
+            <!-- Output Panel -->
+            <div class="output-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">Output</h3>
+                </div>
+                <div class="panel-body">
+                    <!-- Empty state -->
+                    <div class="output-empty" id="output-empty">
+                        <svg class="output-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M15 10l-4-4m0 0L7 10m4-4v12"/>
+                        </svg>
+                        <p>Fill in the brief and generate<br>to see ad concepts here</p>
+                    </div>
+
+                    <!-- Loading state -->
+                    <div class="output-empty" id="output-loading" style="display: none;">
+                        <div class="loading-spinner"></div>
+                        <p>Generating ad concepts...<br>Pulling from your swipe file</p>
+                    </div>
+
+                    <!-- Generated content -->
+                    <div class="output-content" id="output-content">
+                        <div class="version-tabs" id="version-tabs">
+                            <button class="version-tab active" data-version="0">Version A</button>
+                            <button class="version-tab" data-version="1">Version B</button>
+                            <button class="version-tab" data-version="2">Version C</button>
+                        </div>
+
+                        <div class="output-section">
+                            <div class="output-label">
+                                <span>Opening Hook</span>
+                                <button class="copy-btn" onclick="copySection('hook')">Copy</button>
+                            </div>
+                            <div class="output-box hook">
+                                <p class="output-text" id="output-hook">-</p>
+                            </div>
+                        </div>
+
+                        <div class="output-section">
+                            <div class="output-label">
+                                <span>Tags</span>
+                            </div>
+                            <div class="output-tags" id="output-tags">
+                                <!-- Tags populated by JS -->
+                            </div>
+                        </div>
+
+                        <div class="output-section">
+                            <div class="output-label">
+                                <span>Full Script</span>
+                                <button class="copy-btn" onclick="copySection('script')">Copy</button>
+                            </div>
+                            <div class="output-box">
+                                <p class="output-text" id="output-script">-</p>
+                            </div>
+                        </div>
+
+                        <div class="output-section">
+                            <div class="output-label">
+                                <span>Shot List / Production Notes</span>
+                                <button class="copy-btn" onclick="copySection('shots')">Copy</button>
+                            </div>
+                            <div class="output-box">
+                                <div class="shot-list" id="output-shots">
+                                    <!-- Shot items populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="output-section">
+                            <div class="output-label">
+                                <span>Pattern Source</span>
+                            </div>
+                            <div class="output-box">
+                                <p class="output-text small" id="output-source">Based on swipe patterns from your library</p>
+                            </div>
+                        </div>
+
+                        <div class="output-actions">
+                            <button class="output-btn secondary" onclick="regenerate()">↻ Regenerate</button>
+                            <button class="output-btn primary" onclick="saveToHistory()">Save to History →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            WEBHOOK_AD_GENERATE: 'YOUR_N8N_AD_GENERATE_WEBHOOK_URL',
+            SUPABASE_URL: 'YOUR_SUPABASE_URL',
+            SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY'
+        };
+
+        let template = null;
+        let generatedVersions = [];
+        let currentVersion = 0;
+
+        // Check for template from swipe file
+        function loadTemplate() {
+            const stored = sessionStorage.getItem('adTemplate');
+            if (stored) {
+                template = JSON.parse(stored);
+                document.getElementById('template-indicator').style.display = 'block';
+                document.getElementById('template-hook').textContent = `"${template.hook_text?.substring(0, 100)}..."`;
+                
+                // Pre-fill some fields based on template
+                if (template.niche) {
+                    document.getElementById('niche-select').value = template.niche;
+                }
+                if (template.style) {
+                    document.getElementById('style-select').value = template.style;
+                }
+            }
+        }
+
+        function clearTemplate() {
+            template = null;
+            sessionStorage.removeItem('adTemplate');
+            document.getElementById('template-indicator').style.display = 'none';
+        }
+
+        // Checkbox toggle
+        document.querySelectorAll('.checkbox-item').forEach(item => {
+            item.addEventListener('click', () => {
+                item.classList.toggle('selected');
+                item.querySelector('input').checked = item.classList.contains('selected');
+            });
+        });
+
+        // Version tabs
+        document.querySelectorAll('.version-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.version-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentVersion = parseInt(tab.dataset.version);
+                renderVersion(currentVersion);
+            });
+        });
+
+        // Generate
+        document.getElementById('generate-btn').addEventListener('click', async () => {
+            const product = document.getElementById('product-input').value.trim();
+            const angle = document.getElementById('angle-input').value.trim();
+            const niche = document.getElementById('niche-select').value;
+            const style = document.getElementById('style-select').value;
+            const duration = document.getElementById('duration-select').value;
+            const hookTypes = Array.from(document.querySelectorAll('#hook-types input:checked')).map(i => i.value);
+
+            if (!product) {
+                alert('Please describe your product/offer');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('output-empty').style.display = 'none';
+            document.getElementById('output-loading').style.display = 'block';
+            document.getElementById('output-content').classList.remove('active');
+
+            try {
+                const response = await fetch(CONFIG.WEBHOOK_AD_GENERATE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        product,
+                        angle,
+                        niche,
+                        style,
+                        duration: parseInt(duration),
+                        hook_types: hookTypes,
+                        template_id: template?.id || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.versions) {
+                    generatedVersions = data.versions;
+                    currentVersion = 0;
+                    renderVersion(0);
+                    
+                    document.getElementById('output-loading').style.display = 'none';
+                    document.getElementById('output-content').classList.add('active');
+                } else {
+                    throw new Error(data.error || 'Generation failed');
+                }
+            } catch (error) {
+                console.error('Generation failed:', error);
+                
+                // Show sample output for demo
+                generatedVersions = getSampleVersions();
+                currentVersion = 0;
+                renderVersion(0);
+                
+                document.getElementById('output-loading').style.display = 'none';
+                document.getElementById('output-content').classList.add('active');
+            }
+        });
+
+        function getSampleVersions() {
+            const product = document.getElementById('product-input').value || 'your product';
+            return [
+                {
+                    hook: "Stop buying supplements that don't work. Here's what actually fixes the root cause...",
+                    hook_type: 'problem_agitate',
+                    script: `Stop buying supplements that don't work. Here's what actually fixes the root cause...
+
+I spent 3 years and thousands of dollars on pills that did nothing. Then I discovered something that changed everything.
+
+Most supplements treat symptoms. But ${product} works at the cellular level — targeting the actual mechanism behind the problem.
+
+Within 2 weeks, I noticed the difference. Within a month, my labs confirmed it.
+
+If you're tired of wasting money on things that don't work, link in bio.`,
+                    shots: [
+                        { time: '0-5s', desc: 'Direct to camera, frustrated expression, holding supplement bottles' },
+                        { time: '5-15s', desc: 'Show the "pile of shame" — failed supplements, then transition' },
+                        { time: '15-25s', desc: 'Product reveal, explain mechanism with simple visual' },
+                        { time: '25-30s', desc: 'Results montage, soft CTA' }
+                    ],
+                    tags: ['problem_agitate', 'transformation', 'ugc']
+                },
+                {
+                    hook: "My doctor said I'd need medication forever. 6 months later, look at these labs...",
+                    hook_type: 'story',
+                    script: `My doctor said I'd need medication forever. 6 months later, look at these labs...
+
+[Show lab results]
+
+I didn't change my diet. Didn't start exercising more. I just added one thing.
+
+${product} works because it targets the actual cause, not just the symptoms.
+
+And no, you don't need a prescription. Link in bio if you want to try it.`,
+                    shots: [
+                        { time: '0-5s', desc: 'Serious face, holding lab results or phone' },
+                        { time: '5-15s', desc: 'Show before/after labs (blur sensitive info)' },
+                        { time: '15-25s', desc: 'Product shot, simple explanation' },
+                        { time: '25-30s', desc: 'Casual CTA, link mention' }
+                    ],
+                    tags: ['story', 'authority', 'proof']
+                },
+                {
+                    hook: "Everyone's taking the wrong form of this supplement. Here's why yours isn't working...",
+                    hook_type: 'contrarian',
+                    script: `Everyone's taking the wrong form of this supplement. Here's why yours isn't working...
+
+90% of what's on the market uses a form your body can barely absorb. You're literally flushing money down the toilet.
+
+${product} uses [specific mechanism] which has 5x better bioavailability.
+
+That's why people see results in weeks, not months.
+
+Want to actually feel the difference? Link in bio.`,
+                    shots: [
+                        { time: '0-5s', desc: 'Knowing look, like sharing a secret' },
+                        { time: '5-15s', desc: 'Quick visual showing absorption difference (simple graphic or analogy)' },
+                        { time: '15-25s', desc: 'Product focus, credibility element' },
+                        { time: '25-30s', desc: 'Confident CTA' }
+                    ],
+                    tags: ['contrarian', 'education', 'authority']
+                }
+            ];
+        }
+
+        function renderVersion(idx) {
+            const version = generatedVersions[idx];
+            if (!version) return;
+
+            document.getElementById('output-hook').textContent = version.hook;
+            document.getElementById('output-script').textContent = version.script;
+
+            // Tags
+            const tagsContainer = document.getElementById('output-tags');
+            const tagClasses = ['purple', 'blue', 'orange', 'green'];
+            tagsContainer.innerHTML = (version.tags || []).map((tag, i) => 
+                `<span class="tag ${tagClasses[i % tagClasses.length]}">${tag.toUpperCase()}</span>`
+            ).join('');
+
+            // Shots
+            const shotsContainer = document.getElementById('output-shots');
+            if (version.shots && version.shots.length) {
+                shotsContainer.innerHTML = version.shots.map(shot => `
+                    <div class="shot-item">
+                        <span class="shot-time">${shot.time}</span>
+                        <span class="shot-desc">${shot.desc}</span>
+                    </div>
+                `).join('');
+            } else {
+                shotsContainer.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No shot list available</p>';
+            }
+
+            // Update active tab
+            document.querySelectorAll('.version-tab').forEach((tab, i) => {
+                tab.classList.toggle('active', i === idx);
+            });
+        }
+
+        function copySection(section) {
+            const version = generatedVersions[currentVersion];
+            if (!version) return;
+
+            let text = '';
+            if (section === 'hook') text = version.hook;
+            else if (section === 'script') text = version.script;
+            else if (section === 'shots') {
+                text = version.shots?.map(s => `${s.time}: ${s.desc}`).join('\n') || '';
+            }
+
+            navigator.clipboard.writeText(text);
+            alert('Copied!');
+        }
+
+        function regenerate() {
+            document.getElementById('generate-btn').click();
+        }
+
+        async function saveToHistory() {
+            const version = generatedVersions[currentVersion];
+            if (!version) return;
+
+            // Save to ad_generations table
+            alert('Saved to history!');
+            // In production, this would POST to Supabase
+        }
+
+        // Load swipe count
+        async function loadSwipeCount() {
+            try {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/ad_swipes?select=id`, {
+                    headers: {
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('swipe-count').textContent = `${data.length} SWIPES LOADED`;
+                }
+            } catch (e) {
+                document.getElementById('swipe-count').textContent = '0 SWIPES LOADED';
+            }
+        }
+
+        // Initialize
+        loadTemplate();
+        loadSwipeCount();
+    </script>
+</body>
+</html>

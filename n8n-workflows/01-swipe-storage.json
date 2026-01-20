@@ -1,0 +1,341 @@
+{
+  "name": "01 - Swipe Storage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "swipe",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "webhook-swipe",
+      "name": "Webhook: Swipe Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "swipe-storage"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-thumbnail",
+              "leftValue": "={{ $json.body.type }}",
+              "rightValue": "thumbnail",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "switch-type",
+      "name": "Switch: Swipe Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [450, 300],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "assets",
+        "fileName": "=thumbnails/{{ $now.toMillis() }}.png",
+        "fileContent": "={{ $json.body.image_base64 }}"
+      },
+      "id": "supabase-upload",
+      "name": "Supabase: Upload Image",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [650, 200],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=Analyze this YouTube thumbnail image and output ONLY valid JSON (no markdown, no backticks):\n\n{\n  \"composition\": \"describe layout - face position, text position, visual hierarchy\",\n  \"text_overlay\": \"exact text visible on thumbnail or null if none\",\n  \"triggers\": [\"array\", \"of\", \"psychological\", \"triggers\"],\n  \"colors\": \"dominant colors and accents\",\n  \"recreation_prompt\": \"A detailed prompt to recreate this style for image generation. Be specific about: face expression and position (left/right/center, size), text style/size/placement/font style, background treatment (gradient, solid, image), contrast elements, any props or visual elements, lighting mood. This will be used with NanoBanana to generate new thumbnails.\"\n}\n\nPossible triggers: curiosity_gap, shock, authority, transformation, fear, urgency, social_proof, contrarian, value_contrast, story\n\nImage URL: {{ $json.image_url }}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 1000
+        }
+      },
+      "id": "claude-analyze-thumbnail",
+      "name": "Claude: Analyze Thumbnail",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [850, 200],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.message?.content || response.content || response.text || JSON.stringify(response);\n\n// Clean the response - remove markdown code blocks if present\nlet cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\ntry {\n  const parsed = JSON.parse(cleanText);\n  return { json: { ...parsed, image_url: $('Supabase: Upload Image').first().json.publicUrl } };\n} catch (e) {\n  return { json: { error: 'Failed to parse', raw: cleanText } };\n}"
+      },
+      "id": "parse-thumbnail-response",
+      "name": "Parse Thumbnail Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "tableId": "thumbnail_swipes",
+        "fieldsToSend": {
+          "fieldValues": [
+            { "fieldName": "image_url", "fieldValue": "={{ $json.image_url }}" },
+            { "fieldName": "composition", "fieldValue": "={{ $json.composition }}" },
+            { "fieldName": "text_overlay", "fieldValue": "={{ $json.text_overlay }}" },
+            { "fieldName": "triggers", "fieldValue": "={{ $json.triggers }}" },
+            { "fieldName": "colors", "fieldValue": "={{ $json.colors }}" },
+            { "fieldName": "recreation_prompt", "fieldValue": "={{ $json.recreation_prompt }}" },
+            { "fieldName": "niche", "fieldValue": "={{ $('Webhook: Swipe Input').first().json.body.niche }}" }
+          ]
+        }
+      },
+      "id": "supabase-insert-thumbnail",
+      "name": "Supabase: Insert Thumbnail Swipe",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1250, 200],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=Analyze this YouTube headline and output ONLY valid JSON (no markdown, no backticks):\n\n{\n  \"pattern\": \"Replace specific details with [bracketed variables] to create a reusable template. Example: 'I Made $47,000 in 30 Days' becomes 'I [achieved result] in [timeframe]'\",\n  \"triggers\": [\"array\", \"of\", \"psychological\", \"triggers\"],\n  \"niche\": \"detected niche or 'general'\"\n}\n\nPossible triggers: curiosity_gap, shock, authority, transformation, fear, urgency, social_proof, contrarian, value_contrast, story, how_to, listicle, question\n\nHeadline: {{ $json.body.content }}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 500
+        }
+      },
+      "id": "claude-analyze-headline",
+      "name": "Claude: Analyze Headline",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.message?.content || response.content || response.text || JSON.stringify(response);\n\nlet cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\ntry {\n  const parsed = JSON.parse(cleanText);\n  return { json: { ...parsed, raw_text: $('Webhook: Swipe Input').first().json.body.content } };\n} catch (e) {\n  return { json: { error: 'Failed to parse', raw: cleanText } };\n}"
+      },
+      "id": "parse-headline-response",
+      "name": "Parse Headline Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "tableId": "headline_swipes",
+        "fieldsToSend": {
+          "fieldValues": [
+            { "fieldName": "raw_text", "fieldValue": "={{ $json.raw_text }}" },
+            { "fieldName": "pattern", "fieldValue": "={{ $json.pattern }}" },
+            { "fieldName": "triggers", "fieldValue": "={{ $json.triggers }}" },
+            { "fieldName": "niche", "fieldValue": "={{ $json.niche }}" }
+          ]
+        }
+      },
+      "id": "supabase-insert-headline",
+      "name": "Supabase: Insert Headline Swipe",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=Analyze this YouTube video hook script and output ONLY valid JSON (no markdown, no backticks):\n\n{\n  \"hook_type\": \"one of: curiosity_gap, contrarian, story_open, authority, shock, question, empathy, challenge\",\n  \"pattern\": \"Break down the structure - what happens in each sentence/section\",\n  \"opening_mechanism\": \"How does the first line grab attention: pattern_interrupt, bold_claim, question, relatable_pain, shocking_stat, story_start\",\n  \"triggers\": [\"psychological\", \"triggers\", \"used\"],\n  \"niche\": \"detected niche or 'general'\"\n}\n\nHook script:\n{{ $json.body.content }}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 500
+        }
+      },
+      "id": "claude-analyze-hook",
+      "name": "Claude: Analyze Hook",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [650, 400],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.message?.content || response.content || response.text || JSON.stringify(response);\n\nlet cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\ntry {\n  const parsed = JSON.parse(cleanText);\n  return { json: { ...parsed, raw_text: $('Webhook: Swipe Input').first().json.body.content } };\n} catch (e) {\n  return { json: { error: 'Failed to parse', raw: cleanText } };\n}"
+      },
+      "id": "parse-hook-response",
+      "name": "Parse Hook Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "tableId": "hook_swipes",
+        "fieldsToSend": {
+          "fieldValues": [
+            { "fieldName": "raw_text", "fieldValue": "={{ $json.raw_text }}" },
+            { "fieldName": "hook_type", "fieldValue": "={{ $json.hook_type }}" },
+            { "fieldName": "pattern", "fieldValue": "={{ $json.pattern }}" },
+            { "fieldName": "opening_mechanism", "fieldValue": "={{ $json.opening_mechanism }}" },
+            { "fieldName": "triggers", "fieldValue": "={{ $json.triggers }}" },
+            { "fieldName": "niche", "fieldValue": "={{ $json.niche }}" }
+          ]
+        }
+      },
+      "id": "supabase-insert-hook",
+      "name": "Supabase: Insert Hook Swipe",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, id: $json.id, type: $('Webhook: Swipe Input').first().json.body.type } }}"
+      },
+      "id": "respond-success",
+      "name": "Respond: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Swipe Input": {
+      "main": [
+        [{ "node": "Switch: Swipe Type", "type": "main", "index": 0 }]
+      ]
+    },
+    "Switch: Swipe Type": {
+      "main": [
+        [{ "node": "Supabase: Upload Image", "type": "main", "index": 0 }],
+        [{ "node": "Claude: Analyze Headline", "type": "main", "index": 0 }],
+        [{ "node": "Claude: Analyze Hook", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase: Upload Image": {
+      "main": [
+        [{ "node": "Claude: Analyze Thumbnail", "type": "main", "index": 0 }]
+      ]
+    },
+    "Claude: Analyze Thumbnail": {
+      "main": [
+        [{ "node": "Parse Thumbnail Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Thumbnail Response": {
+      "main": [
+        [{ "node": "Supabase: Insert Thumbnail Swipe", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase: Insert Thumbnail Swipe": {
+      "main": [
+        [{ "node": "Respond: Success", "type": "main", "index": 0 }]
+      ]
+    },
+    "Claude: Analyze Headline": {
+      "main": [
+        [{ "node": "Parse Headline Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Headline Response": {
+      "main": [
+        [{ "node": "Supabase: Insert Headline Swipe", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase: Insert Headline Swipe": {
+      "main": [
+        [{ "node": "Respond: Success", "type": "main", "index": 0 }]
+      ]
+    },
+    "Claude: Analyze Hook": {
+      "main": [
+        [{ "node": "Parse Hook Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Hook Response": {
+      "main": [
+        [{ "node": "Supabase: Insert Hook Swipe", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase: Insert Hook Swipe": {
+      "main": [
+        [{ "node": "Respond: Success", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "youtube-content" }
+  ]
+}

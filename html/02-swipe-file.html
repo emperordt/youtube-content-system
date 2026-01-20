@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swipe File Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --warning: #ffaa00;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --blue: #3b82f6;
+            --blue-dim: #3b82f620;
+            --orange: #f97316;
+            --orange-dim: #f9731620;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .nav-links { display: flex; gap: 8px; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+        .container {
+            padding: 92px 48px 48px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .page-title { font-size: 32px; font-weight: 600; }
+        .page-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .tab {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tab:hover { color: var(--text-primary); }
+        .tab.active { background: var(--bg-tertiary); color: var(--text-primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            margin-bottom: 32px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            stroke: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .upload-text { font-size: 16px; color: var(--text-secondary); margin-bottom: 8px; }
+        .upload-hint { font-size: 13px; color: var(--text-muted); }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .text-input {
+            flex: 1;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--text-primary);
+            transition: border-color 0.15s ease;
+        }
+
+        .text-input:focus { outline: none; border-color: var(--accent); }
+        .text-input::placeholder { color: var(--text-muted); }
+
+        .text-input.textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .add-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            padding: 16px 24px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .add-btn:hover { background: var(--accent-hover); }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-search {
+            flex: 1;
+            min-width: 200px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+        }
+
+        .filter-search:focus { outline: none; border-color: var(--accent); }
+
+        .filter-dropdown {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 160px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+
+        .stat { display: flex; flex-direction: column; gap: 4px; }
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .stat-label { font-size: 12px; color: var(--text-muted); }
+
+        .swipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .swipe-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.15s ease;
+        }
+
+        .swipe-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .swipe-card-image {
+            aspect-ratio: 16/9;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .swipe-card-body { padding: 16px; }
+
+        .swipe-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .tag.trigger { background: var(--purple-dim); color: var(--purple); }
+        .tag.niche { background: var(--blue-dim); color: var(--blue); }
+        .tag.composition { background: var(--accent-dim); color: var(--accent); }
+        .tag.hook-type { background: var(--orange-dim); color: var(--orange); }
+
+        .swipe-card-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .swipe-card-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .swipe-card-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .swipe-card-actions { display: flex; gap: 8px; }
+
+        .card-action-btn {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.15s ease;
+        }
+
+        .card-action-btn:hover { color: var(--text-primary); }
+        .card-action-btn.delete:hover { color: var(--danger); }
+
+        .headline-list, .hook-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .headline-card, .hook-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.15s ease;
+        }
+
+        .headline-card:hover, .hook-card:hover { border-color: var(--border-hover); }
+
+        .headline-raw, .hook-raw {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .hook-raw {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+        }
+
+        .headline-pattern, .hook-pattern {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .hook-meta-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .hook-meta-item {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .hook-meta-item strong {
+            color: var(--text-secondary);
+        }
+
+        .headline-meta, .hook-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Config placeholders */
+        .config-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .config-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .config-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent);
+            background: var(--bg-tertiary);
+            padding: 8px 12px;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">CONTENT_ENGINE//v1</div>
+        <div class="nav-links">
+            <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+            <a href="02-swipe-file.html" class="nav-link active">YT Swipes</a>
+            <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
+            <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+            <a href="05-history.html" class="nav-link">History</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Swipe File</h1>
+                <p class="page-subtitle">Your curated library of high-performing thumbnails, headlines, and hooks</p>
+            </div>
+            <div class="tabs">
+                <button class="tab active" data-tab="thumbnails">Thumbnails</button>
+                <button class="tab" data-tab="headlines">Headlines</button>
+                <button class="tab" data-tab="hooks">Hooks</button>
+            </div>
+        </div>
+
+        <!-- Config Section -->
+        <div class="config-section">
+            <p class="config-label">Webhook URL (set this in your code)</p>
+            <p class="config-value" id="webhookUrl">YOUR_N8N_SWIPE_WEBHOOK_URL</p>
+        </div>
+
+        <!-- THUMBNAILS TAB -->
+        <div class="tab-content active" id="thumbnails-tab">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value" id="thumb-total">0</span>
+                    <span class="stat-label">Total Thumbnails</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="thumb-curiosity">0</span>
+                    <span class="stat-label">Curiosity Gap</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="thumb-shock">0</span>
+                    <span class="stat-label">Shock/Contrast</span>
+                </div>
+            </div>
+
+            <div class="upload-zone" id="thumbnail-upload">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <p class="upload-text">Drop thumbnail screenshots here or click to upload</p>
+                <p class="upload-hint">PNG, JPG up to 10MB — AI will auto-analyze composition and triggers</p>
+                <input type="file" id="thumbnail-file-input" accept="image/*" style="display: none;">
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" class="filter-search" placeholder="Search thumbnails...">
+                <select class="filter-dropdown" id="thumb-trigger-filter">
+                    <option value="">All Triggers</option>
+                    <option value="curiosity_gap">Curiosity Gap</option>
+                    <option value="shock">Shock/Contrast</option>
+                    <option value="authority">Authority</option>
+                    <option value="transformation">Transformation</option>
+                </select>
+                <select class="filter-dropdown" id="thumb-niche-filter">
+                    <option value="">All Niches</option>
+                    <option value="herbalism">Herbalism</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="productivity">Productivity</option>
+                </select>
+            </div>
+
+            <div class="swipe-grid" id="thumbnail-grid">
+                <!-- Thumbnails will be loaded here -->
+                <div class="swipe-card">
+                    <div class="swipe-card-image"><span>Sample Thumbnail</span></div>
+                    <div class="swipe-card-body">
+                        <div class="swipe-card-tags">
+                            <span class="tag trigger">CURIOSITY GAP</span>
+                            <span class="tag niche">HERBALISM</span>
+                        </div>
+                        <p class="swipe-card-description">Face left, bold text right, high contrast green/black</p>
+                        <div class="swipe-card-meta">
+                            <span class="swipe-card-date">Sample</span>
+                            <div class="swipe-card-actions">
+                                <button class="card-action-btn delete">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HEADLINES TAB -->
+        <div class="tab-content" id="headlines-tab">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value" id="headline-total">0</span>
+                    <span class="stat-label">Total Headlines</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="headline-howto">0</span>
+                    <span class="stat-label">How To</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="headline-contrarian">0</span>
+                    <span class="stat-label">Contrarian</span>
+                </div>
+            </div>
+
+            <div class="input-wrapper">
+                <input type="text" class="text-input" id="headline-input" placeholder="Paste a headline to analyze and save...">
+                <select class="filter-dropdown" id="headline-niche-select">
+                    <option value="general">General</option>
+                    <option value="herbalism">Herbalism</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="productivity">Productivity</option>
+                </select>
+                <button class="add-btn" id="add-headline-btn">+ Add</button>
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" class="filter-search" placeholder="Search headlines...">
+                <select class="filter-dropdown">
+                    <option value="">All Patterns</option>
+                    <option value="howto">How To</option>
+                    <option value="contrarian">Contrarian</option>
+                    <option value="numbers">Numbers/Stats</option>
+                </select>
+            </div>
+
+            <div class="headline-list" id="headline-list">
+                <!-- Headlines loaded here -->
+                <div class="headline-card">
+                    <p class="headline-raw">I Made $47,000 in 30 Days Using This Forgotten Marketing Strategy</p>
+                    <div class="headline-pattern">I [achieved result] in [timeframe] Using This [descriptor] [method]</div>
+                    <div class="headline-meta">
+                        <div class="swipe-card-tags">
+                            <span class="tag trigger">AUTHORITY</span>
+                            <span class="tag niche">MARKETING</span>
+                        </div>
+                        <div class="swipe-card-actions">
+                            <button class="card-action-btn">Copy Pattern</button>
+                            <button class="card-action-btn delete">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOOKS TAB -->
+        <div class="tab-content" id="hooks-tab">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value" id="hook-total">0</span>
+                    <span class="stat-label">Total Hooks</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="hook-curiosity">0</span>
+                    <span class="stat-label">Curiosity Gap</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="hook-contrarian">0</span>
+                    <span class="stat-label">Contrarian</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="hook-story">0</span>
+                    <span class="stat-label">Story Open</span>
+                </div>
+            </div>
+
+            <div class="input-wrapper" style="flex-direction: column; gap: 12px;">
+                <textarea class="text-input textarea" id="hook-input" placeholder="Paste a hook script to analyze and save..."></textarea>
+                <div style="display: flex; gap: 12px;">
+                    <select class="filter-dropdown" id="hook-niche-select" style="flex: 1;">
+                        <option value="general">General</option>
+                        <option value="herbalism">Herbalism</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="productivity">Productivity</option>
+                    </select>
+                    <button class="add-btn" id="add-hook-btn">+ Add Hook</button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" class="filter-search" placeholder="Search hooks...">
+                <select class="filter-dropdown" id="hook-type-filter">
+                    <option value="">All Types</option>
+                    <option value="curiosity_gap">Curiosity Gap</option>
+                    <option value="contrarian">Contrarian</option>
+                    <option value="story_open">Story Open</option>
+                    <option value="authority">Authority</option>
+                    <option value="shock">Shock</option>
+                    <option value="question">Question</option>
+                </select>
+                <select class="filter-dropdown" id="hook-niche-filter">
+                    <option value="">All Niches</option>
+                    <option value="herbalism">Herbalism</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="productivity">Productivity</option>
+                </select>
+            </div>
+
+            <div class="hook-list" id="hook-list">
+                <!-- Hooks loaded here -->
+                <div class="hook-card">
+                    <div class="swipe-card-tags" style="margin-bottom: 12px;">
+                        <span class="tag hook-type">CURIOSITY GAP</span>
+                        <span class="tag trigger">EMPATHY</span>
+                        <span class="tag niche">HERBALISM</span>
+                    </div>
+                    <p class="hook-raw">If you've tried milk thistle, dandelion root, and every liver supplement on the market... and you're still dealing with fatigue, brain fog, and stubborn weight—it's not because those herbs don't work. It's because you're using them wrong.</p>
+                    <div class="hook-meta-row">
+                        <span class="hook-meta-item"><strong>Opening:</strong> Empathy hook</span>
+                        <span class="hook-meta-item"><strong>Pattern:</strong> Acknowledge failed attempts → Identify symptoms → Reframe</span>
+                    </div>
+                    <div class="hook-meta">
+                        <span class="swipe-card-date">Sample</span>
+                        <div class="swipe-card-actions">
+                            <button class="card-action-btn">Copy</button>
+                            <button class="card-action-btn delete">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Replace these with your actual URLs
+        const CONFIG = {
+            WEBHOOK_SWIPE: 'YOUR_N8N_SWIPE_WEBHOOK_URL',
+            SUPABASE_URL: 'YOUR_SUPABASE_URL',
+            SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY'
+        };
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+
+        // Thumbnail upload
+        const thumbnailUpload = document.getElementById('thumbnail-upload');
+        const thumbnailFileInput = document.getElementById('thumbnail-file-input');
+
+        thumbnailUpload.addEventListener('click', () => thumbnailFileInput.click());
+        thumbnailUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            thumbnailUpload.classList.add('dragover');
+        });
+        thumbnailUpload.addEventListener('dragleave', () => thumbnailUpload.classList.remove('dragover'));
+        thumbnailUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            thumbnailUpload.classList.remove('dragover');
+            handleThumbnailUpload(e.dataTransfer.files[0]);
+        });
+        thumbnailFileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) handleThumbnailUpload(e.target.files[0]);
+        });
+
+        async function handleThumbnailUpload(file) {
+            if (!file) return;
+            
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64 = e.target.result.split(',')[1];
+                
+                try {
+                    const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'thumbnail',
+                            image_base64: base64,
+                            niche: document.getElementById('thumb-niche-filter').value || 'general'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Thumbnail added successfully!');
+                        // Reload thumbnails
+                    }
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    alert('Upload failed. Check console for details.');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Add headline
+        document.getElementById('add-headline-btn').addEventListener('click', async () => {
+            const text = document.getElementById('headline-input').value.trim();
+            const niche = document.getElementById('headline-niche-select').value;
+            
+            if (!text) {
+                alert('Please enter a headline');
+                return;
+            }
+
+            try {
+                const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'headline',
+                        content: text,
+                        niche: niche
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('headline-input').value = '';
+                    alert('Headline added successfully!');
+                }
+            } catch (error) {
+                console.error('Add headline failed:', error);
+                alert('Failed to add headline. Check console.');
+            }
+        });
+
+        // Add hook
+        document.getElementById('add-hook-btn').addEventListener('click', async () => {
+            const text = document.getElementById('hook-input').value.trim();
+            const niche = document.getElementById('hook-niche-select').value;
+            
+            if (!text) {
+                alert('Please enter a hook script');
+                return;
+            }
+
+            try {
+                const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'hook',
+                        content: text,
+                        niche: niche
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('hook-input').value = '';
+                    alert('Hook added successfully!');
+                }
+            } catch (error) {
+                console.error('Add hook failed:', error);
+                alert('Failed to add hook. Check console.');
+            }
+        });
+
+        // Load data from Supabase (implement based on your setup)
+        async function loadSwipes() {
+            // This would fetch from Supabase and populate the UI
+            // For now, sample data is shown
+        }
+
+        // Initial load
+        loadSwipes();
+    </script>
+</body>
+</html>

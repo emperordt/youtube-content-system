@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Generation Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --warning: #ffaa00;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .nav-link.active {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        /* Main Layout */
+        .main {
+            padding-top: 60px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Input Panel */
+        .input-panel {
+            width: 100%;
+            max-width: 640px;
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .panel-header {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: center;
+        }
+
+        .panel-title {
+            font-size: 36px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .panel-subtitle {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-textarea {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--text-primary);
+            resize: vertical;
+            min-height: 180px;
+            transition: border-color 0.15s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-select {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23606065' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            transition: border-color 0.15s ease;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Checkboxes */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex: 1;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        .checkbox-item:hover {
+            border-color: var(--border-hover);
+        }
+
+        .checkbox-item.selected {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .checkbox-input {
+            display: none;
+        }
+
+        .checkbox-box {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .checkbox-item.selected .checkbox-box {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .checkbox-box svg {
+            width: 12px;
+            height: 12px;
+            stroke: var(--bg-primary);
+            stroke-width: 3;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .checkbox-item.selected .checkbox-box svg {
+            opacity: 1;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Generate Button */
+        .generate-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            padding: 20px 32px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-top: 16px;
+        }
+
+        .generate-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        .generate-btn.loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Helper text */
+        .helper-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: -16px;
+        }
+
+        /* Loading State */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading-text {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">CONTENT_ENGINE//v1</div>
+        <div class="nav-links">
+            <a href="01-generation-hub.html" class="nav-link active">YT Generate</a>
+            <a href="02-swipe-file.html" class="nav-link">YT Swipes</a>
+            <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
+            <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+            <a href="05-history.html" class="nav-link">History</a>
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="input-panel">
+            <div class="panel-header">
+                <h1 class="panel-title">Generate Content</h1>
+                <p class="panel-subtitle">Describe your video concept and we'll generate thumbnails, titles, and hooks</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Video Concept</label>
+                <textarea class="form-textarea" id="concept" placeholder="Describe your video idea, main points, target audience, and any specific angles you want to explore..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Niche</label>
+                <select class="form-select" id="niche">
+                    <option value="">Select a niche...</option>
+                    <option value="herbalism">Herbalism / Natural Health</option>
+                    <option value="marketing">Marketing / Business</option>
+                    <option value="productivity">Productivity / Systems</option>
+                    <option value="finance">Finance / Money</option>
+                    <option value="tech">Tech / Software</option>
+                    <option value="fitness">Fitness / Health</option>
+                    <option value="custom">Custom...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Generate</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item selected">
+                        <input type="checkbox" class="checkbox-input" name="generate" value="thumbnails" checked>
+                        <div class="checkbox-box">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="checkbox-label">Thumbnails</span>
+                    </label>
+                    <label class="checkbox-item selected">
+                        <input type="checkbox" class="checkbox-input" name="generate" value="titles" checked>
+                        <div class="checkbox-box">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="checkbox-label">Titles</span>
+                    </label>
+                    <label class="checkbox-item selected">
+                        <input type="checkbox" class="checkbox-input" name="generate" value="hooks" checked>
+                        <div class="checkbox-box">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="checkbox-label">Hooks</span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="generate-btn" id="generateBtn">GENERATE →</button>
+            <p class="helper-text">Results will open in the Review page</p>
+        </div>
+    </main>
+
+    <script>
+        // Checkbox toggle functionality
+        document.querySelectorAll('.checkbox-item').forEach(item => {
+            item.addEventListener('click', () => {
+                item.classList.toggle('selected');
+                const input = item.querySelector('.checkbox-input');
+                input.checked = !input.checked;
+            });
+        });
+
+        // Generate button - will POST to n8n webhook
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('generateBtn');
+            const concept = document.getElementById('concept').value;
+            const niche = document.getElementById('niche').value;
+            const generate = Array.from(document.querySelectorAll('.checkbox-input:checked')).map(el => el.value);
+
+            if (!concept.trim()) {
+                alert('Please describe your video concept');
+                return;
+            }
+
+            if (!niche) {
+                alert('Please select a niche');
+                return;
+            }
+
+            // Loading state
+            btn.classList.add('loading');
+            btn.innerHTML = '<span class="loading-text">GENERATING...</span>';
+
+            // TODO: Replace with actual n8n webhook URL
+            const webhookUrl = 'YOUR_N8N_WEBHOOK_URL';
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        concept,
+                        niche,
+                        generate,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Store response in sessionStorage and redirect to review page
+                sessionStorage.setItem('generationResult', JSON.stringify(data));
+                window.location.href = '04-output-review.html';
+
+            } catch (error) {
+                console.error('Generation failed:', error);
+                // For now, just redirect to review page for demo
+                window.location.href = '04-output-review.html';
+            }
+
+            btn.classList.remove('loading');
+            btn.textContent = 'GENERATE →';
+        });
+    </script>
+</body>
+</html>

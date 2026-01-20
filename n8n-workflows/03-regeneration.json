@@ -1,0 +1,275 @@
+{
+  "name": "03 - Regeneration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "regenerate",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "webhook-regenerate",
+      "name": "Webhook: Regenerate",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "regenerate"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "tableId": "generations",
+        "filterType": "string",
+        "filterString": "=id=eq.{{ $json.body.generation_id }}",
+        "options": {
+          "limit": 1
+        }
+      },
+      "id": "fetch-generation",
+      "name": "Fetch Generation Context",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "tableId": "generation_outputs",
+        "filterType": "string",
+        "filterString": "=id=eq.{{ $('Webhook: Regenerate').first().json.body.output_id }}",
+        "options": {
+          "limit": 1
+        }
+      },
+      "id": "fetch-original-output",
+      "name": "Fetch Original Output",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [450, 450],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "type-title",
+              "leftValue": "={{ $('Webhook: Regenerate').first().json.body.type }}",
+              "rightValue": "title",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "switch-regen-type",
+      "name": "Switch: Regen Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=You are a YouTube title expert. Regenerate this title based on the refinement request.\n\nORIGINAL VIDEO CONCEPT:\n{{ $('Fetch Generation Context').first().json.concept }}\n\nNICHE: {{ $('Fetch Generation Context').first().json.niche }}\n\nORIGINAL TITLE:\n{{ JSON.parse($('Fetch Original Output').first().json.content).text }}\n\nREFINEMENT REQUEST:\n{{ $('Webhook: Regenerate').first().json.body.refinement }}\n\nGenerate ONE improved title based on the refinement request.\n\nOutput ONLY valid JSON (no markdown):\n{\"text\": \"new title here\", \"pattern_used\": \"pattern name\", \"triggers\": [\"trigger1\", \"trigger2\"]}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 300
+        }
+      },
+      "id": "claude-regen-title",
+      "name": "Claude: Regen Title",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [850, 200],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=You are a YouTube hook expert. Regenerate this hook based on the refinement request.\n\nORIGINAL VIDEO CONCEPT:\n{{ $('Fetch Generation Context').first().json.concept }}\n\nNICHE: {{ $('Fetch Generation Context').first().json.niche }}\n\nORIGINAL HOOK:\n{{ JSON.parse($('Fetch Original Output').first().json.content).text }}\n\nREFINEMENT REQUEST:\n{{ $('Webhook: Regenerate').first().json.body.refinement }}\n\nGenerate ONE improved hook based on the refinement request. Keep it 3-5 sentences.\n\nOutput ONLY valid JSON (no markdown):\n{\"text\": \"full hook script here\", \"hook_type\": \"type\", \"word_count\": 45}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 500
+        }
+      },
+      "id": "claude-regen-hook",
+      "name": "Claude: Regen Hook",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=You are a YouTube thumbnail expert. Regenerate this thumbnail concept based on the refinement request.\n\nORIGINAL VIDEO CONCEPT:\n{{ $('Fetch Generation Context').first().json.concept }}\n\nNICHE: {{ $('Fetch Generation Context').first().json.niche }}\n\nORIGINAL THUMBNAIL CONCEPT:\n{{ $('Fetch Original Output').first().json.content }}\n\nREFINEMENT REQUEST:\n{{ $('Webhook: Regenerate').first().json.body.refinement }}\n\nGenerate ONE improved thumbnail concept based on the refinement request.\n\nOutput ONLY valid JSON (no markdown):\n{\n  \"concept\": \"brief description\",\n  \"text_overlay\": \"THE TEXT ON THUMBNAIL\",\n  \"image_prompt\": \"Detailed prompt for image generation\",\n  \"style_reference\": \"style description\"\n}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 600
+        }
+      },
+      "id": "claude-regen-thumbnail",
+      "name": "Claude: Regen Thumbnail Concept",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [850, 400],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// For thumbnail regeneration, call NanoBanana with new prompt\n// This is a placeholder\n\nconst response = $input.first().json;\nconst text = response.message?.content || response.content || JSON.stringify(response);\nlet parsed = {};\n\ntry {\n  parsed = JSON.parse(text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim());\n} catch(e) {\n  parsed = { error: 'parse failed', raw: text };\n}\n\n// In real implementation, call NanoBanana here\nparsed.image_url = 'https://placeholder.com/regenerated-thumbnail.png';\n\nreturn { json: parsed };"
+      },
+      "id": "nanobanana-regen",
+      "name": "NanoBanana: Regen Thumbnail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.message?.content || response.content || JSON.stringify(response);\n\ntry {\n  const parsed = JSON.parse(text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim());\n  return { json: parsed };\n} catch(e) {\n  return { json: { error: 'parse failed', raw: text } };\n}"
+      },
+      "id": "parse-regen-response",
+      "name": "Parse Regen Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "generation_outputs",
+        "filterType": "string",
+        "filterString": "=id=eq.{{ $('Webhook: Regenerate').first().json.body.output_id }}",
+        "fieldsToSend": {
+          "fieldValues": [
+            { "fieldName": "content", "fieldValue": "={{ JSON.stringify($json) }}" },
+            { "fieldName": "version", "fieldValue": "={{ $('Fetch Original Output').first().json.version + 1 }}" }
+          ]
+        }
+      },
+      "id": "update-output",
+      "name": "Supabase: Update Output",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, output_id: $('Webhook: Regenerate').first().json.body.output_id, new_content: $('Parse Regen Response').first().json } }}"
+      },
+      "id": "respond-regen",
+      "name": "Respond: Regen Complete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Regenerate": {
+      "main": [
+        [
+          { "node": "Fetch Generation Context", "type": "main", "index": 0 },
+          { "node": "Fetch Original Output", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fetch Generation Context": {
+      "main": [[{ "node": "Switch: Regen Type", "type": "main", "index": 0 }]]
+    },
+    "Fetch Original Output": {
+      "main": [[{ "node": "Switch: Regen Type", "type": "main", "index": 0 }]]
+    },
+    "Switch: Regen Type": {
+      "main": [
+        [{ "node": "Claude: Regen Title", "type": "main", "index": 0 }],
+        [{ "node": "Claude: Regen Hook", "type": "main", "index": 0 }],
+        [{ "node": "Claude: Regen Thumbnail Concept", "type": "main", "index": 0 }]
+      ]
+    },
+    "Claude: Regen Title": {
+      "main": [[{ "node": "Parse Regen Response", "type": "main", "index": 0 }]]
+    },
+    "Claude: Regen Hook": {
+      "main": [[{ "node": "Parse Regen Response", "type": "main", "index": 0 }]]
+    },
+    "Claude: Regen Thumbnail Concept": {
+      "main": [[{ "node": "NanoBanana: Regen Thumbnail", "type": "main", "index": 0 }]]
+    },
+    "NanoBanana: Regen Thumbnail": {
+      "main": [[{ "node": "Update Output", "type": "main", "index": 0 }]]
+    },
+    "Parse Regen Response": {
+      "main": [[{ "node": "Supabase: Update Output", "type": "main", "index": 0 }]]
+    },
+    "Supabase: Update Output": {
+      "main": [[{ "node": "Respond: Regen Complete", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "youtube-content" }]
+}

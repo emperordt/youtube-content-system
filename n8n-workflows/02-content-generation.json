@@ -1,0 +1,363 @@
+{
+  "name": "02 - Content Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "webhook-generate",
+      "name": "Webhook: Generate",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "content-generate"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "tableId": "generations",
+        "fieldsToSend": {
+          "fieldValues": [
+            { "fieldName": "concept", "fieldValue": "={{ $json.body.concept }}" },
+            { "fieldName": "niche", "fieldValue": "={{ $json.body.niche }}" },
+            { "fieldName": "status", "fieldValue": "draft" }
+          ]
+        },
+        "options": {
+          "returnRow": true
+        }
+      },
+      "id": "create-generation",
+      "name": "Supabase: Create Generation",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhook = $('Webhook: Generate').first().json;\nconst generation = $('Supabase: Create Generation').first().json;\n\nreturn {\n  json: {\n    generation_id: generation.id,\n    concept: webhook.body.concept,\n    niche: webhook.body.niche,\n    generate: webhook.body.generate || ['thumbnails', 'titles', 'hooks']\n  }\n};"
+      },
+      "id": "prepare-context",
+      "name": "Prepare Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "tableId": "headline_swipes",
+        "filterType": "string",
+        "filterString": "=niche=eq.{{ $json.niche }}",
+        "options": {
+          "limit": 8
+        }
+      },
+      "id": "fetch-headline-swipes",
+      "name": "Fetch Headline Swipes",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [850, 200],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=You are a YouTube title expert. Generate 5 high-CTR titles for this video concept.\n\nVIDEO CONCEPT:\n{{ $('Prepare Context').first().json.concept }}\n\nNICHE: {{ $('Prepare Context').first().json.niche }}\n\nUSE THESE PROVEN PATTERNS AS INSPIRATION:\n{{ $json.map(s => '- ' + s.pattern + ' (triggers: ' + s.triggers.join(', ') + ')').join('\\n') }}\n\nRULES:\n- Each title should use a different psychological trigger\n- Keep titles under 60 characters when possible\n- Make them specific to the concept, not generic\n- Include numbers, power words, or curiosity gaps\n\nOutput ONLY valid JSON array (no markdown):\n[\n  {\"text\": \"title here\", \"pattern_used\": \"pattern name\", \"triggers\": [\"trigger1\", \"trigger2\"]},\n  ...\n]"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 1000
+        }
+      },
+      "id": "claude-generate-titles",
+      "name": "Claude: Generate Titles",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [1050, 200],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "tableId": "hook_swipes",
+        "filterType": "string",
+        "filterString": "=niche=eq.{{ $json.niche }}",
+        "options": {
+          "limit": 5
+        }
+      },
+      "id": "fetch-hook-swipes",
+      "name": "Fetch Hook Swipes",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=You are a YouTube hook script expert. Generate 3 compelling hooks for this video.\n\nVIDEO CONCEPT:\n{{ $('Prepare Context').first().json.concept }}\n\nNICHE: {{ $('Prepare Context').first().json.niche }}\n\nUSE THESE PROVEN HOOK STRUCTURES AS INSPIRATION:\n{{ $json.map(s => '---\\nType: ' + s.hook_type + '\\nOpening: ' + s.opening_mechanism + '\\nStructure: ' + s.pattern + '\\nExample: ' + s.raw_text.substring(0, 150) + '...').join('\\n\\n') }}\n\nRULES:\n- Each hook should use a DIFFERENT hook type\n- Keep hooks 3-5 sentences (30-60 seconds when spoken)\n- Open with a pattern interrupt or bold claim\n- Create an open loop that makes viewers need to keep watching\n- Be specific to the concept\n\nOutput ONLY valid JSON array (no markdown):\n[\n  {\"text\": \"full hook script here\", \"hook_type\": \"type\", \"word_count\": 45},\n  ...\n]"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 1500
+        }
+      },
+      "id": "claude-generate-hooks",
+      "name": "Claude: Generate Hooks",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "tableId": "thumbnail_swipes",
+        "filterType": "string",
+        "filterString": "=niche=eq.{{ $json.niche }}",
+        "options": {
+          "limit": 4
+        }
+      },
+      "id": "fetch-thumbnail-swipes",
+      "name": "Fetch Thumbnail Swipes",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [850, 400],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "tableId": "face_assets",
+        "filterType": "string",
+        "filterString": "is_default=eq.true",
+        "options": {
+          "limit": 1
+        }
+      },
+      "id": "fetch-default-face",
+      "name": "Fetch Default Face",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [850, 500],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=You are a YouTube thumbnail expert. Generate 4 thumbnail concepts for this video.\n\nVIDEO CONCEPT:\n{{ $('Prepare Context').first().json.concept }}\n\nNICHE: {{ $('Prepare Context').first().json.niche }}\n\nUSE THESE PROVEN THUMBNAIL STYLES AS INSPIRATION:\n{{ $('Fetch Thumbnail Swipes').all().map(s => '---\\nStyle: ' + s.json.composition + '\\nColors: ' + s.json.colors + '\\nTriggers: ' + (s.json.triggers || []).join(', ') + '\\nRecreation Prompt: ' + s.json.recreation_prompt).join('\\n\\n') }}\n\nFACE ASSET AVAILABLE: {{ $('Fetch Default Face').first().json.expression || 'shocked' }} expression\n\nRULES:\n- Each thumbnail should use a DIFFERENT visual style/composition\n- Include specific text overlay suggestions (keep text SHORT - 3-5 words max)\n- Specify face position and expression\n- Use high contrast colors\n- Make them scroll-stopping\n\nOutput ONLY valid JSON array (no markdown):\n[\n  {\n    \"concept\": \"brief description\",\n    \"text_overlay\": \"THE TEXT ON THUMBNAIL\",\n    \"image_prompt\": \"Detailed prompt for image generation: face position, expression, background, colors, text placement, visual elements. Be very specific.\",\n    \"style_reference\": \"which swipe style this is based on\"\n  },\n  ...\n]"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 2000
+        }
+      },
+      "id": "claude-generate-thumbnail-concepts",
+      "name": "Claude: Generate Thumbnail Concepts",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [1050, 450],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse titles response\nconst titlesRaw = $('Claude: Generate Titles').first().json;\nconst titlesText = titlesRaw.message?.content || titlesRaw.content || JSON.stringify(titlesRaw);\nlet titles = [];\ntry {\n  titles = JSON.parse(titlesText.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim());\n} catch(e) { titles = []; }\n\n// Parse hooks response\nconst hooksRaw = $('Claude: Generate Hooks').first().json;\nconst hooksText = hooksRaw.message?.content || hooksRaw.content || JSON.stringify(hooksRaw);\nlet hooks = [];\ntry {\n  hooks = JSON.parse(hooksText.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim());\n} catch(e) { hooks = []; }\n\n// Parse thumbnail concepts\nconst thumbsRaw = $('Claude: Generate Thumbnail Concepts').first().json;\nconst thumbsText = thumbsRaw.message?.content || thumbsRaw.content || JSON.stringify(thumbsRaw);\nlet thumbnails = [];\ntry {\n  thumbnails = JSON.parse(thumbsText.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim());\n} catch(e) { thumbnails = []; }\n\nconst ctx = $('Prepare Context').first().json;\n\nreturn {\n  json: {\n    generation_id: ctx.generation_id,\n    titles,\n    hooks,\n    thumbnail_concepts: thumbnails\n  }\n};"
+      },
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate thumbnails with NanoBanana\n// This is a placeholder - replace with actual NanoBanana API call\n\nconst data = $input.first().json;\nconst thumbnails = [];\n\n// For each thumbnail concept, we'd call NanoBanana\n// For now, return placeholder URLs\nfor (let i = 0; i < data.thumbnail_concepts.length; i++) {\n  thumbnails.push({\n    ...data.thumbnail_concepts[i],\n    image_url: `https://placeholder.com/thumbnail-${i + 1}.png`,\n    // In real implementation:\n    // image_url: await callNanoBanana(data.thumbnail_concepts[i].image_prompt)\n  });\n}\n\nreturn {\n  json: {\n    ...data,\n    thumbnails\n  }\n};"
+      },
+      "id": "generate-thumbnails-nanobanana",
+      "name": "Generate Thumbnails (NanoBanana)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 300],
+      "notesInFlow": true,
+      "notes": "Replace this with actual NanoBanana HTTP Request node. Call their API for each thumbnail concept."
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst generation_id = data.generation_id;\n\n// Prepare all outputs for batch insert\nconst outputs = [];\n\n// Add titles\ndata.titles.forEach((title, idx) => {\n  outputs.push({\n    generation_id,\n    type: 'title',\n    content: JSON.stringify(title),\n    is_selected: idx === 0, // First one selected by default\n    version: 1\n  });\n});\n\n// Add hooks\ndata.hooks.forEach((hook, idx) => {\n  outputs.push({\n    generation_id,\n    type: 'hook',\n    content: JSON.stringify(hook),\n    is_selected: false,\n    version: 1\n  });\n});\n\n// Add thumbnails\ndata.thumbnails.forEach((thumb, idx) => {\n  outputs.push({\n    generation_id,\n    type: 'thumbnail',\n    content: JSON.stringify(thumb),\n    is_selected: idx === 0,\n    version: 1\n  });\n});\n\nreturn outputs.map(o => ({ json: o }));"
+      },
+      "id": "prepare-outputs",
+      "name": "Prepare Outputs for DB",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "tableId": "generation_outputs",
+        "fieldsToSend": {
+          "fieldValues": [
+            { "fieldName": "generation_id", "fieldValue": "={{ $json.generation_id }}" },
+            { "fieldName": "type", "fieldValue": "={{ $json.type }}" },
+            { "fieldName": "content", "fieldValue": "={{ $json.content }}" },
+            { "fieldName": "is_selected", "fieldValue": "={{ $json.is_selected }}" },
+            { "fieldName": "version", "fieldValue": "={{ $json.version }}" }
+          ]
+        }
+      },
+      "id": "save-outputs",
+      "name": "Supabase: Save Outputs",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1850, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Generate Thumbnails (NanoBanana)').first().json;\n\nreturn {\n  json: {\n    success: true,\n    generation_id: data.generation_id,\n    titles: data.titles,\n    hooks: data.hooks,\n    thumbnails: data.thumbnails\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2050, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-generate",
+      "name": "Respond: Generation Complete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2250, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Generate": {
+      "main": [[{ "node": "Supabase: Create Generation", "type": "main", "index": 0 }]]
+    },
+    "Supabase: Create Generation": {
+      "main": [[{ "node": "Prepare Context", "type": "main", "index": 0 }]]
+    },
+    "Prepare Context": {
+      "main": [
+        [
+          { "node": "Fetch Headline Swipes", "type": "main", "index": 0 },
+          { "node": "Fetch Hook Swipes", "type": "main", "index": 0 },
+          { "node": "Fetch Thumbnail Swipes", "type": "main", "index": 0 },
+          { "node": "Fetch Default Face", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fetch Headline Swipes": {
+      "main": [[{ "node": "Claude: Generate Titles", "type": "main", "index": 0 }]]
+    },
+    "Claude: Generate Titles": {
+      "main": [[{ "node": "Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Fetch Hook Swipes": {
+      "main": [[{ "node": "Claude: Generate Hooks", "type": "main", "index": 0 }]]
+    },
+    "Claude: Generate Hooks": {
+      "main": [[{ "node": "Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Fetch Thumbnail Swipes": {
+      "main": [[{ "node": "Claude: Generate Thumbnail Concepts", "type": "main", "index": 0 }]]
+    },
+    "Fetch Default Face": {
+      "main": [[{ "node": "Claude: Generate Thumbnail Concepts", "type": "main", "index": 0 }]]
+    },
+    "Claude: Generate Thumbnail Concepts": {
+      "main": [[{ "node": "Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Merge Results": {
+      "main": [[{ "node": "Generate Thumbnails (NanoBanana)", "type": "main", "index": 0 }]]
+    },
+    "Generate Thumbnails (NanoBanana)": {
+      "main": [[{ "node": "Prepare Outputs for DB", "type": "main", "index": 0 }]]
+    },
+    "Prepare Outputs for DB": {
+      "main": [[{ "node": "Supabase: Save Outputs", "type": "main", "index": 0 }]]
+    },
+    "Supabase: Save Outputs": {
+      "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]]
+    },
+    "Format Response": {
+      "main": [[{ "node": "Respond: Generation Complete", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "youtube-content" }]
+}

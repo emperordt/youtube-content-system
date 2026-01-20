@@ -1,0 +1,186 @@
+{
+  "name": "05 - Ad Upload & Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ad-upload",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "webhook-ad-upload",
+      "name": "Webhook: Ad Upload",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "ad-upload"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "assets",
+        "fileName": "=ads/{{ $now.toMillis() }}_{{ $json.body.filename }}",
+        "fileContent": "={{ $json.body.video_base64 }}"
+      },
+      "id": "supabase-upload-video",
+      "name": "Supabase: Upload Video",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "parameterType": "formBinaryData",
+              "inputDataFieldName": "video"
+            },
+            {
+              "name": "model",
+              "value": "whisper-1"
+            },
+            {
+              "name": "response_format",
+              "value": "verbose_json"
+            }
+          ]
+        }
+      },
+      "id": "whisper-transcribe",
+      "name": "Whisper: Transcribe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      },
+      "notes": "If Whisper doesn't work directly, you may need to: 1) Download video from Supabase URL first, 2) Extract audio with ffmpeg, 3) Then send to Whisper. Alternative: Use AssemblyAI which accepts URLs directly."
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=Analyze this video ad transcript and extract structured data.\n\nTRANSCRIPT:\n{{ $json.text }}\n\nDURATION: {{ $json.duration || 'unknown' }} seconds\n\nAnalyze and output ONLY valid JSON (no markdown, no backticks):\n{\n  \"hook_text\": \"The exact opening hook (first 1-2 sentences that grab attention)\",\n  \"hook_type\": \"one of: problem_agitate, curiosity, social_proof, contrarian, story, question, shock\",\n  \"concept\": \"What is the core angle/message of this ad? What are they selling and how?\",\n  \"structure\": [\n    {\"time\": \"0-5s\", \"desc\": \"What happens in this segment\"},\n    {\"time\": \"5-15s\", \"desc\": \"What happens in this segment\"},\n    // continue for full ad\n  ],\n  \"cta_type\": \"soft (subtle, link in bio) or hard (direct call to action, urgency)\",\n  \"triggers\": [\"emotional\", \"triggers\", \"used\"],\n  \"style\": \"ugc, motion, mashup, or product\",\n  \"niche\": \"health, saas, ecom, info, finance, or other\"\n}\n\nBe specific and actionable in the structure breakdown - someone should be able to recreate this ad format from your analysis."
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 1500
+        }
+      },
+      "id": "claude-analyze-ad",
+      "name": "Claude: Analyze Ad",
+      "type": "@n8n/n8n-nodes-langchain.anthropicChat",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.message?.content || response.content || JSON.stringify(response);\n\n// Clean response\nlet cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\ntry {\n  const parsed = JSON.parse(cleanText);\n  \n  // Add data from previous nodes\n  const videoUrl = $('Supabase: Upload Video').first().json.publicUrl;\n  const transcript = $('Whisper: Transcribe').first().json.text;\n  const duration = $('Whisper: Transcribe').first().json.duration;\n  \n  return {\n    json: {\n      ...parsed,\n      video_url: videoUrl,\n      transcript: transcript,\n      duration_seconds: Math.round(duration || 0),\n      source: 'Uploaded'\n    }\n  };\n} catch (e) {\n  return {\n    json: {\n      error: 'Failed to parse analysis',\n      raw: cleanText,\n      video_url: $('Supabase: Upload Video').first().json.publicUrl\n    }\n  };\n}"
+      },
+      "id": "parse-ad-analysis",
+      "name": "Parse Ad Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "tableId": "ad_swipes",
+        "fieldsToSend": {
+          "fieldValues": [
+            { "fieldName": "video_url", "fieldValue": "={{ $json.video_url }}" },
+            { "fieldName": "hook_text", "fieldValue": "={{ $json.hook_text }}" },
+            { "fieldName": "hook_type", "fieldValue": "={{ $json.hook_type }}" },
+            { "fieldName": "concept", "fieldValue": "={{ $json.concept }}" },
+            { "fieldName": "structure", "fieldValue": "={{ JSON.stringify($json.structure) }}" },
+            { "fieldName": "cta_type", "fieldValue": "={{ $json.cta_type }}" },
+            { "fieldName": "triggers", "fieldValue": "={{ $json.triggers }}" },
+            { "fieldName": "style", "fieldValue": "={{ $json.style }}" },
+            { "fieldName": "niche", "fieldValue": "={{ $json.niche }}" },
+            { "fieldName": "transcript", "fieldValue": "={{ $json.transcript }}" },
+            { "fieldName": "duration_seconds", "fieldValue": "={{ $json.duration_seconds }}" },
+            { "fieldName": "source", "fieldValue": "={{ $json.source }}" }
+          ]
+        },
+        "options": {
+          "returnRow": true
+        }
+      },
+      "id": "supabase-insert-ad",
+      "name": "Supabase: Insert Ad Swipe",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, id: $json.id, hook: $('Parse Ad Analysis').first().json.hook_text } }}"
+      },
+      "id": "respond-ad-success",
+      "name": "Respond: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Ad Upload": {
+      "main": [[{ "node": "Supabase: Upload Video", "type": "main", "index": 0 }]]
+    },
+    "Supabase: Upload Video": {
+      "main": [[{ "node": "Whisper: Transcribe", "type": "main", "index": 0 }]]
+    },
+    "Whisper: Transcribe": {
+      "main": [[{ "node": "Claude: Analyze Ad", "type": "main", "index": 0 }]]
+    },
+    "Claude: Analyze Ad": {
+      "main": [[{ "node": "Parse Ad Analysis", "type": "main", "index": 0 }]]
+    },
+    "Parse Ad Analysis": {
+      "main": [[{ "node": "Supabase: Insert Ad Swipe", "type": "main", "index": 0 }]]
+    },
+    "Supabase: Insert Ad Swipe": {
+      "main": [[{ "node": "Respond: Success", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "ad-system" }],
+  "notes": "IMPORTANT: The Whisper transcription step may need adjustment based on your setup. Options:\n1. Use OpenAI Whisper API directly (requires sending audio file)\n2. Use AssemblyAI (accepts URLs, easier)\n3. Extract audio from video using ffmpeg first\n\nFor AssemblyAI alternative, replace Whisper node with HTTP Request to: POST https://api.assemblyai.com/v2/transcript with {audio_url: videoUrl}"
+}

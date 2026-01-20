@@ -1,0 +1,148 @@
+{
+  "name": "04 - Finalize",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "finalize",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "webhook-finalize",
+      "name": "Webhook: Finalize",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "finalize"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process the finalize request\n// Expected body:\n// {\n//   generation_id: 'uuid',\n//   selected: {\n//     title_id: 'uuid',\n//     hook_id: 'uuid', \n//     thumbnail_id: 'uuid'\n//   },\n//   edits: {\n//     'output-uuid': { text: 'edited content' },\n//     ...\n//   }\n// }\n\nconst body = $input.first().json.body;\nconst outputs = [];\n\n// Prepare updates for selected items\nif (body.selected) {\n  Object.values(body.selected).forEach(id => {\n    if (id) {\n      outputs.push({ id, is_selected: true });\n    }\n  });\n}\n\n// Prepare content updates for edited items\nif (body.edits) {\n  Object.entries(body.edits).forEach(([id, content]) => {\n    const existing = outputs.find(o => o.id === id);\n    if (existing) {\n      existing.content = JSON.stringify(content);\n    } else {\n      outputs.push({ id, content: JSON.stringify(content) });\n    }\n  });\n}\n\nreturn {\n  json: {\n    generation_id: body.generation_id,\n    outputs\n  }\n};"
+      },
+      "id": "prepare-updates",
+      "name": "Prepare Updates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "generation_outputs",
+        "filterType": "string",
+        "filterString": "=generation_id=eq.{{ $json.generation_id }}",
+        "fieldsToSend": {
+          "fieldValues": [
+            { "fieldName": "is_selected", "fieldValue": "false" }
+          ]
+        }
+      },
+      "id": "reset-selections",
+      "name": "Reset All Selections",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Prepare Updates').first().json;\nreturn data.outputs.map(o => ({ json: o }));"
+      },
+      "id": "split-outputs",
+      "name": "Split Outputs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "generation_outputs",
+        "filterType": "string",
+        "filterString": "=id=eq.{{ $json.id }}",
+        "fieldsToSend": {
+          "fieldValues": [
+            { "fieldName": "is_selected", "fieldValue": "={{ $json.is_selected || false }}" },
+            { "fieldName": "content", "fieldValue": "={{ $json.content || undefined }}" }
+          ]
+        }
+      },
+      "id": "update-each-output",
+      "name": "Update Each Output",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "generations",
+        "filterType": "string",
+        "filterString": "=id=eq.{{ $('Prepare Updates').first().json.generation_id }}",
+        "fieldsToSend": {
+          "fieldValues": [
+            { "fieldName": "status", "fieldValue": "published" }
+          ]
+        }
+      },
+      "id": "update-generation-status",
+      "name": "Update Generation Status",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, generation_id: $('Prepare Updates').first().json.generation_id, status: 'published' } }}"
+      },
+      "id": "respond-finalize",
+      "name": "Respond: Finalized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Finalize": {
+      "main": [[{ "node": "Prepare Updates", "type": "main", "index": 0 }]]
+    },
+    "Prepare Updates": {
+      "main": [[{ "node": "Reset All Selections", "type": "main", "index": 0 }]]
+    },
+    "Reset All Selections": {
+      "main": [[{ "node": "Split Outputs", "type": "main", "index": 0 }]]
+    },
+    "Split Outputs": {
+      "main": [[{ "node": "Update Each Output", "type": "main", "index": 0 }]]
+    },
+    "Update Each Output": {
+      "main": [[{ "node": "Update Generation Status", "type": "main", "index": 0 }]]
+    },
+    "Update Generation Status": {
+      "main": [[{ "node": "Respond: Finalized", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "youtube-content" }]
+}

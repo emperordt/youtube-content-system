@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Output Review</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --danger-dim: #ff444420;
+            --warning: #ffaa00;
+            --warning-dim: #ffaa0020;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --blue: #3b82f6;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .nav-links { display: flex; gap: 8px; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+        .container {
+            padding: 92px 48px 48px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .page-title { font-size: 32px; font-weight: 600; }
+        .page-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+
+        .header-actions { display: flex; gap: 12px; }
+
+        .header-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .header-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .header-btn.secondary:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .header-btn.primary {
+            background: var(--accent);
+            border: none;
+            color: var(--bg-primary);
+        }
+
+        .header-btn.primary:hover { background: var(--accent-hover); }
+
+        .project-bar {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 32px;
+        }
+
+        .project-title { font-size: 16px; font-weight: 600; }
+
+        .project-meta { display: flex; gap: 16px; }
+
+        .project-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+
+        .project-status {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-indicator.pending { background: var(--warning); }
+        .status-indicator.complete { background: var(--accent); }
+
+        .status-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .review-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+
+        .review-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title { display: flex; align-items: center; gap: 12px; }
+        .section-title h3 { font-size: 16px; font-weight: 600; }
+
+        .section-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .section-badge.selected { background: var(--accent-dim); color: var(--accent); }
+        .section-badge.pending { background: var(--warning-dim); color: var(--warning); }
+
+        .section-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .section-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .section-body { padding: 24px; }
+
+        .thumbnail-review-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .thumbnail-option {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            overflow: hidden;
+        }
+
+        .thumbnail-option:hover { border-color: var(--border-hover); }
+        .thumbnail-option.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-dim);
+        }
+
+        .thumbnail-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail-number {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .thumbnail-check {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .thumbnail-option.selected .thumbnail-check { display: flex; }
+
+        .thumbnail-check svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--bg-primary);
+            stroke-width: 3;
+        }
+
+        .refinement-box {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .refinement-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .refinement-input {
+            width: 100%;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            resize: none;
+        }
+
+        .refinement-input:focus { outline: none; }
+        .refinement-input::placeholder { color: var(--text-muted); }
+
+        .refinement-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .refine-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            background: var(--purple);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .refine-btn:hover { opacity: 0.9; }
+
+        .title-options { display: flex; flex-direction: column; gap: 12px; }
+
+        .title-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .title-option:hover { border-color: var(--border-hover); }
+        .title-option.selected {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .title-radio {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .title-option.selected .title-radio { border-color: var(--accent); }
+
+        .title-radio-inner {
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: none;
+        }
+
+        .title-option.selected .title-radio-inner { display: block; }
+
+        .title-content { flex: 1; }
+
+        .title-text {
+            font-size: 15px;
+            line-height: 1.4;
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            resize: none;
+            font-family: inherit;
+        }
+
+        .title-text:focus { outline: none; }
+
+        .title-copy-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .title-copy-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .full-width-section { grid-column: 1 / -1; }
+
+        .hook-editor-full { display: flex; flex-direction: column; gap: 16px; }
+
+        .hook-version {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+
+        .hook-version:hover { border-color: var(--border-hover); }
+        .hook-version.selected { border-color: var(--accent); }
+
+        .hook-version-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .hook-version-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .hook-version-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--purple-dim);
+            color: var(--purple);
+        }
+
+        .hook-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .hook-text.editable {
+            background: transparent;
+            border: none;
+            width: 100%;
+            color: var(--text-primary);
+            resize: none;
+            font-family: inherit;
+            min-height: 80px;
+        }
+
+        .hook-text.editable:focus { outline: none; }
+
+        .final-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .checklist { display: flex; gap: 24px; }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .checklist-item.complete { color: var(--accent); }
+
+        .checklist-icon {
+            width: 18px;
+            height: 18px;
+            border: 2px solid currentColor;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checklist-item.complete .checklist-icon {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .checklist-icon svg {
+            width: 12px;
+            height: 12px;
+            stroke: var(--bg-primary);
+            stroke-width: 3;
+            display: none;
+        }
+
+        .checklist-item.complete .checklist-icon svg { display: block; }
+
+        .final-actions-right { display: flex; gap: 12px; }
+
+        .action-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 14px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .action-btn.discard {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .action-btn.discard:hover { background: var(--danger-dim); }
+
+        .action-btn.save-draft {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .action-btn.save-draft:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .action-btn.export {
+            background: var(--accent);
+            border: none;
+            color: var(--bg-primary);
+        }
+
+        .action-btn.export:hover { background: var(--accent-hover); }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .loading-overlay.active { display: flex; }
+
+        .loading-content {
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">CONTENT_ENGINE//v1</div>
+        <div class="nav-links">
+            <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+            <a href="02-swipe-file.html" class="nav-link">YT Swipes</a>
+            <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
+            <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+            <a href="05-history.html" class="nav-link">History</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Review & Refine</h1>
+                <p class="page-subtitle">Select your favorites, edit directly, and refine before exporting</p>
+            </div>
+            <div class="header-actions">
+                <a href="01-generation-hub.html" class="header-btn secondary">← Back to Generate</a>
+                <button class="header-btn primary" id="regenerate-all-btn">Regenerate All</button>
+            </div>
+        </div>
+
+        <div class="project-bar">
+            <span class="project-title" id="project-concept">Awaiting generation...</span>
+            <div class="project-meta">
+                <span class="project-tag" id="project-niche">-</span>
+                <span class="project-tag" id="project-date">-</span>
+            </div>
+            <div class="project-status">
+                <div class="status-indicator pending" id="status-dot"></div>
+                <span class="status-text" id="status-text">Waiting for data</span>
+            </div>
+        </div>
+
+        <div class="review-grid">
+            <!-- Thumbnails Section -->
+            <div class="review-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h3>Thumbnails</h3>
+                        <span class="section-badge pending" id="thumb-badge">SELECT ONE</span>
+                    </div>
+                    <button class="section-btn" id="regen-thumbs">↻ Regenerate</button>
+                </div>
+                <div class="section-body">
+                    <div class="thumbnail-review-grid" id="thumbnail-grid">
+                        <!-- Thumbnails populated by JS -->
+                        <div class="thumbnail-option">
+                            <span class="thumbnail-number">#1</span>
+                            <span>Awaiting...</span>
+                            <div class="thumbnail-check">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="refinement-box">
+                        <p class="refinement-label">Refine Selected Thumbnail</p>
+                        <textarea class="refinement-input" id="thumb-refinement" rows="2" placeholder="e.g., Make the text bigger, add more contrast, change expression..."></textarea>
+                        <div class="refinement-actions">
+                            <button class="refine-btn" id="refine-thumb-btn">Refine →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Titles Section -->
+            <div class="review-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h3>Title Options</h3>
+                        <span class="section-badge pending" id="title-badge">SELECT ONE</span>
+                    </div>
+                    <button class="section-btn" id="regen-titles">↻ Regenerate</button>
+                </div>
+                <div class="section-body">
+                    <div class="title-options" id="title-list">
+                        <!-- Titles populated by JS -->
+                        <div class="title-option">
+                            <div class="title-radio"><div class="title-radio-inner"></div></div>
+                            <div class="title-content">
+                                <textarea class="title-text" rows="2">Awaiting generation...</textarea>
+                            </div>
+                            <button class="title-copy-btn">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hooks Section (Full Width) -->
+            <div class="review-section full-width-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h3>Hook Scripts</h3>
+                        <span class="section-badge pending" id="hook-badge">SELECT ONE</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="section-btn" id="regen-hooks">↻ Regenerate</button>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="hook-editor-full" id="hook-list">
+                        <!-- Hooks populated by JS -->
+                        <div class="hook-version">
+                            <div class="hook-version-header">
+                                <span class="hook-version-title">VERSION A</span>
+                                <span class="hook-version-tag">AWAITING</span>
+                            </div>
+                            <textarea class="hook-text editable" rows="4">Awaiting generation...</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Actions -->
+            <div class="final-actions">
+                <div class="checklist">
+                    <div class="checklist-item" id="check-thumb">
+                        <div class="checklist-icon">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span>Thumbnail</span>
+                    </div>
+                    <div class="checklist-item" id="check-title">
+                        <div class="checklist-icon">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span>Title</span>
+                    </div>
+                    <div class="checklist-item" id="check-hook">
+                        <div class="checklist-icon">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span>Hook</span>
+                    </div>
+                </div>
+                <div class="final-actions-right">
+                    <button class="action-btn discard" id="discard-btn">Discard</button>
+                    <button class="action-btn save-draft" id="save-draft-btn">Save Draft</button>
+                    <button class="action-btn export" id="export-btn">Export & Save →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Replace with your actual URLs
+        const CONFIG = {
+            WEBHOOK_REGENERATE: 'YOUR_N8N_REGENERATE_WEBHOOK_URL',
+            WEBHOOK_FINALIZE: 'YOUR_N8N_FINALIZE_WEBHOOK_URL',
+            SUPABASE_URL: 'YOUR_SUPABASE_URL',
+            SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY'
+        };
+
+        // State
+        let state = {
+            generation_id: null,
+            concept: '',
+            niche: '',
+            thumbnails: [],
+            titles: [],
+            hooks: [],
+            selected: {
+                thumbnail_id: null,
+                title_id: null,
+                hook_id: null
+            },
+            edits: {}
+        };
+
+        // Load data from sessionStorage (set by generation page)
+        function loadGenerationData() {
+            const stored = sessionStorage.getItem('generationResult');
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    state.generation_id = data.generation_id;
+                    state.thumbnails = data.thumbnails || [];
+                    state.titles = data.titles || [];
+                    state.hooks = data.hooks || [];
+                    
+                    // Get concept from session or use placeholder
+                    const conceptData = sessionStorage.getItem('generationInput');
+                    if (conceptData) {
+                        const input = JSON.parse(conceptData);
+                        state.concept = input.concept;
+                        state.niche = input.niche;
+                    }
+                    
+                    renderAll();
+                } catch (e) {
+                    console.error('Failed to parse generation data:', e);
+                }
+            }
+        }
+
+        function renderAll() {
+            // Update project bar
+            document.getElementById('project-concept').textContent = 
+                state.concept ? state.concept.substring(0, 60) + '...' : 'Generated Content';
+            document.getElementById('project-niche').textContent = 
+                state.niche ? state.niche.toUpperCase() : 'GENERAL';
+            document.getElementById('project-date').textContent = 
+                'Generated ' + new Date().toLocaleDateString();
+
+            renderThumbnails();
+            renderTitles();
+            renderHooks();
+            updateChecklist();
+        }
+
+        function renderThumbnails() {
+            const grid = document.getElementById('thumbnail-grid');
+            if (state.thumbnails.length === 0) {
+                grid.innerHTML = `
+                    <div class="thumbnail-option">
+                        <span>No thumbnails generated</span>
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = state.thumbnails.map((thumb, idx) => `
+                <div class="thumbnail-option ${state.selected.thumbnail_id === idx ? 'selected' : ''}" 
+                     data-idx="${idx}" onclick="selectThumbnail(${idx})">
+                    <span class="thumbnail-number">#${idx + 1}</span>
+                    ${thumb.image_url ? 
+                        `<img src="${thumb.image_url}" alt="Thumbnail ${idx + 1}">` : 
+                        `<span>${thumb.concept || 'Thumbnail ' + (idx + 1)}</span>`
+                    }
+                    <div class="thumbnail-check">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTitles() {
+            const list = document.getElementById('title-list');
+            if (state.titles.length === 0) {
+                list.innerHTML = `
+                    <div class="title-option">
+                        <div class="title-content">
+                            <textarea class="title-text" rows="2" disabled>No titles generated</textarea>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = state.titles.map((title, idx) => `
+                <div class="title-option ${state.selected.title_id === idx ? 'selected' : ''}" 
+                     data-idx="${idx}" onclick="selectTitle(${idx}, event)">
+                    <div class="title-radio"><div class="title-radio-inner"></div></div>
+                    <div class="title-content">
+                        <textarea class="title-text" rows="2" 
+                                  onchange="editTitle(${idx}, this.value)"
+                                  onclick="event.stopPropagation()">${title.text}</textarea>
+                    </div>
+                    <button class="title-copy-btn" onclick="copyTitle(${idx}, event)">Copy</button>
+                </div>
+            `).join('');
+        }
+
+        function renderHooks() {
+            const list = document.getElementById('hook-list');
+            if (state.hooks.length === 0) {
+                list.innerHTML = `
+                    <div class="hook-version">
+                        <div class="hook-version-header">
+                            <span class="hook-version-title">NO HOOKS</span>
+                        </div>
+                        <p class="hook-text">No hooks generated</p>
+                    </div>`;
+                return;
+            }
+
+            const letters = ['A', 'B', 'C', 'D', 'E'];
+            list.innerHTML = state.hooks.map((hook, idx) => `
+                <div class="hook-version ${state.selected.hook_id === idx ? 'selected' : ''}" 
+                     data-idx="${idx}" onclick="selectHook(${idx})">
+                    <div class="hook-version-header">
+                        <span class="hook-version-title">VERSION ${letters[idx] || idx + 1}</span>
+                        <span class="hook-version-tag">${(hook.hook_type || 'HOOK').toUpperCase()}</span>
+                    </div>
+                    <textarea class="hook-text editable" rows="4" 
+                              onchange="editHook(${idx}, this.value)"
+                              onclick="event.stopPropagation()">${hook.text}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function selectThumbnail(idx) {
+            state.selected.thumbnail_id = idx;
+            renderThumbnails();
+            updateChecklist();
+        }
+
+        function selectTitle(idx, event) {
+            if (event.target.tagName === 'TEXTAREA') return;
+            state.selected.title_id = idx;
+            renderTitles();
+            updateChecklist();
+        }
+
+        function selectHook(idx) {
+            state.selected.hook_id = idx;
+            renderHooks();
+            updateChecklist();
+        }
+
+        function editTitle(idx, value) {
+            state.titles[idx].text = value;
+            state.edits[`title-${idx}`] = { text: value };
+        }
+
+        function editHook(idx, value) {
+            state.hooks[idx].text = value;
+            state.edits[`hook-${idx}`] = { text: value };
+        }
+
+        function copyTitle(idx, event) {
+            event.stopPropagation();
+            navigator.clipboard.writeText(state.titles[idx].text);
+            const btn = event.target;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 1500);
+        }
+
+        function updateChecklist() {
+            const thumbCheck = document.getElementById('check-thumb');
+            const titleCheck = document.getElementById('check-title');
+            const hookCheck = document.getElementById('check-hook');
+
+            thumbCheck.classList.toggle('complete', state.selected.thumbnail_id !== null);
+            titleCheck.classList.toggle('complete', state.selected.title_id !== null);
+            hookCheck.classList.toggle('complete', state.selected.hook_id !== null);
+
+            // Update badges
+            document.getElementById('thumb-badge').className = 
+                'section-badge ' + (state.selected.thumbnail_id !== null ? 'selected' : 'pending');
+            document.getElementById('thumb-badge').textContent = 
+                state.selected.thumbnail_id !== null ? '1 SELECTED' : 'SELECT ONE';
+
+            document.getElementById('title-badge').className = 
+                'section-badge ' + (state.selected.title_id !== null ? 'selected' : 'pending');
+            document.getElementById('title-badge').textContent = 
+                state.selected.title_id !== null ? '1 SELECTED' : 'SELECT ONE';
+
+            document.getElementById('hook-badge').className = 
+                'section-badge ' + (state.selected.hook_id !== null ? 'selected' : 'pending');
+            document.getElementById('hook-badge').textContent = 
+                state.selected.hook_id !== null ? '1 SELECTED' : 'SELECT ONE';
+
+            // Update status
+            const selected = [state.selected.thumbnail_id, state.selected.title_id, state.selected.hook_id]
+                .filter(x => x !== null).length;
+            document.getElementById('status-text').textContent = `${selected} of 3 selections made`;
+            document.getElementById('status-dot').className = 
+                'status-indicator ' + (selected === 3 ? 'complete' : 'pending');
+        }
+
+        // Refinement
+        document.getElementById('refine-thumb-btn').addEventListener('click', async () => {
+            const refinement = document.getElementById('thumb-refinement').value.trim();
+            if (!refinement) {
+                alert('Please enter refinement instructions');
+                return;
+            }
+            if (state.selected.thumbnail_id === null) {
+                alert('Please select a thumbnail first');
+                return;
+            }
+            
+            showLoading();
+            try {
+                // Call regeneration webhook
+                const response = await fetch(CONFIG.WEBHOOK_REGENERATE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        generation_id: state.generation_id,
+                        output_id: state.thumbnails[state.selected.thumbnail_id].id,
+                        type: 'thumbnail',
+                        refinement: refinement
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    state.thumbnails[state.selected.thumbnail_id] = data.new_content;
+                    renderThumbnails();
+                    document.getElementById('thumb-refinement').value = '';
+                }
+            } catch (e) {
+                console.error('Refinement failed:', e);
+                alert('Refinement failed. Check console.');
+            }
+            hideLoading();
+        });
+
+        // Export
+        document.getElementById('export-btn').addEventListener('click', async () => {
+            if (state.selected.thumbnail_id === null || 
+                state.selected.title_id === null || 
+                state.selected.hook_id === null) {
+                alert('Please select one of each: thumbnail, title, and hook');
+                return;
+            }
+
+            showLoading();
+            try {
+                const response = await fetch(CONFIG.WEBHOOK_FINALIZE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        generation_id: state.generation_id,
+                        selected: state.selected,
+                        edits: state.edits
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Saved successfully!');
+                    sessionStorage.removeItem('generationResult');
+                    window.location.href = '05-history.html';
+                }
+            } catch (e) {
+                console.error('Export failed:', e);
+                alert('Export failed. Check console.');
+            }
+            hideLoading();
+        });
+
+        // Discard
+        document.getElementById('discard-btn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to discard this generation?')) {
+                sessionStorage.removeItem('generationResult');
+                window.location.href = '01-generation-hub.html';
+            }
+        });
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        // Initialize
+        loadGenerationData();
+    </script>
+</body>
+</html>
