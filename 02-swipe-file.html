@@ -721,9 +721,16 @@
             btn.textContent = 'Adding...';
 
             try {
+                console.log('Sending to:', CONFIG.WEBHOOK_SWIPE);
+                console.log('Data:', { type: 'headline', content: text, niche: niche });
+
                 const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         type: 'headline',
                         content: text,
@@ -731,10 +738,10 @@
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Server returned ${response.status}`);
-                }
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
+
                 document.getElementById('headline-input').value = '';
                 alert('Headline added!');
             } catch (error) {
@@ -761,9 +768,15 @@
             btn.textContent = 'Adding...';
 
             try {
+                console.log('Sending hook to:', CONFIG.WEBHOOK_SWIPE);
+
                 const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         type: 'hook',
                         content: text,
@@ -771,10 +784,10 @@
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Server returned ${response.status}`);
-                }
+                console.log('Hook response status:', response.status);
                 const data = await response.json();
+                console.log('Hook response:', data);
+
                 document.getElementById('hook-input').value = '';
                 alert('Hook added!');
             } catch (error) {
