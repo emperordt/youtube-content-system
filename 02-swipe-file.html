@@ -676,31 +676,47 @@
 
         async function handleThumbnailUpload(file) {
             if (!file) return;
-            
+
+            console.log('Starting thumbnail upload:', file.name, file.size);
+
+            // Show loading state
+            const uploadZone = document.getElementById('thumbnail-upload');
+            const originalHTML = uploadZone.innerHTML;
+            uploadZone.innerHTML = '<p style="color: var(--accent);">Uploading & analyzing...</p>';
+            uploadZone.style.pointerEvents = 'none';
+
             // Convert to base64
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const base64 = e.target.result.split(',')[1];
-                
+                console.log('Base64 ready, length:', base64.length);
+
                 try {
+                    console.log('Sending to:', CONFIG.WEBHOOK_SWIPE);
                     const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
                         method: 'POST',
+                        mode: 'cors',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             type: 'thumbnail',
                             image_base64: base64,
+                            filename: `thumb_${Date.now()}.png`,
                             niche: document.getElementById('thumb-niche-filter').value || 'general'
                         })
                     });
-                    
+
+                    console.log('Response status:', response.status);
                     const data = await response.json();
-                    if (data.success) {
-                        alert('Thumbnail added successfully!');
-                        // Reload thumbnails
-                    }
+                    console.log('Response data:', data);
+
+                    alert('Thumbnail uploaded! Processing...');
+                    loadThumbnails(); // Refresh the list
                 } catch (error) {
                     console.error('Upload failed:', error);
-                    alert('Upload failed. Check console for details.');
+                    alert('Upload failed: ' + error.message);
+                } finally {
+                    uploadZone.innerHTML = originalHTML;
+                    uploadZone.style.pointerEvents = 'auto';
                 }
             };
             reader.readAsDataURL(file);
