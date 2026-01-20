@@ -708,13 +708,17 @@
 
         // Add headline
         document.getElementById('add-headline-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('add-headline-btn');
             const text = document.getElementById('headline-input').value.trim();
             const niche = document.getElementById('headline-niche-select').value;
-            
+
             if (!text) {
                 alert('Please enter a headline');
                 return;
             }
+
+            btn.disabled = true;
+            btn.textContent = 'Adding...';
 
             try {
                 const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
@@ -728,25 +732,30 @@
                 });
 
                 const data = await response.json();
-                if (data.success) {
-                    document.getElementById('headline-input').value = '';
-                    alert('Headline added successfully!');
-                }
+                document.getElementById('headline-input').value = '';
+                alert('Headline sent to n8n!');
             } catch (error) {
                 console.error('Add headline failed:', error);
                 alert('Failed to add headline. Check console.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '+ Add';
             }
         });
 
         // Add hook
         document.getElementById('add-hook-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('add-hook-btn');
             const text = document.getElementById('hook-input').value.trim();
             const niche = document.getElementById('hook-niche-select').value;
-            
+
             if (!text) {
                 alert('Please enter a hook script');
                 return;
             }
+
+            btn.disabled = true;
+            btn.textContent = 'Adding...';
 
             try {
                 const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
@@ -760,13 +769,14 @@
                 });
 
                 const data = await response.json();
-                if (data.success) {
-                    document.getElementById('hook-input').value = '';
-                    alert('Hook added successfully!');
-                }
+                document.getElementById('hook-input').value = '';
+                alert('Hook sent to n8n!');
             } catch (error) {
                 console.error('Add hook failed:', error);
                 alert('Failed to add hook. Check console.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '+ Add Hook';
             }
         });
 
