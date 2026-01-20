@@ -731,9 +731,12 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
                 const data = await response.json();
                 document.getElementById('headline-input').value = '';
-                alert('Headline sent to n8n!');
+                alert('Headline added!');
             } catch (error) {
                 console.error('Add headline failed:', error);
                 alert('Failed to add headline. Check console.');
@@ -768,9 +771,12 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
                 const data = await response.json();
                 document.getElementById('hook-input').value = '';
-                alert('Hook sent to n8n!');
+                alert('Hook added!');
             } catch (error) {
                 console.error('Add hook failed:', error);
                 alert('Failed to add hook. Check console.');
