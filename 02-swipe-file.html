@@ -641,8 +641,8 @@
         // Configuration - Replace these with your actual URLs
         const CONFIG = {
             WEBHOOK_SWIPE: 'https://n8n.dtthomas.cloud/webhook/swipe',
-            SUPABASE_URL: 'YOUR_SUPABASE_URL',
-            SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY'
+            SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
+            SUPABASE_ANON_KEY: 'sb_secret_Lx9rz43ssfD6uWk7kXIeqw_eOT2LkvX'
         };
 
         // Tab switching
@@ -799,10 +799,140 @@
             }
         });
 
-        // Load data from Supabase (implement based on your setup)
+        // Load data from Supabase
         async function loadSwipes() {
-            // This would fetch from Supabase and populate the UI
-            // For now, sample data is shown
+            await Promise.all([loadHeadlines(), loadHooks(), loadThumbnails()]);
+        }
+
+        async function supabaseFetch(table) {
+            const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}?order=created_at.desc`, {
+                headers: {
+                    'apikey': CONFIG.SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                }
+            });
+            return res.json();
+        }
+
+        async function loadHeadlines() {
+            try {
+                const headlines = await supabaseFetch('headline_swipes');
+                const list = document.getElementById('headline-list');
+                document.getElementById('headline-total').textContent = headlines.length;
+
+                if (headlines.length === 0) {
+                    list.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No headlines yet. Add one above!</p>';
+                    return;
+                }
+
+                list.innerHTML = headlines.map(h => `
+                    <div class="headline-card">
+                        <p class="headline-raw">${h.raw_text || 'No text'}</p>
+                        <div class="headline-pattern">${h.pattern || 'No pattern detected'}</div>
+                        <div class="headline-meta">
+                            <div class="swipe-card-tags">
+                                ${(h.triggers || []).map(t => `<span class="tag trigger">${t.toUpperCase()}</span>`).join('')}
+                                <span class="tag niche">${(h.niche || 'general').toUpperCase()}</span>
+                            </div>
+                            <div class="swipe-card-actions">
+                                <button class="card-action-btn" onclick="navigator.clipboard.writeText('${(h.pattern || '').replace(/'/g, "\\'")}')">Copy Pattern</button>
+                                <button class="card-action-btn delete" onclick="deleteSwipe('headline_swipes', '${h.id}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load headlines:', e);
+            }
+        }
+
+        async function loadHooks() {
+            try {
+                const hooks = await supabaseFetch('hook_swipes');
+                const list = document.getElementById('hook-list');
+                document.getElementById('hook-total').textContent = hooks.length;
+
+                if (hooks.length === 0) {
+                    list.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No hooks yet. Add one above!</p>';
+                    return;
+                }
+
+                list.innerHTML = hooks.map(h => `
+                    <div class="hook-card">
+                        <div class="swipe-card-tags" style="margin-bottom: 12px;">
+                            <span class="tag hook-type">${(h.hook_type || 'hook').toUpperCase()}</span>
+                            ${(h.triggers || []).map(t => `<span class="tag trigger">${t.toUpperCase()}</span>`).join('')}
+                            <span class="tag niche">${(h.niche || 'general').toUpperCase()}</span>
+                        </div>
+                        <p class="hook-raw">${h.raw_text || 'No text'}</p>
+                        <div class="hook-meta-row">
+                            <span class="hook-meta-item"><strong>Opening:</strong> ${h.opening_mechanism || 'N/A'}</span>
+                            <span class="hook-meta-item"><strong>Pattern:</strong> ${h.pattern || 'N/A'}</span>
+                        </div>
+                        <div class="hook-meta">
+                            <span class="swipe-card-date">${new Date(h.created_at).toLocaleDateString()}</span>
+                            <div class="swipe-card-actions">
+                                <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${(h.raw_text || '').replace(/`/g, '\\`').replace(/\n/g, ' ')}\`)">Copy</button>
+                                <button class="card-action-btn delete" onclick="deleteSwipe('hook_swipes', '${h.id}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load hooks:', e);
+            }
+        }
+
+        async function loadThumbnails() {
+            try {
+                const thumbs = await supabaseFetch('thumbnail_swipes');
+                const grid = document.getElementById('thumbnail-grid');
+                document.getElementById('thumb-total').textContent = thumbs.length;
+
+                if (thumbs.length === 0) {
+                    grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No thumbnails yet. Upload one above!</p>';
+                    return;
+                }
+
+                grid.innerHTML = thumbs.map(t => `
+                    <div class="swipe-card">
+                        <div class="swipe-card-image">
+                            ${t.image_url ? `<img src="${t.image_url}" alt="Thumbnail" style="width:100%;height:100%;object-fit:cover;">` : '<span>No image</span>'}
+                        </div>
+                        <div class="swipe-card-body">
+                            <div class="swipe-card-tags">
+                                ${(t.triggers || []).map(tr => `<span class="tag trigger">${tr.toUpperCase()}</span>`).join('')}
+                                <span class="tag niche">${(t.niche || 'general').toUpperCase()}</span>
+                            </div>
+                            <p class="swipe-card-description">${t.composition || 'No composition data'}</p>
+                            <div class="swipe-card-meta">
+                                <span class="swipe-card-date">${new Date(t.created_at).toLocaleDateString()}</span>
+                                <div class="swipe-card-actions">
+                                    <button class="card-action-btn delete" onclick="deleteSwipe('thumbnail_swipes', '${t.id}')">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load thumbnails:', e);
+            }
+        }
+
+        async function deleteSwipe(table, id) {
+            if (!confirm('Delete this swipe?')) return;
+            try {
+                await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                    }
+                });
+                loadSwipes();
+            } catch (e) {
+                console.error('Delete failed:', e);
+            }
         }
 
         // Initial load
