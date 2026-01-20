@@ -857,27 +857,64 @@
                     return;
                 }
 
-                list.innerHTML = hooks.map(h => `
+                list.innerHTML = hooks.map(h => {
+                    const meta = h.metadata || {};
+                    const formula = meta.formula || {};
+                    return `
                     <div class="hook-card">
                         <div class="swipe-card-tags" style="margin-bottom: 12px;">
                             <span class="tag hook-type">${(h.hook_type || 'hook').toUpperCase()}</span>
+                            ${meta.tone ? `<span class="tag" style="background: var(--blue-dim); color: var(--blue);">${meta.tone.toUpperCase()}</span>` : ''}
+                            ${meta.pov ? `<span class="tag" style="background: var(--warning-dim); color: var(--warning);">${meta.pov.replace('_', ' ').toUpperCase()}</span>` : ''}
                             ${(h.triggers || []).map(t => `<span class="tag trigger">${t.toUpperCase()}</span>`).join('')}
                             <span class="tag niche">${(h.niche || 'general').toUpperCase()}</span>
                         </div>
+
                         <p class="hook-raw">${h.raw_text || 'No text'}</p>
-                        <div class="hook-meta-row">
-                            <span class="hook-meta-item"><strong>Opening:</strong> ${h.opening_mechanism || 'N/A'}</span>
-                            <span class="hook-meta-item"><strong>Pattern:</strong> ${h.pattern || 'N/A'}</span>
+
+                        <div class="headline-pattern" style="margin: 12px 0;">
+                            <strong>Pattern:</strong> ${h.pattern || 'N/A'}
                         </div>
+
+                        ${meta.opening_line ? `
+                        <div style="background: var(--purple-dim); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px;">
+                            <strong style="color: var(--purple);">Opening Line:</strong><br>
+                            <span style="color: var(--text-primary);">${meta.opening_line}</span>
+                        </div>
+                        ` : ''}
+
+                        ${formula.step1 ? `
+                        <div style="background: var(--bg-tertiary); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; font-size: 13px;">
+                            <strong style="color: var(--text-secondary);">Formula:</strong><br>
+                            <span style="color: var(--accent);">1.</span> ${formula.step1}<br>
+                            ${formula.step2 ? `<span style="color: var(--accent);">2.</span> ${formula.step2}<br>` : ''}
+                            ${formula.step3 ? `<span style="color: var(--accent);">3.</span> ${formula.step3}` : ''}
+                        </div>
+                        ` : ''}
+
+                        ${meta.why_it_works ? `
+                        <div style="font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 12px;">
+                            <strong>Why it works:</strong> ${meta.why_it_works}
+                        </div>
+                        ` : ''}
+
+                        ${meta.power_words && meta.power_words.length > 0 ? `
+                        <div style="margin-bottom: 12px;">
+                            <strong style="font-size: 11px; color: var(--text-muted);">POWER WORDS:</strong>
+                            <span style="font-size: 13px; color: var(--text-secondary);"> ${meta.power_words.join(', ')}</span>
+                        </div>
+                        ` : ''}
+
                         <div class="hook-meta">
                             <span class="swipe-card-date">${new Date(h.created_at).toLocaleDateString()}</span>
                             <div class="swipe-card-actions">
-                                <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${(h.raw_text || '').replace(/`/g, '\\`').replace(/\n/g, ' ')}\`)">Copy</button>
+                                <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${(h.pattern || '').replace(/`/g, '').replace(/\n/g, ' ')}\`)">Copy Pattern</button>
+                                <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${(h.raw_text || '').replace(/`/g, '').replace(/\n/g, ' ')}\`)">Copy Hook</button>
                                 <button class="card-action-btn delete" onclick="deleteSwipe('hook_swipes', '${h.id}')">Delete</button>
                             </div>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             } catch (e) {
                 console.error('Failed to load hooks:', e);
             }
