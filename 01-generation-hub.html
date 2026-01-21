@@ -411,7 +411,13 @@
             btn.classList.add('loading');
             btn.innerHTML = '<span class="loading-text">GENERATING...</span>';
 
-            const webhookUrl = 'https://n8n.dtthomas.cloud/webhook/generate';
+            // Toggle between test and production
+            const USE_TEST_WEBHOOK = true; // Set to false for production
+            const webhookUrl = USE_TEST_WEBHOOK
+                ? 'https://n8n.dtthomas.cloud/webhook-test/generate'
+                : 'https://n8n.dtthomas.cloud/webhook/generate';
+
+            console.log('Using webhook:', webhookUrl);
 
             // Store input for review page
             sessionStorage.setItem('generationInput', JSON.stringify({ concept, niche, generate }));
