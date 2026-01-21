@@ -383,11 +383,19 @@
         });
 
         // Generate button - will POST to n8n webhook
-        document.getElementById('generateBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('generateBtn');
+        const generateBtn = document.getElementById('generateBtn');
+        console.log('Generate button found:', generateBtn);
+
+        generateBtn.addEventListener('click', async () => {
+            console.log('Generate button clicked!');
+            const btn = generateBtn;
             const concept = document.getElementById('concept').value;
             const niche = document.getElementById('niche').value;
             const generate = Array.from(document.querySelectorAll('.checkbox-input:checked')).map(el => el.value);
+
+            console.log('Concept:', concept);
+            console.log('Niche:', niche);
+            console.log('Generate:', generate);
 
             if (!concept.trim()) {
                 alert('Please describe your video concept');
