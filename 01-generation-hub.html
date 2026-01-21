@@ -298,6 +298,70 @@
         .loading-text {
             animation: pulse 1.5s infinite;
         }
+
+        /* Error Modal */
+        .error-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .error-modal.active {
+            display: flex;
+        }
+
+        .error-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--danger);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 480px;
+            text-align: center;
+        }
+
+        .error-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--danger);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+        }
+
+        .error-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--danger);
+        }
+
+        .error-message {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .error-close {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .error-close:hover {
+            border-color: var(--border-hover);
+        }
     </style>
 </head>
 <body>
@@ -370,7 +434,28 @@
         </div>
     </main>
 
+    <!-- Error Modal -->
+    <div class="error-modal" id="errorModal">
+        <div class="error-content">
+            <div class="error-icon">!</div>
+            <h3 class="error-title" id="errorTitle">Error</h3>
+            <p class="error-message" id="errorMessage">Something went wrong.</p>
+            <button class="error-close" onclick="closeErrorModal()">Close</button>
+        </div>
+    </div>
+
     <script>
+        // Error modal functions
+        function showErrorModal(title, message) {
+            document.getElementById('errorTitle').textContent = title;
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorModal').classList.add('active');
+        }
+
+        function closeErrorModal() {
+            document.getElementById('errorModal').classList.remove('active');
+        }
+
         // Checkbox toggle functionality
         document.querySelectorAll('.checkbox-item').forEach(item => {
             item.style.cursor = 'pointer';
@@ -411,11 +496,8 @@
             btn.classList.add('loading');
             btn.innerHTML = '<span class="loading-text">GENERATING...</span>';
 
-            // Toggle between test and production
-            const USE_TEST_WEBHOOK = true; // Set to false for production
-            const webhookUrl = USE_TEST_WEBHOOK
-                ? 'https://n8n.dtthomas.cloud/webhook-test/generate'
-                : 'https://n8n.dtthomas.cloud/webhook/generate';
+            // Production webhook URL
+            const webhookUrl = 'https://n8n.dtthomas.cloud/webhook/generate';
 
             console.log('Using webhook:', webhookUrl);
 
@@ -440,6 +522,11 @@
                 });
 
                 console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error('Server returned ' + response.status);
+                }
+
                 const data = await response.json();
                 console.log('Response data:', data);
 
@@ -449,7 +536,7 @@
 
             } catch (error) {
                 console.error('Generation failed:', error);
-                alert('Generation failed: ' + error.message);
+                showErrorModal('Generation Failed', error.message + '. Make sure the n8n workflow is activated.');
                 btn.classList.remove('loading');
                 btn.textContent = 'GENERATE →';
                 return;
