@@ -770,14 +770,18 @@
         // Load data from sessionStorage (set by generation page)
         function loadGenerationData() {
             const stored = sessionStorage.getItem('generationResult');
+            console.log('Stored generation result:', stored);
+
             if (stored) {
                 try {
                     const data = JSON.parse(stored);
-                    state.generation_id = data.generation_id;
-                    state.thumbnails = data.thumbnails || [];
-                    state.titles = data.titles || [];
-                    state.hooks = data.hooks || [];
-                    
+                    console.log('Parsed data:', data);
+
+                    state.generation_id = data.generation_id || null;
+                    state.thumbnails = Array.isArray(data.thumbnails) ? data.thumbnails : [];
+                    state.titles = Array.isArray(data.titles) ? data.titles : [];
+                    state.hooks = Array.isArray(data.hooks) ? data.hooks : [];
+
                     // Get concept from session or use placeholder
                     const conceptData = sessionStorage.getItem('generationInput');
                     if (conceptData) {
@@ -785,11 +789,16 @@
                         state.concept = input.concept;
                         state.niche = input.niche;
                     }
-                    
+
+                    console.log('State after load:', state);
                     renderAll();
                 } catch (e) {
                     console.error('Failed to parse generation data:', e);
+                    alert('Failed to load generation data. Check console.');
                 }
+            } else {
+                console.log('No generation data found in sessionStorage');
+                document.getElementById('project-concept').textContent = 'No data - go back and generate';
             }
         }
 
