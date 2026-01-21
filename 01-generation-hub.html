@@ -341,27 +341,27 @@
             <div class="form-group">
                 <label class="form-label">Generate</label>
                 <div class="checkbox-group">
-                    <label class="checkbox-item selected">
+                    <div class="checkbox-item selected" data-value="thumbnails">
                         <input type="checkbox" class="checkbox-input" name="generate" value="thumbnails" checked>
                         <div class="checkbox-box">
                             <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
                         </div>
                         <span class="checkbox-label">Thumbnails</span>
-                    </label>
-                    <label class="checkbox-item selected">
+                    </div>
+                    <div class="checkbox-item selected" data-value="titles">
                         <input type="checkbox" class="checkbox-input" name="generate" value="titles" checked>
                         <div class="checkbox-box">
                             <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
                         </div>
                         <span class="checkbox-label">Titles</span>
-                    </label>
-                    <label class="checkbox-item selected">
+                    </div>
+                    <div class="checkbox-item selected" data-value="hooks">
                         <input type="checkbox" class="checkbox-input" name="generate" value="hooks" checked>
                         <div class="checkbox-box">
                             <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg>
                         </div>
                         <span class="checkbox-label">Hooks</span>
-                    </label>
+                    </div>
                 </div>
             </div>
 
@@ -373,11 +373,12 @@
     <script>
         // Checkbox toggle functionality
         document.querySelectorAll('.checkbox-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                item.classList.toggle('selected');
-                const input = item.querySelector('.checkbox-input');
-                input.checked = item.classList.contains('selected');
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                const input = this.querySelector('.checkbox-input');
+                input.checked = this.classList.contains('selected');
+                console.log('Toggled:', this.dataset.value, input.checked);
             });
         });
 
