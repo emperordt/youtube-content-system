@@ -373,10 +373,11 @@
     <script>
         // Checkbox toggle functionality
         document.querySelectorAll('.checkbox-item').forEach(item => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
                 item.classList.toggle('selected');
                 const input = item.querySelector('.checkbox-input');
-                input.checked = !input.checked;
+                input.checked = item.classList.contains('selected');
             });
         });
 
