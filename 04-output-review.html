@@ -774,8 +774,14 @@
 
             if (stored) {
                 try {
-                    const data = JSON.parse(stored);
+                    let data = JSON.parse(stored);
                     console.log('Parsed data:', data);
+
+                    // Handle array response from n8n (unwrap if needed)
+                    if (Array.isArray(data) && data.length > 0) {
+                        data = data[0];
+                    }
+                    console.log('Unwrapped data:', data);
 
                     state.generation_id = data.generation_id || null;
                     state.thumbnails = Array.isArray(data.thumbnails) ? data.thumbnails : [];
