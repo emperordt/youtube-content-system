@@ -401,14 +401,19 @@
             btn.classList.add('loading');
             btn.innerHTML = '<span class="loading-text">GENERATING...</span>';
 
-            // TODO: Replace with actual n8n webhook URL
-            const webhookUrl = 'YOUR_N8N_WEBHOOK_URL';
+            const webhookUrl = 'https://n8n.dtthomas.cloud/webhook/generate';
+
+            // Store input for review page
+            sessionStorage.setItem('generationInput', JSON.stringify({ concept, niche, generate }));
 
             try {
+                console.log('Sending to:', webhookUrl);
                 const response = await fetch(webhookUrl, {
                     method: 'POST',
+                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         concept,
@@ -418,20 +423,21 @@
                     })
                 });
 
+                console.log('Response status:', response.status);
                 const data = await response.json();
-                
+                console.log('Response data:', data);
+
                 // Store response in sessionStorage and redirect to review page
                 sessionStorage.setItem('generationResult', JSON.stringify(data));
                 window.location.href = '04-output-review.html';
 
             } catch (error) {
                 console.error('Generation failed:', error);
-                // For now, just redirect to review page for demo
-                window.location.href = '04-output-review.html';
+                alert('Generation failed: ' + error.message);
+                btn.classList.remove('loading');
+                btn.textContent = 'GENERATE →';
+                return;
             }
-
-            btn.classList.remove('loading');
-            btn.textContent = 'GENERATE →';
         });
     </script>
 </body>
