@@ -525,7 +525,7 @@
             const filterSearch = document.getElementById('filterSearch').value.toLowerCase();
 
             try {
-                let url = `${CONFIG.SUPABASE_URL}/rest/v1/hooks?order=created_at.desc`;
+                let url = `${CONFIG.SUPABASE_URL}/rest/v1/tw_hooks?order=created_at.desc`;
                 if (filterType) {
                     url += `&hook_type=eq.${filterType}`;
                 }
@@ -627,7 +627,7 @@
             }
 
             try {
-                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/hooks`, {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_hooks`, {
                     method: 'POST',
                     headers: {
                         'apikey': CONFIG.SUPABASE_ANON_KEY,
@@ -677,7 +677,7 @@
             if (!confirm('Delete this hook?')) return;
 
             try {
-                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/hooks?id=eq.${id}`, {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_hooks?id=eq.${id}`, {
                     method: 'DELETE',
                     headers: {
                         'apikey': CONFIG.SUPABASE_ANON_KEY,
@@ -699,7 +699,7 @@
             if (!hook) return;
 
             try {
-                await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/hooks?id=eq.${id}`, {
+                await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_hooks?id=eq.${id}`, {
                     method: 'PATCH',
                     headers: {
                         'apikey': CONFIG.SUPABASE_ANON_KEY,

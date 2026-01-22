@@ -563,7 +563,7 @@
         // Load saved profiles
         async function loadSavedProfiles() {
             try {
-                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/scraped_profiles?order=scraped_at.desc&limit=10`, {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_scraped_profiles?order=scraped_at.desc&limit=10`, {
                     headers: {
                         'apikey': CONFIG.SUPABASE_ANON_KEY,
                         'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
@@ -724,7 +724,7 @@
             const tweet = window.scrapedTweets[idx];
 
             try {
-                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/swipefile`, {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_swipefile`, {
                     method: 'POST',
                     headers: {
                         'apikey': CONFIG.SUPABASE_ANON_KEY,

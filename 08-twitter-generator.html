@@ -577,17 +577,17 @@
                 };
 
                 // Get hooks count
-                const hooksRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/hooks?select=id`, { headers });
+                const hooksRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_hooks?select=id`, { headers });
                 const hooks = await hooksRes.json();
                 document.getElementById('hooksCount').textContent = Array.isArray(hooks) ? hooks.length : 0;
 
                 // Get swipes count
-                const swipesRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/swipefile?select=id`, { headers });
+                const swipesRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_swipefile?select=id`, { headers });
                 const swipes = await swipesRes.json();
                 document.getElementById('swipesCount').textContent = Array.isArray(swipes) ? swipes.length : 0;
 
                 // Get generated count
-                const genRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/generated_content?select=id`, { headers });
+                const genRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_generated_content?select=id`, { headers });
                 const generated = await genRes.json();
                 document.getElementById('generatedCount').textContent = Array.isArray(generated) ? generated.length : 0;
             } catch (e) {
@@ -690,7 +690,7 @@
             const text = typeof tweet === 'string' ? tweet : tweet.content || tweet.text;
 
             try {
-                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/generated_content`, {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_generated_content`, {
                     method: 'POST',
                     headers: {
                         'apikey': CONFIG.SUPABASE_ANON_KEY,
