@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --danger-dim: #ff444420;
+            --warning: #ffaa00;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --blue: #1d9bf0;
+            --blue-dim: #1d9bf020;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .nav-links { display: flex; gap: 8px; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+        .main {
+            padding-top: 60px;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sidebar-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-textarea {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-primary);
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-textarea::placeholder { color: var(--text-muted); }
+
+        .form-select {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 14px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--border-hover);
+        }
+
+        .btn-twitter {
+            background: var(--blue);
+            color: white;
+        }
+
+        .btn-twitter:hover {
+            background: #1a8cd8;
+        }
+
+        .btn.loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .output-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .output-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .output-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .output-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .tweet-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tweet-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .tweet-card.selected {
+            border-color: var(--blue);
+            background: var(--blue-dim);
+        }
+
+        .tweet-content {
+            font-size: 15px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            margin-bottom: 16px;
+        }
+
+        .tweet-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tweet-hook-type {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            background: var(--purple-dim);
+            color: var(--purple);
+            border-radius: 4px;
+        }
+
+        .tweet-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tweet-action-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tweet-action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 64px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .hook-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .hook-chip:hover {
+            border-color: var(--border-hover);
+        }
+
+        .hook-chip.selected {
+            border-color: var(--purple);
+            background: var(--purple-dim);
+        }
+
+        .hook-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error Modal */
+        .error-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .error-modal.active { display: flex; }
+
+        .error-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--danger);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 480px;
+            text-align: center;
+        }
+
+        .error-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--danger);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+        }
+
+        .error-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--danger);
+        }
+
+        .error-message {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .error-close {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">CONTENT_ENGINE//v1</div>
+        <div class="nav-links">
+            <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+            <a href="02-swipe-file.html" class="nav-link">YT Swipes</a>
+            <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
+            <a href="08-twitter-generator.html" class="nav-link active">Twitter Gen</a>
+            <a href="09-twitter-scraper.html" class="nav-link">Twitter Scrape</a>
+            <a href="10-hook-bank.html" class="nav-link">Hook Bank</a>
+        </div>
+    </nav>
+
+    <main class="main">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <span class="sidebar-title">Tweet Idea</span>
+                <div class="form-group">
+                    <textarea class="form-textarea" id="tweetIdea" rows="4" placeholder="What do you want to tweet about? Drop a rough idea, angle, or topic..."></textarea>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <span class="sidebar-title">Hook Type</span>
+                <div class="form-group">
+                    <select class="form-select" id="hookType">
+                        <option value="">Any hook type</option>
+                        <option value="contrarian">Contrarian Take</option>
+                        <option value="story">Story Hook</option>
+                        <option value="question">Question Hook</option>
+                        <option value="stat">Stat/Number Hook</option>
+                        <option value="curiosity">Curiosity Gap</option>
+                        <option value="bold-claim">Bold Claim</option>
+                        <option value="how-to">How-To</option>
+                        <option value="mistake">Mistake/Warning</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <span class="sidebar-title">Content Type</span>
+                <div class="form-group">
+                    <select class="form-select" id="contentType">
+                        <option value="tweet">Single Tweet</option>
+                        <option value="thread">Thread (3-5 tweets)</option>
+                        <option value="thread-long">Long Thread (7-10 tweets)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <span class="sidebar-title">Tone</span>
+                <div class="form-group">
+                    <select class="form-select" id="tone">
+                        <option value="default">Match my voice</option>
+                        <option value="provocative">Provocative</option>
+                        <option value="educational">Educational</option>
+                        <option value="casual">Casual/Conversational</option>
+                        <option value="authoritative">Authoritative</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="generateBtn" style="margin-top: auto;">
+                GENERATE TWEETS
+            </button>
+        </aside>
+
+        <div class="content">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="hooksCount">0</div>
+                    <div class="stat-label">Hooks Saved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="swipesCount">0</div>
+                    <div class="stat-label">Swipes Collected</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="generatedCount">0</div>
+                    <div class="stat-label">Tweets Generated</div>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="output-header">
+                    <h2 class="output-title">Generated Tweets</h2>
+                </div>
+
+                <div class="output-grid" id="outputGrid">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🐦</div>
+                        <p>Enter an idea and generate tweets</p>
+                        <p style="font-size: 13px; margin-top: 8px;">Your tweets will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Error Modal -->
+    <div class="error-modal" id="errorModal">
+        <div class="error-content">
+            <div class="error-icon">!</div>
+            <h3 class="error-title" id="errorTitle">Error</h3>
+            <p class="error-message" id="errorMessage">Something went wrong.</p>
+            <button class="error-close" onclick="closeErrorModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxY2xzcHluYmRnaGZzb3NxeWdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MDY1MTIsImV4cCI6MjA1Mjk4MjUxMn0.sHrRR9INceqwfGbG9RtIE7qGzRiRvHrlEHF27_jkdGk',
+            N8N_GENERATE_WEBHOOK: 'https://n8n.dtthomas.cloud/webhook/generate-tweet'
+        };
+
+        // State
+        let generatedTweets = [];
+
+        // Error modal
+        function showErrorModal(title, message) {
+            document.getElementById('errorTitle').textContent = title;
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorModal').classList.add('active');
+        }
+
+        function closeErrorModal() {
+            document.getElementById('errorModal').classList.remove('active');
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const headers = {
+                    'apikey': CONFIG.SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                };
+
+                // Get hooks count
+                const hooksRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/hooks?select=id`, { headers });
+                const hooks = await hooksRes.json();
+                document.getElementById('hooksCount').textContent = Array.isArray(hooks) ? hooks.length : 0;
+
+                // Get swipes count
+                const swipesRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/swipefile?select=id`, { headers });
+                const swipes = await swipesRes.json();
+                document.getElementById('swipesCount').textContent = Array.isArray(swipes) ? swipes.length : 0;
+
+                // Get generated count
+                const genRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/generated_content?select=id`, { headers });
+                const generated = await genRes.json();
+                document.getElementById('generatedCount').textContent = Array.isArray(generated) ? generated.length : 0;
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+
+        // Generate tweets
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('generateBtn');
+            const idea = document.getElementById('tweetIdea').value.trim();
+            const hookType = document.getElementById('hookType').value;
+            const contentType = document.getElementById('contentType').value;
+            const tone = document.getElementById('tone').value;
+
+            if (!idea) {
+                showErrorModal('Missing Input', 'Please enter a tweet idea');
+                return;
+            }
+
+            btn.classList.add('loading');
+            btn.innerHTML = '<span class="loading-spinner"></span>GENERATING...';
+
+            try {
+                const response = await fetch(CONFIG.N8N_GENERATE_WEBHOOK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        idea,
+                        hookType,
+                        contentType,
+                        tone,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                if (!response.ok) throw new Error('Server returned ' + response.status);
+
+                let data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    data = data[0];
+                }
+
+                generatedTweets = data.tweets || data.generated || [];
+                renderTweets();
+                loadStats();
+
+            } catch (error) {
+                console.error('Generation failed:', error);
+                showErrorModal('Generation Failed', error.message);
+            }
+
+            btn.classList.remove('loading');
+            btn.textContent = 'GENERATE TWEETS';
+        });
+
+        // Render tweets
+        function renderTweets() {
+            const grid = document.getElementById('outputGrid');
+
+            if (generatedTweets.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🐦</div>
+                        <p>Enter an idea and generate tweets</p>
+                        <p style="font-size: 13px; margin-top: 8px;">Your tweets will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = generatedTweets.map((tweet, idx) => `
+                <div class="tweet-card" data-idx="${idx}">
+                    <div class="tweet-content">${typeof tweet === 'string' ? tweet : tweet.content || tweet.text}</div>
+                    <div class="tweet-meta">
+                        <span class="tweet-hook-type">${tweet.hook_type || 'Generated'}</span>
+                        <div class="tweet-actions">
+                            <button class="tweet-action-btn" onclick="copyTweet(${idx})">Copy</button>
+                            <button class="tweet-action-btn" onclick="saveTweet(${idx})">Save</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Copy tweet
+        function copyTweet(idx) {
+            const tweet = generatedTweets[idx];
+            const text = typeof tweet === 'string' ? tweet : tweet.content || tweet.text;
+            navigator.clipboard.writeText(text);
+
+            const btns = document.querySelectorAll('.tweet-action-btn');
+            btns[idx * 2].textContent = 'Copied!';
+            setTimeout(() => btns[idx * 2].textContent = 'Copy', 1500);
+        }
+
+        // Save tweet
+        async function saveTweet(idx) {
+            const tweet = generatedTweets[idx];
+            const text = typeof tweet === 'string' ? tweet : tweet.content || tweet.text;
+
+            try {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/generated_content`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        input_idea: document.getElementById('tweetIdea').value,
+                        hook_type_used: tweet.hook_type || null,
+                        generated_content: text,
+                        status: 'saved'
+                    })
+                });
+
+                if (response.ok) {
+                    const btns = document.querySelectorAll('.tweet-action-btn');
+                    btns[idx * 2 + 1].textContent = 'Saved!';
+                    btns[idx * 2 + 1].style.color = 'var(--accent)';
+                    btns[idx * 2 + 1].style.borderColor = 'var(--accent)';
+                    loadStats();
+                }
+            } catch (e) {
+                console.error('Save failed:', e);
+            }
+        }
+
+        // Init
+        loadStats();
+    </script>
+</body>
+</html>

@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hook Bank</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --danger-dim: #ff444420;
+            --warning: #ffaa00;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --blue: #1d9bf0;
+            --blue-dim: #1d9bf020;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .nav-links { display: flex; gap: 8px; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+        .container {
+            padding: 92px 48px 48px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .page-title { font-size: 32px; font-weight: 600; }
+        .page-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+
+        .btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 14px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover { background: var(--accent-hover); }
+
+        .filters-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .filter-select {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 160px;
+        }
+
+        .filter-input {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            min-width: 250px;
+        }
+
+        .filter-input::placeholder { color: var(--text-muted); }
+
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .hooks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 16px;
+        }
+
+        .hook-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.15s ease;
+        }
+
+        .hook-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .hook-text {
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .hook-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .hook-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .hook-type-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            background: var(--purple-dim);
+            color: var(--purple);
+            border-radius: 4px;
+        }
+
+        .hook-source-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            background: var(--blue-dim);
+            color: var(--blue);
+            border-radius: 4px;
+        }
+
+        .hook-usage {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .hook-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .hook-action-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .hook-action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .hook-action-btn.delete:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* Add Hook Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-textarea {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-primary);
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-input {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-primary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-select {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 64px;
+            color: var(--text-muted);
+            text-align: center;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">CONTENT_ENGINE//v1</div>
+        <div class="nav-links">
+            <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+            <a href="02-swipe-file.html" class="nav-link">YT Swipes</a>
+            <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
+            <a href="08-twitter-generator.html" class="nav-link">Twitter Gen</a>
+            <a href="09-twitter-scraper.html" class="nav-link">Twitter Scrape</a>
+            <a href="10-hook-bank.html" class="nav-link active">Hook Bank</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Hook Bank</h1>
+                <p class="page-subtitle">Your curated collection of proven hooks and openers</p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddModal()">+ ADD HOOK</button>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalHooks">0</div>
+                <div class="stat-label">Total Hooks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="hookTypes">0</div>
+                <div class="stat-label">Hook Types</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="mostUsed">-</div>
+                <div class="stat-label">Most Used Type</div>
+            </div>
+        </div>
+
+        <div class="filters-bar">
+            <div class="filter-group">
+                <span class="filter-label">Hook Type</span>
+                <select class="filter-select" id="filterType" onchange="loadHooks()">
+                    <option value="">All Types</option>
+                    <option value="contrarian">Contrarian</option>
+                    <option value="story">Story</option>
+                    <option value="question">Question</option>
+                    <option value="stat">Stat/Number</option>
+                    <option value="curiosity">Curiosity Gap</option>
+                    <option value="bold-claim">Bold Claim</option>
+                    <option value="how-to">How-To</option>
+                    <option value="mistake">Mistake/Warning</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Search</span>
+                <input type="text" class="filter-input" id="filterSearch" placeholder="Search hooks..." oninput="loadHooks()">
+            </div>
+        </div>
+
+        <div class="hooks-grid" id="hooksGrid">
+            <!-- Hooks populated by JS -->
+        </div>
+    </div>
+
+    <!-- Add Hook Modal -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Add New Hook</h2>
+
+            <div class="form-group">
+                <label class="form-label">Hook Text</label>
+                <textarea class="form-textarea" id="hookText" rows="4" placeholder="Paste or type the hook..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Hook Type</label>
+                <select class="form-select" id="hookTypeInput">
+                    <option value="contrarian">Contrarian Take</option>
+                    <option value="story">Story Hook</option>
+                    <option value="question">Question Hook</option>
+                    <option value="stat">Stat/Number Hook</option>
+                    <option value="curiosity">Curiosity Gap</option>
+                    <option value="bold-claim">Bold Claim</option>
+                    <option value="how-to">How-To</option>
+                    <option value="mistake">Mistake/Warning</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Source (optional)</label>
+                <input type="text" class="form-input" id="hookSource" placeholder="@username or URL">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Notes (optional)</label>
+                <textarea class="form-textarea" id="hookNotes" rows="2" placeholder="Why does this hook work?"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveHook()">Save Hook</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxY2xzcHluYmRnaGZzb3NxeWdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MDY1MTIsImV4cCI6MjA1Mjk4MjUxMn0.sHrRR9INceqwfGbG9RtIE7qGzRiRvHrlEHF27_jkdGk'
+        };
+
+        let allHooks = [];
+
+        // Modal functions
+        function openAddModal() {
+            document.getElementById('addModal').classList.add('active');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('active');
+            document.getElementById('hookText').value = '';
+            document.getElementById('hookSource').value = '';
+            document.getElementById('hookNotes').value = '';
+        }
+
+        // Load hooks
+        async function loadHooks() {
+            const filterType = document.getElementById('filterType').value;
+            const filterSearch = document.getElementById('filterSearch').value.toLowerCase();
+
+            try {
+                let url = `${CONFIG.SUPABASE_URL}/rest/v1/hooks?order=created_at.desc`;
+                if (filterType) {
+                    url += `&hook_type=eq.${filterType}`;
+                }
+
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                    }
+                });
+
+                let hooks = await response.json();
+
+                if (!Array.isArray(hooks)) {
+                    hooks = [];
+                }
+
+                // Client-side search filter
+                if (filterSearch) {
+                    hooks = hooks.filter(h =>
+                        h.hook_text.toLowerCase().includes(filterSearch) ||
+                        (h.notes && h.notes.toLowerCase().includes(filterSearch))
+                    );
+                }
+
+                allHooks = hooks;
+                renderHooks(hooks);
+                updateStats(hooks);
+
+            } catch (e) {
+                console.error('Failed to load hooks:', e);
+            }
+        }
+
+        // Render hooks
+        function renderHooks(hooks) {
+            const grid = document.getElementById('hooksGrid');
+
+            if (hooks.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-state-icon">🪝</div>
+                        <p>No hooks saved yet</p>
+                        <p style="font-size: 13px; margin-top: 8px;">Start building your hook bank</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = hooks.map((hook, idx) => `
+                <div class="hook-card">
+                    <div class="hook-text">${hook.hook_text}</div>
+                    <div class="hook-meta">
+                        <div class="hook-tags">
+                            <span class="hook-type-tag">${hook.hook_type || 'Unclassified'}</span>
+                            ${hook.source_author ? `<span class="hook-source-tag">@${hook.source_author}</span>` : ''}
+                        </div>
+                        <span class="hook-usage">Used ${hook.times_used || 0}x</span>
+                    </div>
+                    ${hook.notes ? `<p style="font-size: 13px; color: var(--text-muted); margin-top: 12px; font-style: italic;">${hook.notes}</p>` : ''}
+                    <div class="hook-actions" style="margin-top: 16px;">
+                        <button class="hook-action-btn" onclick="copyHook('${hook.id}')">Copy</button>
+                        <button class="hook-action-btn" onclick="useHook('${hook.id}')">Use in Generator</button>
+                        <button class="hook-action-btn delete" onclick="deleteHook('${hook.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update stats
+        function updateStats(hooks) {
+            document.getElementById('totalHooks').textContent = hooks.length;
+
+            const types = [...new Set(hooks.map(h => h.hook_type).filter(Boolean))];
+            document.getElementById('hookTypes').textContent = types.length;
+
+            if (hooks.length > 0) {
+                const typeCounts = {};
+                hooks.forEach(h => {
+                    if (h.hook_type) {
+                        typeCounts[h.hook_type] = (typeCounts[h.hook_type] || 0) + 1;
+                    }
+                });
+                const mostUsedType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0];
+                document.getElementById('mostUsed').textContent = mostUsedType ? mostUsedType[0] : '-';
+            }
+        }
+
+        // Save hook
+        async function saveHook() {
+            const hookText = document.getElementById('hookText').value.trim();
+            const hookType = document.getElementById('hookTypeInput').value;
+            const source = document.getElementById('hookSource').value.trim();
+            const notes = document.getElementById('hookNotes').value.trim();
+
+            if (!hookText) {
+                alert('Please enter hook text');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/hooks`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        hook_text: hookText,
+                        hook_type: hookType,
+                        source_author: source.replace('@', '') || null,
+                        notes: notes || null
+                    })
+                });
+
+                if (response.ok) {
+                    closeAddModal();
+                    loadHooks();
+                }
+            } catch (e) {
+                console.error('Save failed:', e);
+                alert('Failed to save hook');
+            }
+        }
+
+        // Copy hook
+        function copyHook(id) {
+            const hook = allHooks.find(h => h.id === id);
+            if (hook) {
+                navigator.clipboard.writeText(hook.hook_text);
+                // Update usage count
+                incrementUsage(id);
+            }
+        }
+
+        // Use in generator
+        function useHook(id) {
+            const hook = allHooks.find(h => h.id === id);
+            if (hook) {
+                sessionStorage.setItem('selectedHook', JSON.stringify(hook));
+                window.location.href = '08-twitter-generator.html';
+            }
+        }
+
+        // Delete hook
+        async function deleteHook(id) {
+            if (!confirm('Delete this hook?')) return;
+
+            try {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/hooks?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadHooks();
+                }
+            } catch (e) {
+                console.error('Delete failed:', e);
+            }
+        }
+
+        // Increment usage
+        async function incrementUsage(id) {
+            const hook = allHooks.find(h => h.id === id);
+            if (!hook) return;
+
+            try {
+                await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/hooks?id=eq.${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        times_used: (hook.times_used || 0) + 1
+                    })
+                });
+            } catch (e) {
+                console.error('Failed to update usage:', e);
+            }
+        }
+
+        // Init
+        loadHooks();
+    </script>
+</body>
+</html>
