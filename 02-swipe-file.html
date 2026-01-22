@@ -832,7 +832,7 @@
 
         async function loadHeadlines() {
             try {
-                const headlines = await supabaseFetch('headline_swipes');
+                const headlines = await supabaseFetch('yt_headline_swipes');
                 const list = document.getElementById('headline-list');
                 document.getElementById('headline-total').textContent = headlines.length;
 
@@ -852,7 +852,7 @@
                             </div>
                             <div class="swipe-card-actions">
                                 <button class="card-action-btn" onclick="navigator.clipboard.writeText('${(h.pattern || '').replace(/'/g, "\\'")}')">Copy Pattern</button>
-                                <button class="card-action-btn delete" onclick="deleteSwipe('headline_swipes', '${h.id}')">Delete</button>
+                                <button class="card-action-btn delete" onclick="deleteSwipe('yt_headline_swipes', '${h.id}')">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -864,7 +864,7 @@
 
         async function loadHooks() {
             try {
-                const hooks = await supabaseFetch('hook_swipes');
+                const hooks = await supabaseFetch('yt_hook_swipes');
                 const list = document.getElementById('hook-list');
                 document.getElementById('hook-total').textContent = hooks.length;
 
@@ -926,7 +926,7 @@
                             <div class="swipe-card-actions">
                                 <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${(h.pattern || '').replace(/`/g, '').replace(/\n/g, ' ')}\`)">Copy Pattern</button>
                                 <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${(h.raw_text || '').replace(/`/g, '').replace(/\n/g, ' ')}\`)">Copy Hook</button>
-                                <button class="card-action-btn delete" onclick="deleteSwipe('hook_swipes', '${h.id}')">Delete</button>
+                                <button class="card-action-btn delete" onclick="deleteSwipe('yt_hook_swipes', '${h.id}')">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -938,7 +938,7 @@
 
         async function loadThumbnails() {
             try {
-                const thumbs = await supabaseFetch('thumbnail_swipes');
+                const thumbs = await supabaseFetch('yt_thumbnail_swipes');
                 const grid = document.getElementById('thumbnail-grid');
                 document.getElementById('thumb-total').textContent = thumbs.length;
 
@@ -961,7 +961,7 @@
                             <div class="swipe-card-meta">
                                 <span class="swipe-card-date">${new Date(t.created_at).toLocaleDateString()}</span>
                                 <div class="swipe-card-actions">
-                                    <button class="card-action-btn delete" onclick="deleteSwipe('thumbnail_swipes', '${t.id}')">Delete</button>
+                                    <button class="card-action-btn delete" onclick="deleteSwipe('yt_thumbnail_swipes', '${t.id}')">Delete</button>
                                 </div>
                             </div>
                         </div>
