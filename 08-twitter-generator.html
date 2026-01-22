@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twitter Generator</title>
+    <title>Twitter Generator | Content Engine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,13 +22,10 @@
             --accent: #00ff88;
             --accent-dim: #00ff8820;
             --accent-hover: #00ffaa;
+            --blue: #3b82f6;
+            --blue-dim: #3b82f620;
             --danger: #ff4444;
-            --danger-dim: #ff444420;
             --warning: #ffaa00;
-            --purple: #a855f7;
-            --purple-dim: #a855f720;
-            --blue: #1d9bf0;
-            --blue-dim: #1d9bf020;
         }
 
         body {
@@ -74,49 +71,36 @@
         .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
         .nav-link.active { color: var(--accent); background: var(--accent-dim); }
 
-        .main {
+        .container {
             padding-top: 60px;
+            display: flex;
             min-height: 100vh;
-            display: flex;
         }
 
-        .sidebar {
-            width: 320px;
-            background: var(--bg-secondary);
+        /* Left Panel - Input */
+        .input-panel {
+            width: 480px;
+            min-width: 480px;
             border-right: 1px solid var(--border);
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            height: calc(100vh - 60px);
-            overflow-y: auto;
-        }
-
-        .sidebar-section {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .sidebar-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .content {
-            flex: 1;
             padding: 32px;
             overflow-y: auto;
+            max-height: calc(100vh - 60px);
+        }
+
+        .panel-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .panel-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
         }
 
         .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            margin-bottom: 24px;
         }
 
         .form-label {
@@ -126,18 +110,22 @@
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
         }
 
         .form-textarea {
+            width: 100%;
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 14px;
-            background: var(--bg-tertiary);
+            font-size: 15px;
+            background: var(--bg-secondary);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 12px;
+            padding: 16px;
             color: var(--text-primary);
             resize: vertical;
-            min-height: 100px;
+            min-height: 140px;
+            transition: border-color 0.15s ease;
         }
 
         .form-textarea:focus {
@@ -145,17 +133,87 @@
             border-color: var(--accent);
         }
 
-        .form-textarea::placeholder { color: var(--text-muted); }
+        .form-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* File Drop Zone */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .drop-zone-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        .drop-zone-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .drop-zone-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .uploaded-file {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-tertiary);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .uploaded-file-name {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .uploaded-file-remove {
+            font-size: 12px;
+            color: var(--danger);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Dropdowns Row */
+        .dropdown-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
 
         .form-select {
+            width: 100%;
             font-family: 'Space Grotesk', sans-serif;
             font-size: 14px;
-            background: var(--bg-tertiary);
+            background: var(--bg-secondary);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 12px;
+            padding: 12px 16px;
             color: var(--text-primary);
             cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23606065' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
         }
 
         .form-select:focus {
@@ -163,79 +221,109 @@
             border-color: var(--accent);
         }
 
-        .btn {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            font-weight: 600;
-            padding: 14px 24px;
-            border-radius: 8px;
+        /* Checkbox */
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .checkbox-input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent);
             cursor: pointer;
-            transition: all 0.15s ease;
-            border: none;
         }
 
-        .btn-primary {
-            background: var(--accent);
-            color: var(--bg-primary);
+        .checkbox-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
         }
 
-        .btn-primary:hover {
-            background: var(--accent-hover);
-        }
-
-        .btn-secondary {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--border-hover);
-        }
-
-        .btn-twitter {
+        /* Generate Button */
+        .generate-btn {
+            width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
             background: var(--blue);
             color: white;
-        }
-
-        .btn-twitter:hover {
-            background: #1a8cd8;
-        }
-
-        .btn.loading {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .output-section {
+            border: none;
+            border-radius: 8px;
+            padding: 18px 32px;
+            cursor: pointer;
+            transition: all 0.15s ease;
             display: flex;
-            flex-direction: column;
-            gap: 24px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .generate-btn:hover {
+            background: #4b8ff7;
+            transform: translateY(-1px);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Right Panel - Output */
+        .output-panel {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-height: calc(100vh - 60px);
         }
 
         .output-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 24px;
         }
 
         .output-title {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600;
         }
 
-        .output-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+        .output-hint {
+            font-size: 13px;
+            color: var(--text-muted);
         }
 
+        .output-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .output-empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .output-empty-text {
+            font-size: 15px;
+        }
+
+        /* Tweet Cards */
         .tweet-card {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 20px;
-            cursor: pointer;
+            margin-bottom: 16px;
             transition: all 0.15s ease;
         }
 
@@ -244,15 +332,15 @@
         }
 
         .tweet-card.selected {
-            border-color: var(--blue);
-            background: var(--blue-dim);
+            border-color: var(--accent);
+            background: var(--accent-dim);
         }
 
-        .tweet-content {
+        .tweet-text {
             font-size: 15px;
-            line-height: 1.5;
-            white-space: pre-wrap;
+            line-height: 1.6;
             margin-bottom: 16px;
+            white-space: pre-wrap;
         }
 
         .tweet-meta {
@@ -261,13 +349,23 @@
             justify-content: space-between;
         }
 
-        .tweet-hook-type {
+        .tweet-tags {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tweet-tag {
             font-family: 'JetBrains Mono', monospace;
             font-size: 10px;
             padding: 4px 8px;
-            background: var(--purple-dim);
-            color: var(--purple);
             border-radius: 4px;
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+        }
+
+        .tweet-tag.hook {
+            background: var(--accent-dim);
+            color: var(--accent);
         }
 
         .tweet-actions {
@@ -277,162 +375,54 @@
 
         .tweet-action-btn {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            padding: 6px 12px;
-            background: transparent;
+            font-size: 12px;
+            padding: 8px 16px;
+            border-radius: 6px;
             border: 1px solid var(--border);
-            border-radius: 4px;
+            background: var(--bg-tertiary);
             color: var(--text-secondary);
             cursor: pointer;
             transition: all 0.15s ease;
         }
 
         .tweet-action-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 64px;
-            color: var(--text-muted);
-            text-align: center;
-        }
-
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .hook-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .hook-chip:hover {
             border-color: var(--border-hover);
+            color: var(--text-primary);
         }
 
-        .hook-chip.selected {
-            border-color: var(--purple);
-            background: var(--purple-dim);
+        .tweet-action-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
         }
 
-        .hook-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+        .tweet-action-btn.primary:hover {
+            background: var(--accent-hover);
         }
 
-        .stats-row {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            flex: 1;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        .stat-label {
+        /* Character count */
+        .char-count {
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
             color: var(--text-muted);
-            text-transform: uppercase;
         }
 
-        .loading-spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 8px;
+        .char-count.warning {
+            color: var(--warning);
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Error Modal */
-        .error-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-        }
-
-        .error-modal.active { display: flex; }
-
-        .error-content {
-            background: var(--bg-secondary);
-            border: 1px solid var(--danger);
-            border-radius: 12px;
-            padding: 32px;
-            max-width: 480px;
-            text-align: center;
-        }
-
-        .error-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--danger);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-            font-size: 24px;
-        }
-
-        .error-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
+        .char-count.danger {
             color: var(--danger);
         }
 
-        .error-message {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
+        /* Loading */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
-        .error-close {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 12px 24px;
-            border-radius: 6px;
-            cursor: pointer;
+        .loading {
+            animation: pulse 1.5s infinite;
         }
     </style>
 </head>
@@ -442,284 +432,306 @@
         <div class="nav-links">
             <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
             <a href="02-swipe-file.html" class="nav-link">YT Swipes</a>
+            <a href="08-twitter-generator.html" class="nav-link active">TW Generate</a>
+            <a href="10-hook-bank.html" class="nav-link">TW Hooks</a>
             <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
-            <a href="08-twitter-generator.html" class="nav-link active">Twitter Gen</a>
-            <a href="09-twitter-scraper.html" class="nav-link">Twitter Scrape</a>
-            <a href="10-hook-bank.html" class="nav-link">Hook Bank</a>
+            <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+            <a href="05-history.html" class="nav-link">History</a>
         </div>
     </nav>
 
-    <main class="main">
-        <aside class="sidebar">
-            <div class="sidebar-section">
-                <span class="sidebar-title">Tweet Idea</span>
-                <div class="form-group">
-                    <textarea class="form-textarea" id="tweetIdea" rows="4" placeholder="What do you want to tweet about? Drop a rough idea, angle, or topic..."></textarea>
-                </div>
+    <div class="container">
+        <!-- Left Panel - Input -->
+        <div class="input-panel">
+            <h1 class="panel-title">Generate Tweets</h1>
+            <p class="panel-subtitle">Turn ideas into viral content</p>
+
+            <div class="form-group">
+                <label class="form-label">Idea / Information</label>
+                <textarea class="form-textarea" id="idea-input" placeholder="Paste your idea, notes, research, or anything you want to turn into content..."></textarea>
             </div>
 
-            <div class="sidebar-section">
-                <span class="sidebar-title">Hook Type</span>
-                <div class="form-group">
-                    <select class="form-select" id="hookType">
-                        <option value="">Any hook type</option>
-                        <option value="contrarian">Contrarian Take</option>
-                        <option value="story">Story Hook</option>
-                        <option value="question">Question Hook</option>
-                        <option value="stat">Stat/Number Hook</option>
-                        <option value="curiosity">Curiosity Gap</option>
-                        <option value="bold-claim">Bold Claim</option>
-                        <option value="how-to">How-To</option>
-                        <option value="mistake">Mistake/Warning</option>
-                    </select>
+            <div class="form-group">
+                <label class="form-label">Additional Context</label>
+                <div class="drop-zone" id="drop-zone">
+                    <div class="drop-zone-icon">📄</div>
+                    <div class="drop-zone-text">Drop PDF or TXT files here</div>
+                    <div class="drop-zone-hint">or click to upload</div>
                 </div>
+                <input type="file" id="file-input" accept=".pdf,.txt" style="display: none;">
+                <div id="uploaded-files"></div>
             </div>
 
-            <div class="sidebar-section">
-                <span class="sidebar-title">Content Type</span>
-                <div class="form-group">
-                    <select class="form-select" id="contentType">
-                        <option value="tweet">Single Tweet</option>
-                        <option value="thread">Thread (3-5 tweets)</option>
-                        <option value="thread-long">Long Thread (7-10 tweets)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <span class="sidebar-title">Tone</span>
-                <div class="form-group">
-                    <select class="form-select" id="tone">
-                        <option value="default">Match my voice</option>
-                        <option value="provocative">Provocative</option>
-                        <option value="educational">Educational</option>
-                        <option value="casual">Casual/Conversational</option>
-                        <option value="authoritative">Authoritative</option>
-                    </select>
-                </div>
-            </div>
-
-            <button class="btn btn-primary" id="generateBtn" style="margin-top: auto;">
-                GENERATE TWEETS
-            </button>
-        </aside>
-
-        <div class="content">
-            <div class="stats-row">
-                <div class="stat-card">
-                    <div class="stat-value" id="hooksCount">0</div>
-                    <div class="stat-label">Hooks Saved</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="swipesCount">0</div>
-                    <div class="stat-label">Swipes Collected</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="generatedCount">0</div>
-                    <div class="stat-label">Tweets Generated</div>
-                </div>
-            </div>
-
-            <div class="output-section">
-                <div class="output-header">
-                    <h2 class="output-title">Generated Tweets</h2>
-                </div>
-
-                <div class="output-grid" id="outputGrid">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🐦</div>
-                        <p>Enter an idea and generate tweets</p>
-                        <p style="font-size: 13px; margin-top: 8px;">Your tweets will appear here</p>
+            <div class="form-group">
+                <div class="dropdown-row">
+                    <div>
+                        <label class="form-label">Hook Type</label>
+                        <select class="form-select" id="hook-type">
+                            <option value="auto">Auto-detect</option>
+                            <option value="contrarian">Contrarian</option>
+                            <option value="curiosity">Curiosity Gap</option>
+                            <option value="story">Story Open</option>
+                            <option value="authority">Authority</option>
+                            <option value="question">Question</option>
+                            <option value="shock">Shock/Pattern Interrupt</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Tone</label>
+                        <select class="form-select" id="tone">
+                            <option value="default">Default (My Voice)</option>
+                            <option value="professional">Professional</option>
+                            <option value="casual">Casual</option>
+                            <option value="provocative">Provocative</option>
+                            <option value="educational">Educational</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Type</label>
+                        <select class="form-select" id="tweet-type">
+                            <option value="single">Single Tweet</option>
+                            <option value="thread">Thread (5-7)</option>
+                            <option value="thread-long">Thread (10+)</option>
+                        </select>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
 
-    <!-- Error Modal -->
-    <div class="error-modal" id="errorModal">
-        <div class="error-content">
-            <div class="error-icon">!</div>
-            <h3 class="error-title" id="errorTitle">Error</h3>
-            <p class="error-message" id="errorMessage">Something went wrong.</p>
-            <button class="error-close" onclick="closeErrorModal()">Close</button>
+            <div class="checkbox-row">
+                <input type="checkbox" class="checkbox-input" id="variations" checked>
+                <label class="checkbox-label" for="variations">Generate 5 variations</label>
+            </div>
+
+            <button class="generate-btn" id="generate-btn">
+                <span>⚡</span> Generate Content
+            </button>
+        </div>
+
+        <!-- Right Panel - Output -->
+        <div class="output-panel">
+            <div class="output-header">
+                <h2 class="output-title">Output</h2>
+                <span class="output-hint">Select a tweet, edit, ship</span>
+            </div>
+
+            <div id="output-container">
+                <div class="output-empty">
+                    <div class="output-empty-icon">✨</div>
+                    <div class="output-empty-text">Your generated tweets will appear here</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Configuration
         const CONFIG = {
+            WEBHOOK_URL: 'https://n8n.dtthomas.cloud/webhook/generate-tweet',
             SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxY2xzcHluYmRnaGZzb3NxeWdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MDY1MTIsImV4cCI6MjA1Mjk4MjUxMn0.sHrRR9INceqwfGbG9RtIE7qGzRiRvHrlEHF27_jkdGk',
-            N8N_GENERATE_WEBHOOK: 'https://n8n.dtthomas.cloud/webhook/generate-tweet'
+            SUPABASE_ANON_KEY: 'sb_publishable_TnW2BTNaZvow6Gm8DbxU-w_5YyQN3Av'
         };
 
-        // State
-        let generatedTweets = [];
+        let uploadedFiles = [];
 
-        // Error modal
-        function showErrorModal(title, message) {
-            document.getElementById('errorTitle').textContent = title;
-            document.getElementById('errorMessage').textContent = message;
-            document.getElementById('errorModal').classList.add('active');
+        // File drop zone
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type === 'application/pdf' || file.type === 'text/plain') {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        uploadedFiles.push({
+                            name: file.name,
+                            content: e.target.result
+                        });
+                        renderUploadedFiles();
+                    };
+                    if (file.type === 'text/plain') {
+                        reader.readAsText(file);
+                    } else {
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
         }
 
-        function closeErrorModal() {
-            document.getElementById('errorModal').classList.remove('active');
+        function renderUploadedFiles() {
+            const container = document.getElementById('uploaded-files');
+            container.innerHTML = uploadedFiles.map((f, i) => `
+                <div class="uploaded-file">
+                    <span>📄</span>
+                    <span class="uploaded-file-name">${f.name}</span>
+                    <button class="uploaded-file-remove" onclick="removeFile(${i})">Remove</button>
+                </div>
+            `).join('');
         }
 
-        // Load stats
-        async function loadStats() {
-            try {
-                const headers = {
-                    'apikey': CONFIG.SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-                };
-
-                // Get hooks count
-                const hooksRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_hooks?select=id`, { headers });
-                const hooks = await hooksRes.json();
-                document.getElementById('hooksCount').textContent = Array.isArray(hooks) ? hooks.length : 0;
-
-                // Get swipes count
-                const swipesRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_swipefile?select=id`, { headers });
-                const swipes = await swipesRes.json();
-                document.getElementById('swipesCount').textContent = Array.isArray(swipes) ? swipes.length : 0;
-
-                // Get generated count
-                const genRes = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_generated_content?select=id`, { headers });
-                const generated = await genRes.json();
-                document.getElementById('generatedCount').textContent = Array.isArray(generated) ? generated.length : 0;
-            } catch (e) {
-                console.error('Failed to load stats:', e);
-            }
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            renderUploadedFiles();
         }
 
-        // Generate tweets
-        document.getElementById('generateBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('generateBtn');
-            const idea = document.getElementById('tweetIdea').value.trim();
-            const hookType = document.getElementById('hookType').value;
-            const contentType = document.getElementById('contentType').value;
-            const tone = document.getElementById('tone').value;
+        // Generate
+        document.getElementById('generate-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('generate-btn');
+            const idea = document.getElementById('idea-input').value.trim();
 
             if (!idea) {
-                showErrorModal('Missing Input', 'Please enter a tweet idea');
+                alert('Please enter an idea or information');
                 return;
             }
 
-            btn.classList.add('loading');
-            btn.innerHTML = '<span class="loading-spinner"></span>GENERATING...';
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading">⚡</span> Generating...';
 
             try {
-                const response = await fetch(CONFIG.N8N_GENERATE_WEBHOOK, {
+                const response = await fetch(CONFIG.WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        idea,
-                        hookType,
-                        contentType,
-                        tone,
+                        idea: idea,
+                        context: uploadedFiles.map(f => f.content).join('\n\n'),
+                        hook_type: document.getElementById('hook-type').value,
+                        tone: document.getElementById('tone').value,
+                        tweet_type: document.getElementById('tweet-type').value,
+                        variations: document.getElementById('variations').checked ? 5 : 1,
                         timestamp: new Date().toISOString()
                     })
                 });
 
-                if (!response.ok) throw new Error('Server returned ' + response.status);
+                const data = await response.json();
+                console.log('Response:', data);
 
-                let data = await response.json();
+                // Handle array response from n8n
+                let result = data;
                 if (Array.isArray(data) && data.length > 0) {
-                    data = data[0];
+                    result = data[0];
                 }
 
-                generatedTweets = data.tweets || data.generated || [];
-                renderTweets();
-                loadStats();
+                renderOutput(result);
 
             } catch (error) {
-                console.error('Generation failed:', error);
-                showErrorModal('Generation Failed', error.message);
+                console.error('Error:', error);
+                alert('Generation failed: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>⚡</span> Generate Content';
             }
-
-            btn.classList.remove('loading');
-            btn.textContent = 'GENERATE TWEETS';
         });
 
-        // Render tweets
-        function renderTweets() {
-            const grid = document.getElementById('outputGrid');
+        function renderOutput(data) {
+            const container = document.getElementById('output-container');
 
-            if (generatedTweets.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🐦</div>
-                        <p>Enter an idea and generate tweets</p>
-                        <p style="font-size: 13px; margin-top: 8px;">Your tweets will appear here</p>
+            // Handle different response formats
+            let tweets = [];
+            if (data.tweets) {
+                tweets = data.tweets;
+            } else if (data.variations) {
+                tweets = data.variations;
+            } else if (Array.isArray(data)) {
+                tweets = data;
+            } else if (data.tweet) {
+                tweets = [{ text: data.tweet, hook_type: data.hook_type }];
+            }
+
+            if (tweets.length === 0) {
+                container.innerHTML = `
+                    <div class="output-empty">
+                        <div class="output-empty-icon">🤔</div>
+                        <div class="output-empty-text">No tweets generated. Try again with more detail.</div>
                     </div>
                 `;
                 return;
             }
 
-            grid.innerHTML = generatedTweets.map((tweet, idx) => `
-                <div class="tweet-card" data-idx="${idx}">
-                    <div class="tweet-content">${typeof tweet === 'string' ? tweet : tweet.content || tweet.text}</div>
-                    <div class="tweet-meta">
-                        <span class="tweet-hook-type">${tweet.hook_type || 'Generated'}</span>
-                        <div class="tweet-actions">
-                            <button class="tweet-action-btn" onclick="copyTweet(${idx})">Copy</button>
-                            <button class="tweet-action-btn" onclick="saveTweet(${idx})">Save</button>
+            container.innerHTML = tweets.map((tweet, i) => {
+                const text = typeof tweet === 'string' ? tweet : (tweet.text || tweet.content || '');
+                const hookType = typeof tweet === 'object' ? (tweet.hook_type || tweet.hookType || 'hook') : 'hook';
+                const charCount = text.length;
+                const charClass = charCount > 280 ? 'danger' : charCount > 250 ? 'warning' : '';
+
+                return `
+                    <div class="tweet-card" data-index="${i}">
+                        <p class="tweet-text">${escapeHtml(text)}</p>
+                        <div class="tweet-meta">
+                            <div class="tweet-tags">
+                                <span class="tweet-tag hook">${hookType.toUpperCase()}</span>
+                                <span class="char-count ${charClass}">${charCount}/280</span>
+                            </div>
+                            <div class="tweet-actions">
+                                <button class="tweet-action-btn" onclick="copyTweet(${i})">Copy</button>
+                                <button class="tweet-action-btn" onclick="saveTweet(${i})">Save</button>
+                                <button class="tweet-action-btn primary" onclick="selectTweet(${i})">Select</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+
+            // Store tweets for actions
+            window.generatedTweets = tweets;
         }
 
-        // Copy tweet
-        function copyTweet(idx) {
-            const tweet = generatedTweets[idx];
-            const text = typeof tweet === 'string' ? tweet : tweet.content || tweet.text;
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function copyTweet(index) {
+            const tweet = window.generatedTweets[index];
+            const text = typeof tweet === 'string' ? tweet : (tweet.text || tweet.content || '');
             navigator.clipboard.writeText(text);
 
-            const btns = document.querySelectorAll('.tweet-action-btn');
-            btns[idx * 2].textContent = 'Copied!';
-            setTimeout(() => btns[idx * 2].textContent = 'Copy', 1500);
+            // Visual feedback
+            event.target.textContent = 'Copied!';
+            setTimeout(() => event.target.textContent = 'Copy', 1500);
         }
 
-        // Save tweet
-        async function saveTweet(idx) {
-            const tweet = generatedTweets[idx];
-            const text = typeof tweet === 'string' ? tweet : tweet.content || tweet.text;
+        async function saveTweet(index) {
+            const tweet = window.generatedTweets[index];
+            const text = typeof tweet === 'string' ? tweet : (tweet.text || tweet.content || '');
 
             try {
-                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_generated_content`, {
+                await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_generated_content`, {
                     method: 'POST',
                     headers: {
-                        'apikey': CONFIG.SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
                         'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
                     },
                     body: JSON.stringify({
-                        input_idea: document.getElementById('tweetIdea').value,
-                        hook_type_used: tweet.hook_type || null,
-                        generated_content: text,
+                        original_idea: document.getElementById('idea-input').value,
+                        generated_tweet: text,
                         status: 'saved'
                     })
                 });
 
-                if (response.ok) {
-                    const btns = document.querySelectorAll('.tweet-action-btn');
-                    btns[idx * 2 + 1].textContent = 'Saved!';
-                    btns[idx * 2 + 1].style.color = 'var(--accent)';
-                    btns[idx * 2 + 1].style.borderColor = 'var(--accent)';
-                    loadStats();
-                }
+                event.target.textContent = 'Saved!';
+                setTimeout(() => event.target.textContent = 'Save', 1500);
             } catch (e) {
                 console.error('Save failed:', e);
             }
         }
 
-        // Init
-        loadStats();
+        function selectTweet(index) {
+            document.querySelectorAll('.tweet-card').forEach(c => c.classList.remove('selected'));
+            document.querySelector(`.tweet-card[data-index="${index}"]`).classList.add('selected');
+        }
     </script>
 </body>
 </html>
