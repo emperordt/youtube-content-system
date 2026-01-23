@@ -532,26 +532,34 @@
                 <div class="slider-group">
                     <div class="slider-header">
                         <span class="slider-label">Minimum Likes</span>
-                        <span class="slider-value" id="likes-value">100</span>
+                        <span class="slider-value" id="likes-value">50</span>
                     </div>
-                    <input type="range" class="slider" id="likes-slider" min="0" max="10000" value="100" step="50">
+                    <input type="range" class="slider" id="likes-slider" min="0" max="10000" value="50" step="25">
                 </div>
 
                 <div class="slider-group">
                     <div class="slider-header">
                         <span class="slider-label">Minimum Replies</span>
-                        <span class="slider-value" id="replies-value">10</span>
+                        <span class="slider-value" id="replies-value">5</span>
                     </div>
-                    <input type="range" class="slider" id="replies-slider" min="0" max="1000" value="10" step="5">
+                    <input type="range" class="slider" id="replies-slider" min="0" max="1000" value="5" step="5">
                 </div>
 
                 <div class="slider-group">
                     <div class="slider-header">
                         <span class="slider-label">Minimum Retweets</span>
-                        <span class="slider-value" id="retweets-value">5</span>
+                        <span class="slider-value" id="retweets-value">3</span>
                     </div>
-                    <input type="range" class="slider" id="retweets-slider" min="0" max="5000" value="5" step="5">
+                    <input type="range" class="slider" id="retweets-slider" min="0" max="5000" value="3" step="1">
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Sort By</label>
+                <select class="form-select" id="sort-select" style="width: 100%; font-family: 'Space Grotesk', sans-serif; font-size: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; color: var(--text-primary); cursor: pointer;">
+                    <option value="Top">Top (Most Viral)</option>
+                    <option value="Latest">Latest</option>
+                </select>
             </div>
 
             <div class="checkbox-row">
@@ -676,6 +684,7 @@
                         min_likes: parseInt(document.getElementById('likes-slider').value),
                         min_replies: parseInt(document.getElementById('replies-slider').value),
                         min_retweets: parseInt(document.getElementById('retweets-slider').value),
+                        sort: document.getElementById('sort-select').value,
                         include_threads: document.getElementById('include-threads').checked,
                         timestamp: new Date().toISOString()
                     })
