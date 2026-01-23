@@ -619,6 +619,7 @@
 
         // Load previously scraped
         async function loadScrapedProfiles() {
+            const list = document.getElementById('scraped-list');
             try {
                 const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_scraped_profiles?order=last_scraped.desc&limit=10`, {
                     headers: {
@@ -626,10 +627,15 @@
                         'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
                     }
                 });
+
+                if (!response.ok) {
+                    list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No profiles scraped yet</p>';
+                    return;
+                }
+
                 const profiles = await response.json();
 
-                const list = document.getElementById('scraped-list');
-                if (profiles.length === 0) {
+                if (!Array.isArray(profiles) || profiles.length === 0) {
                     list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No profiles scraped yet</p>';
                     return;
                 }
@@ -645,6 +651,7 @@
                 `).join('');
             } catch (e) {
                 console.error('Failed to load profiles:', e);
+                list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No profiles scraped yet</p>';
             }
         }
 
@@ -683,7 +690,11 @@
             try {
                 const response = await fetch(CONFIG.WEBHOOK_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         username: username,
                         profile_url: profileUrl,
@@ -696,7 +707,16 @@
                     })
                 });
 
-                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+
+                const text = await response.text();
+                if (!text) {
+                    throw new Error('Empty response from server');
+                }
+
+                const data = JSON.parse(text);
                 console.log('Response:', data);
 
                 // Handle array response
