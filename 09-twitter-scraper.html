@@ -622,7 +622,7 @@
         async function loadScrapedProfiles() {
             const list = document.getElementById('scraped-list');
             try {
-                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_scraped_profiles?order=last_scraped.desc&limit=10`, {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_swipefile?select=username,created_at&order=created_at.desc&limit=50`, {
                     headers: {
                         'apikey': CONFIG.SUPABASE_ANON_KEY,
                         'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
@@ -630,29 +630,36 @@
                 });
 
                 if (!response.ok) {
-                    list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No profiles scraped yet</p>';
+                    list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No accounts scraped yet</p>';
                     return;
                 }
 
-                const profiles = await response.json();
-
-                if (!Array.isArray(profiles) || profiles.length === 0) {
-                    list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No profiles scraped yet</p>';
+                const rows = await response.json();
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No accounts scraped yet</p>';
                     return;
                 }
+
+                // Deduplicate by username, keep most recent
+                const seen = {};
+                rows.forEach(r => {
+                    if (r.username && !seen[r.username]) seen[r.username] = r.created_at;
+                });
+
+                const profiles = Object.entries(seen).slice(0, 10).map(([username, date]) => ({ username, date }));
 
                 list.innerHTML = profiles.map(p => `
                     <div class="scraped-item" onclick="loadProfile('${p.username}')">
                         <div>
                             <div class="scraped-username">@${p.username}</div>
-                            <div class="scraped-date">${timeAgo(p.last_scraped)}</div>
+                            <div class="scraped-date">${timeAgo(p.date)}</div>
                         </div>
                         <span class="scraped-arrow">→</span>
                     </div>
                 `).join('');
             } catch (e) {
                 console.error('Failed to load profiles:', e);
-                list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No profiles scraped yet</p>';
+                list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No accounts scraped yet</p>';
             }
         }
 
@@ -843,9 +850,7 @@
         async function saveHook(index) {
             const tweet = window.scrapedTweets[index];
             const text = tweet.text || tweet.content || '';
-
-            // Extract first sentence as hook
-            const hook = text.split(/[.!?]/)[0] + (text.match(/[.!?]/) ? text.match(/[.!?]/)[0] : '');
+            const hook = text.split(/[.!?\n]/)[0].trim();
 
             try {
                 await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/tw_hooks`, {
@@ -856,9 +861,12 @@
                         'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
                     },
                     body: JSON.stringify({
+                        username: window.currentUsername,
                         hook_text: hook,
-                        source: `@${window.currentUsername}`,
-                        engagement_score: tweet.likes || 0
+                        likes: tweet.likes || 0,
+                        replies: tweet.replies || 0,
+                        retweets: tweet.retweets || 0,
+                        source_tweet: text
                     })
                 });
 
@@ -881,9 +889,14 @@
                         'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
                     },
                     body: JSON.stringify({
-                        tweet_text: tweet.text || tweet.content || '',
-                        author: window.currentUsername,
-                        engagement_count: tweet.likes || 0
+                        username: window.currentUsername,
+                        content: tweet.text || tweet.content || '',
+                        likes: tweet.likes || 0,
+                        replies: tweet.replies || 0,
+                        retweets: tweet.retweets || 0,
+                        views: tweet.views || 0,
+                        bookmarks: tweet.bookmarks || 0,
+                        content_type: 'tweet'
                     })
                 });
 
@@ -909,9 +922,14 @@
                             'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
                         },
                         body: JSON.stringify({
-                            tweet_text: tweet.text || tweet.content || '',
-                            author: window.currentUsername,
-                            engagement_count: tweet.likes || 0
+                            username: window.currentUsername,
+                            content: tweet.text || tweet.content || '',
+                            likes: tweet.likes || 0,
+                            replies: tweet.replies || 0,
+                            retweets: tweet.retweets || 0,
+                            views: tweet.views || 0,
+                            bookmarks: tweet.bookmarks || 0,
+                            content_type: 'tweet'
                         })
                     })
                 );
