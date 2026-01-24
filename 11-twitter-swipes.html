@@ -580,6 +580,7 @@
                             <span class="tweet-stat"><strong>${formatNum(t.bookmarks)}</strong> saves</span>
                         </div>
                         <div class="tweet-actions">
+                            ${t.notes ? `<a href="${t.notes}" target="_blank" class="tweet-action" style="text-decoration:none;">View on X</a>` : ''}
                             <button class="tweet-action" onclick="copyTweet(${i})">Copy</button>
                             <button class="tweet-action save-hook" onclick="saveAsHook(${i})">Save Hook</button>
                             <button class="tweet-action" onclick="deleteTweet('${t.id}', this)">Delete</button>
