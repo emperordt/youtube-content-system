@@ -56,14 +56,46 @@
             color: var(--accent);
         }
 
-        .nav-links { display: flex; gap: 8px; }
+        .nav-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 14px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-toggle.active { border-color: var(--accent); color: var(--accent); }
+
+        .nav-panel {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 200px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            border-radius: 0 0 0 12px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 99;
+            box-shadow: -4px 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .nav-panel.open { display: flex; }
 
         .nav-link {
             font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
             color: var(--text-secondary);
             text-decoration: none;
-            padding: 8px 16px;
+            padding: 10px 14px;
             border-radius: 6px;
             transition: all 0.15s ease;
         }
@@ -429,17 +461,19 @@
 <body>
     <nav class="nav">
         <div class="nav-brand">CONTENT_ENGINE//v1</div>
-        <div class="nav-links">
-            <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
-            <a href="02-swipe-file.html" class="nav-link">YT Swipes</a>
-            <a href="08-twitter-generator.html" class="nav-link active">TW Generate</a>
-            <a href="09-twitter-scraper.html" class="nav-link">TW Scraper</a>
-            <a href="10-hook-bank.html" class="nav-link">TW Hooks</a>
-            <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
-            <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
-            <a href="05-history.html" class="nav-link">History</a>
-        </div>
+        <button class="nav-toggle" id="nav-toggle">Menu</button>
     </nav>
+    <div class="nav-panel" id="nav-panel">
+        <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+        <a href="02-swipe-file.html" class="nav-link">YT Swipes</a>
+        <a href="08-twitter-generator.html" class="nav-link active">TW Generate</a>
+        <a href="11-twitter-swipes.html" class="nav-link">TW Swipes</a>
+        <a href="09-twitter-scraper.html" class="nav-link">TW Scraper</a>
+        <a href="10-hook-bank.html" class="nav-link">TW Hooks</a>
+        <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
+        <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+        <a href="05-history.html" class="nav-link">History</a>
+    </div>
 
     <div class="container">
         <!-- Left Panel - Input -->
@@ -493,6 +527,7 @@
                             <option value="single">Single Tweet</option>
                             <option value="thread">Thread (5-7)</option>
                             <option value="thread-long">Thread (10+)</option>
+                            <option value="article">Article (Long-form)</option>
                         </select>
                     </div>
                 </div>
@@ -525,6 +560,18 @@
     </div>
 
     <script>
+        // Nav toggle
+        document.getElementById('nav-toggle').addEventListener('click', function() {
+            document.getElementById('nav-panel').classList.toggle('open');
+            this.classList.toggle('active');
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-panel') && !e.target.closest('.nav-toggle')) {
+                document.getElementById('nav-panel').classList.remove('open');
+                document.getElementById('nav-toggle').classList.remove('active');
+            }
+        });
+
         const CONFIG = {
             WEBHOOK_URL: 'https://n8n.dtthomas.cloud/webhook/generate-tweet',
             SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
@@ -586,6 +633,35 @@
             renderUploadedFiles();
         }
 
+        // Fetch top swipefile examples from Supabase
+        async function fetchSwipeExamples() {
+            try {
+                const res = await fetch(
+                    `${CONFIG.SUPABASE_URL}/rest/v1/tw_swipefile?order=likes.desc&limit=60&select=content,likes,bookmarks,username`,
+                    {
+                        headers: {
+                            'apikey': CONFIG.SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                        }
+                    }
+                );
+                const tweets = await res.json();
+                // Filter to text-only (no bare links, no RTs, no dupes)
+                const seen = new Set();
+                return tweets.filter(t => {
+                    const stripped = t.content.replace(/https?:\/\/\S+/g, '').trim();
+                    if (stripped.length < 30) return false;
+                    if (t.content.startsWith('RT @')) return false;
+                    if (seen.has(t.content)) return false;
+                    seen.add(t.content);
+                    return true;
+                }).slice(0, 20);
+            } catch (e) {
+                console.error('Failed to fetch swipe examples:', e);
+                return [];
+            }
+        }
+
         // Generate
         document.getElementById('generate-btn').addEventListener('click', async () => {
             const btn = document.getElementById('generate-btn');
@@ -597,9 +673,13 @@
             }
 
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading">⚡</span> Generating...';
+            btn.innerHTML = '<span class="loading">⚡</span> Loading swipefile...';
 
             try {
+                // Pull top examples from swipefile
+                const swipeExamples = await fetchSwipeExamples();
+                btn.innerHTML = '<span class="loading">⚡</span> Generating...';
+
                 const response = await fetch(CONFIG.WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -610,6 +690,7 @@
                         tone: document.getElementById('tone').value,
                         tweet_type: document.getElementById('tweet-type').value,
                         variations: document.getElementById('variations').checked ? 5 : 1,
+                        swipe_examples: swipeExamples,
                         timestamp: new Date().toISOString()
                     })
                 });
@@ -659,11 +740,15 @@
                 return;
             }
 
+            const tweetType = document.getElementById('tweet-type').value;
+            const isArticle = tweetType === 'article';
+
             container.innerHTML = tweets.map((tweet, i) => {
                 const text = typeof tweet === 'string' ? tweet : (tweet.text || tweet.content || '');
                 const hookType = typeof tweet === 'object' ? (tweet.hook_type || tweet.hookType || 'hook') : 'hook';
                 const charCount = text.length;
-                const charClass = charCount > 280 ? 'danger' : charCount > 250 ? 'warning' : '';
+                const charClass = isArticle ? '' : (charCount > 280 ? 'danger' : charCount > 250 ? 'warning' : '');
+                const charLabel = isArticle ? `${charCount} chars` : `${charCount}/280`;
 
                 return `
                     <div class="tweet-card" data-index="${i}">
@@ -671,7 +756,7 @@
                         <div class="tweet-meta">
                             <div class="tweet-tags">
                                 <span class="tweet-tag hook">${hookType.toUpperCase()}</span>
-                                <span class="char-count ${charClass}">${charCount}/280</span>
+                                <span class="char-count ${charClass}">${charLabel}</span>
                             </div>
                             <div class="tweet-actions">
                                 <button class="tweet-action-btn" onclick="copyTweet(${i})">Copy</button>
@@ -716,9 +801,12 @@
                         'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
                     },
                     body: JSON.stringify({
-                        original_idea: document.getElementById('idea-input').value,
-                        generated_tweet: text,
-                        status: 'saved'
+                        idea: document.getElementById('idea-input').value,
+                        hook_type: document.getElementById('hook-type').value,
+                        tone: document.getElementById('tone').value,
+                        tweet_type: document.getElementById('tweet-type').value,
+                        generated_text: text,
+                        char_count: text.length
                     })
                 });
 

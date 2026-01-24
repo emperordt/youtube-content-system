@@ -59,14 +59,46 @@
             color: var(--accent);
         }
 
-        .nav-links { display: flex; gap: 8px; }
+        .nav-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 14px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-toggle.active { border-color: var(--accent); color: var(--accent); }
+
+        .nav-panel {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 200px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            border-radius: 0 0 0 12px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 99;
+            box-shadow: -4px 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .nav-panel.open { display: flex; }
 
         .nav-link {
             font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
             color: var(--text-secondary);
             text-decoration: none;
-            padding: 8px 16px;
+            padding: 10px 14px;
             border-radius: 6px;
             transition: all 0.15s ease;
         }
@@ -397,17 +429,19 @@
 <body>
     <nav class="nav">
         <div class="nav-brand">CONTENT_ENGINE//v1</div>
-        <div class="nav-links">
-            <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
-            <a href="02-swipe-file.html" class="nav-link">YT Swipes</a>
-            <a href="08-twitter-generator.html" class="nav-link">TW Generate</a>
-            <a href="09-twitter-scraper.html" class="nav-link">TW Scraper</a>
-            <a href="10-hook-bank.html" class="nav-link active">TW Hooks</a>
-            <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
-            <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
-            <a href="05-history.html" class="nav-link">History</a>
-        </div>
+        <button class="nav-toggle" id="nav-toggle">Menu</button>
     </nav>
+    <div class="nav-panel" id="nav-panel">
+        <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+        <a href="02-swipe-file.html" class="nav-link">YT Swipes</a>
+        <a href="08-twitter-generator.html" class="nav-link">TW Generate</a>
+        <a href="11-twitter-swipes.html" class="nav-link">TW Swipes</a>
+        <a href="09-twitter-scraper.html" class="nav-link">TW Scraper</a>
+        <a href="10-hook-bank.html" class="nav-link active">TW Hooks</a>
+        <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
+        <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+        <a href="05-history.html" class="nav-link">History</a>
+    </div>
 
     <div class="container">
         <div class="page-header">
@@ -501,6 +535,18 @@
     </div>
 
     <script>
+        // Nav toggle
+        document.getElementById('nav-toggle').addEventListener('click', function() {
+            document.getElementById('nav-panel').classList.toggle('open');
+            this.classList.toggle('active');
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-panel') && !e.target.closest('.nav-toggle')) {
+                document.getElementById('nav-panel').classList.remove('open');
+                document.getElementById('nav-toggle').classList.remove('active');
+            }
+        });
+
         // Configuration
         const CONFIG = {
             SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
