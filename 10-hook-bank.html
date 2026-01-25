@@ -550,7 +550,7 @@
         // Configuration
         const CONFIG = {
             SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxY2xzcHluYmRnaGZzb3NxeWdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0MDY1MTIsImV4cCI6MjA1Mjk4MjUxMn0.sHrRR9INceqwfGbG9RtIE7qGzRiRvHrlEHF27_jkdGk'
+            SUPABASE_ANON_KEY: 'sb_publishable_TnW2BTNaZvow6Gm8DbxU-w_5YyQN3Av'
         };
 
         let allHooks = [];
@@ -595,7 +595,7 @@
                 if (filterSearch) {
                     hooks = hooks.filter(h =>
                         h.hook_text.toLowerCase().includes(filterSearch) ||
-                        (h.notes && h.notes.toLowerCase().includes(filterSearch))
+                        (h.source_tweet && h.source_tweet.toLowerCase().includes(filterSearch))
                     );
                 }
 
@@ -629,11 +629,11 @@
                     <div class="hook-meta">
                         <div class="hook-tags">
                             <span class="hook-type-tag">${hook.hook_type || 'Unclassified'}</span>
-                            ${hook.source_author ? `<span class="hook-source-tag">@${hook.source_author}</span>` : ''}
+                            ${hook.username ? `<span class="hook-source-tag">@${hook.username}</span>` : ''}
                         </div>
                         <span class="hook-usage">Used ${hook.times_used || 0}x</span>
                     </div>
-                    ${hook.notes ? `<p style="font-size: 13px; color: var(--text-muted); margin-top: 12px; font-style: italic;">${hook.notes}</p>` : ''}
+                    ${hook.source_tweet ? `<p style="font-size: 13px; color: var(--text-muted); margin-top: 12px; font-style: italic;">${hook.source_tweet}</p>` : ''}
                     <div class="hook-actions" style="margin-top: 16px;">
                         <button class="hook-action-btn" onclick="copyHook('${hook.id}')">Copy</button>
                         <button class="hook-action-btn" onclick="useHook('${hook.id}')">Use in Generator</button>
@@ -686,8 +686,8 @@
                     body: JSON.stringify({
                         hook_text: hookText,
                         hook_type: hookType,
-                        source_author: source.replace('@', '') || null,
-                        notes: notes || null
+                        username: source.replace('@', '') || null,
+                        source_tweet: notes || null
                     })
                 });
 
