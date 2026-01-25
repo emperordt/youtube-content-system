@@ -786,29 +786,26 @@
             btn.textContent = 'Adding...';
 
             try {
-                console.log('Sending to:', CONFIG.WEBHOOK_SWIPE);
-                console.log('Data:', { type: 'headline', content: text, niche: niche });
-
-                const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/yt_headline_swipes`, {
                     method: 'POST',
-                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+                        'Prefer': 'return=minimal'
                     },
                     body: JSON.stringify({
-                        type: 'headline',
                         content: text,
-                        niche: niche
+                        niche: niche || 'general'
                     })
                 });
 
-                console.log('Response status:', response.status);
-                const data = await response.json();
-                console.log('Response data:', data);
+                if (!response.ok) {
+                    throw new Error('Failed to save');
+                }
 
                 document.getElementById('headline-input').value = '';
-                alert('Headline added!');
+                loadHeadlines();
             } catch (error) {
                 console.error('Add headline failed:', error);
                 alert('Failed to add headline. Check console.');
@@ -833,28 +830,26 @@
             btn.textContent = 'Adding...';
 
             try {
-                console.log('Sending hook to:', CONFIG.WEBHOOK_SWIPE);
-
-                const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
+                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/yt_hook_swipes`, {
                     method: 'POST',
-                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+                        'Prefer': 'return=minimal'
                     },
                     body: JSON.stringify({
-                        type: 'hook',
                         content: text,
-                        niche: niche
+                        niche: niche || 'general'
                     })
                 });
 
-                console.log('Hook response status:', response.status);
-                const data = await response.json();
-                console.log('Hook response:', data);
+                if (!response.ok) {
+                    throw new Error('Failed to save');
+                }
 
                 document.getElementById('hook-input').value = '';
-                alert('Hook added!');
+                loadHooks();
             } catch (error) {
                 console.error('Add hook failed:', error);
                 alert('Failed to add hook. Check console.');
