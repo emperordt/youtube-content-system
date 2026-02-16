@@ -721,6 +721,7 @@
                     <input type="number" class="small-input" id="tw-likes-input" placeholder="Likes" min="0">
                     <input type="number" class="small-input" id="tw-bookmarks-input" placeholder="Bookmarks" min="0">
                     <input type="number" class="small-input" id="tw-retweets-input" placeholder="Retweets" min="0">
+                    <input type="number" class="small-input" id="tw-replies-input" placeholder="Replies" min="0">
                     <button class="add-btn" id="add-tweet-btn" style="margin-left: auto;">+ Save Tweet</button>
                 </div>
             </div>
@@ -913,8 +914,9 @@
             return String(n || 0);
         }
 
-        function escAttr(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
-        function escTpl(s) { return (s || '').replace(/`/g, '').replace(/\n/g, ' '); }
+        function escHtml(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+        function escAttr(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\\/g, '\\\\'); }
+        function escTpl(s) { return (s || '').replace(/`/g, '').replace(/\\/g, '\\\\').replace(/\n/g, ' '); }
 
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
@@ -1050,12 +1052,14 @@
 
             btn.disabled = true; btn.textContent = 'Saving...';
             try {
-                await supabaseInsert('tw_swipefile', { content, username, likes, bookmarks, retweets, content_type: 'tweet' });
+                const replies = parseInt(document.getElementById('tw-replies-input').value) || 0;
+                await supabaseInsert('tw_swipefile', { content, username, likes, bookmarks, retweets, replies, content_type: 'tweet' });
                 document.getElementById('tw-content-input').value = '';
                 document.getElementById('tw-username-input').value = '';
                 document.getElementById('tw-likes-input').value = '';
                 document.getElementById('tw-bookmarks-input').value = '';
                 document.getElementById('tw-retweets-input').value = '';
+                document.getElementById('tw-replies-input').value = '';
                 showToast('Tweet saved!');
                 loadTweets();
             } catch (e) { console.error(e); showToast('Failed to save tweet'); }
@@ -1159,13 +1163,13 @@
             if (thumbs.length === 0) { grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No thumbnails found.</p>'; return; }
             grid.innerHTML = thumbs.map(t => `
                 <div class="swipe-card">
-                    <div class="swipe-card-image">${t.image_url ? `<img src="${t.image_url}" alt="Thumbnail" style="width:100%;height:100%;object-fit:cover;">` : '<span>No image</span>'}</div>
+                    <div class="swipe-card-image">${t.image_url ? `<img src="${escHtml(t.image_url)}" alt="Thumbnail" style="width:100%;height:100%;object-fit:cover;">` : '<span>No image</span>'}</div>
                     <div class="swipe-card-body">
                         <div class="swipe-card-tags">
-                            ${(t.triggers || []).map(tr => `<span class="tag trigger">${tr.toUpperCase()}</span>`).join('')}
-                            <span class="tag niche">${(t.niche || 'general').toUpperCase()}</span>
+                            ${(t.triggers || []).map(tr => `<span class="tag trigger">${escHtml(tr.toUpperCase())}</span>`).join('')}
+                            <span class="tag niche">${escHtml((t.niche || 'general').toUpperCase())}</span>
                         </div>
-                        <p class="swipe-card-description">${t.composition || 'No composition data'}</p>
+                        <p class="swipe-card-description">${escHtml(t.composition || 'No composition data')}</p>
                         <div class="swipe-card-meta">
                             <span class="swipe-card-date">${new Date(t.created_at).toLocaleDateString()}</span>
                             <div class="swipe-card-actions"><button class="card-action-btn delete" onclick="deleteSwipe('yt_thumbnail_swipes', '${t.id}')">Delete</button></div>
@@ -1209,12 +1213,12 @@
             if (headlines.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No headlines found.</p>'; return; }
             list.innerHTML = headlines.map(h => `
                 <div class="headline-card">
-                    <p class="headline-raw">${h.raw_text || 'No text'}</p>
-                    <div class="headline-pattern">${h.pattern || 'No pattern detected'}</div>
+                    <p class="headline-raw">${escHtml(h.raw_text || 'No text')}</p>
+                    <div class="headline-pattern">${escHtml(h.pattern || 'No pattern detected')}</div>
                     <div class="headline-meta">
                         <div class="swipe-card-tags">
-                            ${(h.triggers || []).map(t => `<span class="tag trigger">${t.toUpperCase()}</span>`).join('')}
-                            <span class="tag niche">${(h.niche || 'general').toUpperCase()}</span>
+                            ${(h.triggers || []).map(t => `<span class="tag trigger">${escHtml(t.toUpperCase())}</span>`).join('')}
+                            <span class="tag niche">${escHtml((h.niche || 'general').toUpperCase())}</span>
                         </div>
                         <div class="swipe-card-actions">
                             <button class="card-action-btn" onclick="navigator.clipboard.writeText('${escAttr(h.pattern)}'); showToast('Pattern copied!')">Copy Pattern</button>
@@ -1261,18 +1265,18 @@
                 return `
                 <div class="hook-card">
                     <div class="swipe-card-tags" style="margin-bottom: 12px;">
-                        <span class="tag hook-type">${(h.hook_type || 'hook').toUpperCase()}</span>
-                        ${meta.tone ? `<span class="tag" style="background: var(--blue-dim); color: var(--blue);">${meta.tone.toUpperCase()}</span>` : ''}
-                        ${meta.pov ? `<span class="tag" style="background: var(--orange-dim); color: var(--orange);">${meta.pov.replace('_', ' ').toUpperCase()}</span>` : ''}
-                        ${(h.triggers || []).map(t => `<span class="tag trigger">${t.toUpperCase()}</span>`).join('')}
-                        <span class="tag niche">${(h.niche || 'general').toUpperCase()}</span>
+                        <span class="tag hook-type">${escHtml((h.hook_type || 'hook').toUpperCase())}</span>
+                        ${meta.tone ? `<span class="tag" style="background: var(--blue-dim); color: var(--blue);">${escHtml(meta.tone.toUpperCase())}</span>` : ''}
+                        ${meta.pov ? `<span class="tag" style="background: var(--orange-dim); color: var(--orange);">${escHtml(meta.pov.replace('_', ' ').toUpperCase())}</span>` : ''}
+                        ${(h.triggers || []).map(t => `<span class="tag trigger">${escHtml(t.toUpperCase())}</span>`).join('')}
+                        <span class="tag niche">${escHtml((h.niche || 'general').toUpperCase())}</span>
                     </div>
-                    <p class="hook-raw">${h.raw_text || 'No text'}</p>
-                    <div class="headline-pattern" style="margin: 12px 0;"><strong>Pattern:</strong> ${h.pattern || 'N/A'}</div>
-                    ${meta.opening_line ? `<div style="background: var(--purple-dim); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px;"><strong style="color: var(--purple);">Opening Line:</strong><br><span style="color: var(--text-primary);">${meta.opening_line}</span></div>` : ''}
-                    ${formula.step1 ? `<div style="background: var(--bg-tertiary); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; font-size: 13px;"><strong style="color: var(--text-secondary);">Formula:</strong><br><span style="color: var(--accent);">1.</span> ${formula.step1}<br>${formula.step2 ? `<span style="color: var(--accent);">2.</span> ${formula.step2}<br>` : ''}${formula.step3 ? `<span style="color: var(--accent);">3.</span> ${formula.step3}` : ''}</div>` : ''}
-                    ${meta.why_it_works ? `<div style="font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 12px;"><strong>Why it works:</strong> ${meta.why_it_works}</div>` : ''}
-                    ${meta.power_words && meta.power_words.length > 0 ? `<div style="margin-bottom: 12px;"><strong style="font-size: 11px; color: var(--text-muted);">POWER WORDS:</strong><span style="font-size: 13px; color: var(--text-secondary);"> ${meta.power_words.join(', ')}</span></div>` : ''}
+                    <p class="hook-raw">${escHtml(h.raw_text || 'No text')}</p>
+                    <div class="headline-pattern" style="margin: 12px 0;"><strong>Pattern:</strong> ${escHtml(h.pattern || 'N/A')}</div>
+                    ${meta.opening_line ? `<div style="background: var(--purple-dim); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px;"><strong style="color: var(--purple);">Opening Line:</strong><br><span style="color: var(--text-primary);">${escHtml(meta.opening_line)}</span></div>` : ''}
+                    ${formula.step1 ? `<div style="background: var(--bg-tertiary); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; font-size: 13px;"><strong style="color: var(--text-secondary);">Formula:</strong><br><span style="color: var(--accent);">1.</span> ${escHtml(formula.step1)}<br>${formula.step2 ? `<span style="color: var(--accent);">2.</span> ${escHtml(formula.step2)}<br>` : ''}${formula.step3 ? `<span style="color: var(--accent);">3.</span> ${escHtml(formula.step3)}` : ''}</div>` : ''}
+                    ${meta.why_it_works ? `<div style="font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 12px;"><strong>Why it works:</strong> ${escHtml(meta.why_it_works)}</div>` : ''}
+                    ${meta.power_words && meta.power_words.length > 0 ? `<div style="margin-bottom: 12px;"><strong style="font-size: 11px; color: var(--text-muted);">POWER WORDS:</strong><span style="font-size: 13px; color: var(--text-secondary);"> ${meta.power_words.map(w => escHtml(w)).join(', ')}</span></div>` : ''}
                     <div class="hook-meta">
                         <span class="swipe-card-date">${new Date(h.created_at).toLocaleDateString()}</span>
                         <div class="swipe-card-actions">
@@ -1322,8 +1326,8 @@
             if (tweets.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No tweets found. Paste one above or use the TW Scraper.</p>'; return; }
             list.innerHTML = tweets.map(t => `
                 <div class="tweet-card">
-                    ${t.username ? `<span class="tweet-username">@${t.username}</span>` : ''}
-                    <p class="tweet-content">${t.content || ''}</p>
+                    ${t.username ? `<span class="tweet-username">@${escHtml(t.username)}</span>` : ''}
+                    <p class="tweet-content">${escHtml(t.content || '')}</p>
                     <div class="tweet-engagement">
                         <span><strong>${fmt(t.likes)}</strong> likes</span>
                         <span><strong>${fmt(t.bookmarks)}</strong> bookmarks</span>
@@ -1374,12 +1378,12 @@
             list.innerHTML = items.map(a => `
                 <div class="adcopy-card">
                     <div class="swipe-card-tags" style="margin-bottom: 12px;">
-                        <span class="tag ad">${(a.hook_type || 'AD').toUpperCase()}</span>
-                        ${(a.triggers || []).map(t => `<span class="tag trigger">${t.toUpperCase()}</span>`).join('')}
-                        <span class="tag niche">${(a.niche || 'general').toUpperCase()}</span>
+                        <span class="tag ad">${escHtml((a.hook_type || 'AD').toUpperCase())}</span>
+                        ${(a.triggers || []).map(t => `<span class="tag trigger">${escHtml(t.toUpperCase())}</span>`).join('')}
+                        <span class="tag niche">${escHtml((a.niche || 'general').toUpperCase())}</span>
                     </div>
-                    <p class="headline-raw">${a.raw_text || 'No text'}</p>
-                    ${a.pattern ? `<div class="headline-pattern">${a.pattern}</div>` : ''}
+                    <p class="headline-raw">${escHtml(a.raw_text || 'No text')}</p>
+                    ${a.pattern ? `<div class="headline-pattern">${escHtml(a.pattern)}</div>` : ''}
                     <div class="headline-meta">
                         <span class="swipe-card-date">${new Date(a.created_at).toLocaleDateString()}</span>
                         <div class="swipe-card-actions">
@@ -1423,15 +1427,15 @@
             if (items.length === 0) { grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No image ads found. Upload one above!</p>'; return; }
             grid.innerHTML = items.map(a => `
                 <div class="swipe-card">
-                    <div class="swipe-card-image">${a.image_url ? `<img src="${a.image_url}" alt="Ad" style="width:100%;height:100%;object-fit:cover;">` : '<span>No image</span>'}</div>
+                    <div class="swipe-card-image">${a.image_url ? `<img src="${escHtml(a.image_url)}" alt="Ad" style="width:100%;height:100%;object-fit:cover;">` : '<span>No image</span>'}</div>
                     <div class="swipe-card-body">
                         <div class="swipe-card-tags">
-                            <span class="tag ad">${(a.hook_type || 'AD').toUpperCase()}</span>
-                            ${(a.triggers || []).map(tr => `<span class="tag trigger">${tr.toUpperCase()}</span>`).join('')}
-                            <span class="tag niche">${(a.niche || 'general').toUpperCase()}</span>
+                            <span class="tag ad">${escHtml((a.hook_type || 'AD').toUpperCase())}</span>
+                            ${(a.triggers || []).map(tr => `<span class="tag trigger">${escHtml(tr.toUpperCase())}</span>`).join('')}
+                            <span class="tag niche">${escHtml((a.niche || 'general').toUpperCase())}</span>
                         </div>
-                        ${a.headline_text ? `<p style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">${a.headline_text}</p>` : ''}
-                        <p class="swipe-card-description">${a.composition || a.cta_text || 'No analysis yet'}</p>
+                        ${a.headline_text ? `<p style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">${escHtml(a.headline_text)}</p>` : ''}
+                        <p class="swipe-card-description">${escHtml(a.composition || a.cta_text || 'No analysis yet')}</p>
                         <div class="swipe-card-meta">
                             <span class="swipe-card-date">${new Date(a.created_at).toLocaleDateString()}</span>
                             <div class="swipe-card-actions"><button class="card-action-btn delete" onclick="deleteSwipe('ad_image_swipes', '${a.id}')">Delete</button></div>
