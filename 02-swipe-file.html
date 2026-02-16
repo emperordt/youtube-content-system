@@ -30,6 +30,10 @@
             --blue-dim: #3b82f620;
             --orange: #f97316;
             --orange-dim: #f9731620;
+            --cyan: #06b6d4;
+            --cyan-dim: #06b6d420;
+            --pink: #ec4899;
+            --pink-dim: #ec489920;
         }
 
         body {
@@ -118,6 +122,7 @@
             align-items: flex-start;
             justify-content: space-between;
             margin-bottom: 32px;
+            gap: 24px;
         }
 
         .page-title { font-size: 32px; font-weight: 600; }
@@ -130,19 +135,21 @@
             padding: 4px;
             border-radius: 8px;
             border: 1px solid var(--border);
+            flex-wrap: wrap;
         }
 
         .tab {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             color: var(--text-secondary);
             background: transparent;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 14px;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.15s ease;
+            white-space: nowrap;
         }
 
         .tab:hover { color: var(--text-primary); }
@@ -216,6 +223,7 @@
         }
 
         .add-btn:hover { background: var(--accent-hover); }
+        .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .filter-bar {
             display: flex;
@@ -258,6 +266,7 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             margin-bottom: 32px;
+            flex-wrap: wrap;
         }
 
         .stat { display: flex; flex-direction: column; gap: 4px; }
@@ -319,6 +328,8 @@
         .tag.niche { background: var(--blue-dim); color: var(--blue); }
         .tag.composition { background: var(--accent-dim); color: var(--accent); }
         .tag.hook-type { background: var(--orange-dim); color: var(--orange); }
+        .tag.twitter { background: var(--cyan-dim); color: var(--cyan); }
+        .tag.ad { background: var(--pink-dim); color: var(--pink); }
 
         .swipe-card-description {
             font-size: 13px;
@@ -354,13 +365,13 @@
         .card-action-btn:hover { color: var(--text-primary); }
         .card-action-btn.delete:hover { color: var(--danger); }
 
-        .headline-list, .hook-list {
+        .headline-list, .hook-list, .tweet-list, .adcopy-list {
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        .headline-card, .hook-card {
+        .headline-card, .hook-card, .tweet-card, .adcopy-card {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -368,7 +379,7 @@
             transition: all 0.15s ease;
         }
 
-        .headline-card:hover, .hook-card:hover { border-color: var(--border-hover); }
+        .headline-card:hover, .hook-card:hover, .tweet-card:hover, .adcopy-card:hover { border-color: var(--border-hover); }
 
         .headline-raw, .hook-raw {
             font-size: 16px;
@@ -415,7 +426,45 @@
             justify-content: space-between;
         }
 
-        /* Config placeholders */
+        .tweet-content {
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+        }
+
+        .tweet-engagement {
+            display: flex;
+            gap: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .tweet-engagement span strong {
+            color: var(--text-secondary);
+        }
+
+        .tweet-username {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--cyan);
+        }
+
+        .small-input {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            width: 100px;
+        }
+
+        .small-input:focus { outline: none; border-color: var(--accent); }
+
         .config-section {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
@@ -442,6 +491,27 @@
             border-radius: 4px;
             word-break: break-all;
         }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 13px;
+            color: var(--accent);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.2s ease;
+            z-index: 200;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -451,12 +521,12 @@
     </nav>
     <div class="nav-panel" id="nav-panel">
         <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
-        <a href="02-swipe-file.html" class="nav-link active">YT Swipes</a>
+        <a href="02-swipe-file.html" class="nav-link active">Swipe File</a>
         <a href="08-twitter-generator.html" class="nav-link">TW Generate</a>
         <a href="11-twitter-swipes.html" class="nav-link">TW Swipes</a>
         <a href="09-twitter-scraper.html" class="nav-link">TW Scraper</a>
         <a href="10-hook-bank.html" class="nav-link">TW Hooks</a>
-        <a href="06-ad-swipes.html" class="nav-link">Ad Swipes</a>
+        <a href="06-ad-swipes.html" class="nav-link">Ad Video</a>
         <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
         <a href="05-history.html" class="nav-link">History</a>
     </div>
@@ -465,12 +535,15 @@
         <div class="page-header">
             <div>
                 <h1 class="page-title">Swipe File</h1>
-                <p class="page-subtitle">Your curated library of high-performing thumbnails, headlines, and hooks</p>
+                <p class="page-subtitle">Unified library — thumbnails, headlines, hooks, tweets, ad copy, and image ads</p>
             </div>
             <div class="tabs">
                 <button class="tab active" data-tab="thumbnails">Thumbnails</button>
                 <button class="tab" data-tab="headlines">Headlines</button>
                 <button class="tab" data-tab="hooks">Hooks</button>
+                <button class="tab" data-tab="twitter">Twitter</button>
+                <button class="tab" data-tab="adcopy">Ad Copy</button>
+                <button class="tab" data-tab="adimages">Image Ads</button>
             </div>
         </div>
 
@@ -502,7 +575,7 @@
             </div>
 
             <div class="filter-bar">
-                <input type="text" class="filter-search" placeholder="Search thumbnails...">
+                <input type="text" class="filter-search" id="thumb-search" placeholder="Search thumbnails...">
                 <select class="filter-dropdown" id="thumb-trigger-filter">
                     <option value="">All Triggers</option>
                     <option value="curiosity_gap">Curiosity Gap</option>
@@ -519,23 +592,7 @@
             </div>
 
             <div class="swipe-grid" id="thumbnail-grid">
-                <!-- Thumbnails will be loaded here -->
-                <div class="swipe-card">
-                    <div class="swipe-card-image"><span>Sample Thumbnail</span></div>
-                    <div class="swipe-card-body">
-                        <div class="swipe-card-tags">
-                            <span class="tag trigger">CURIOSITY GAP</span>
-                            <span class="tag niche">HERBALISM</span>
-                        </div>
-                        <p class="swipe-card-description">Face left, bold text right, high contrast green/black</p>
-                        <div class="swipe-card-meta">
-                            <span class="swipe-card-date">Sample</span>
-                            <div class="swipe-card-actions">
-                                <button class="card-action-btn delete">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <p style="color: var(--text-muted); padding: 20px;">Loading...</p>
             </div>
         </div>
 
@@ -568,8 +625,8 @@
             </div>
 
             <div class="filter-bar">
-                <input type="text" class="filter-search" placeholder="Search headlines...">
-                <select class="filter-dropdown">
+                <input type="text" class="filter-search" id="headline-search" placeholder="Search headlines...">
+                <select class="filter-dropdown" id="headline-pattern-filter">
                     <option value="">All Patterns</option>
                     <option value="howto">How To</option>
                     <option value="contrarian">Contrarian</option>
@@ -578,21 +635,7 @@
             </div>
 
             <div class="headline-list" id="headline-list">
-                <!-- Headlines loaded here -->
-                <div class="headline-card">
-                    <p class="headline-raw">I Made $47,000 in 30 Days Using This Forgotten Marketing Strategy</p>
-                    <div class="headline-pattern">I [achieved result] in [timeframe] Using This [descriptor] [method]</div>
-                    <div class="headline-meta">
-                        <div class="swipe-card-tags">
-                            <span class="tag trigger">AUTHORITY</span>
-                            <span class="tag niche">MARKETING</span>
-                        </div>
-                        <div class="swipe-card-actions">
-                            <button class="card-action-btn">Copy Pattern</button>
-                            <button class="card-action-btn delete">Delete</button>
-                        </div>
-                    </div>
-                </div>
+                <p style="color: var(--text-muted); padding: 20px;">Loading...</p>
             </div>
         </div>
 
@@ -631,7 +674,7 @@
             </div>
 
             <div class="filter-bar">
-                <input type="text" class="filter-search" placeholder="Search hooks...">
+                <input type="text" class="filter-search" id="hook-search" placeholder="Search hooks...">
                 <select class="filter-dropdown" id="hook-type-filter">
                     <option value="">All Types</option>
                     <option value="curiosity_gap">Curiosity Gap</option>
@@ -650,29 +693,179 @@
             </div>
 
             <div class="hook-list" id="hook-list">
-                <!-- Hooks loaded here -->
-                <div class="hook-card">
-                    <div class="swipe-card-tags" style="margin-bottom: 12px;">
-                        <span class="tag hook-type">CURIOSITY GAP</span>
-                        <span class="tag trigger">EMPATHY</span>
-                        <span class="tag niche">HERBALISM</span>
-                    </div>
-                    <p class="hook-raw">If you've tried milk thistle, dandelion root, and every liver supplement on the market... and you're still dealing with fatigue, brain fog, and stubborn weight—it's not because those herbs don't work. It's because you're using them wrong.</p>
-                    <div class="hook-meta-row">
-                        <span class="hook-meta-item"><strong>Opening:</strong> Empathy hook</span>
-                        <span class="hook-meta-item"><strong>Pattern:</strong> Acknowledge failed attempts → Identify symptoms → Reframe</span>
-                    </div>
-                    <div class="hook-meta">
-                        <span class="swipe-card-date">Sample</span>
-                        <div class="swipe-card-actions">
-                            <button class="card-action-btn">Copy</button>
-                            <button class="card-action-btn delete">Delete</button>
-                        </div>
-                    </div>
+                <p style="color: var(--text-muted); padding: 20px;">Loading...</p>
+            </div>
+        </div>
+
+        <!-- TWITTER TAB -->
+        <div class="tab-content" id="twitter-tab">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value" id="tw-total">0</span>
+                    <span class="stat-label">Total Tweets</span>
                 </div>
+                <div class="stat">
+                    <span class="stat-value" id="tw-avg-likes">0</span>
+                    <span class="stat-label">Avg Likes</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="tw-top-bookmarks">0</span>
+                    <span class="stat-label">Most Bookmarked</span>
+                </div>
+            </div>
+
+            <div class="input-wrapper" style="flex-direction: column; gap: 12px;">
+                <textarea class="text-input textarea" id="tw-content-input" placeholder="Paste a tweet you want to save to your swipe file..."></textarea>
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" class="small-input" id="tw-username-input" placeholder="@username" style="width: 160px;">
+                    <input type="number" class="small-input" id="tw-likes-input" placeholder="Likes" min="0">
+                    <input type="number" class="small-input" id="tw-bookmarks-input" placeholder="Bookmarks" min="0">
+                    <input type="number" class="small-input" id="tw-retweets-input" placeholder="Retweets" min="0">
+                    <button class="add-btn" id="add-tweet-btn" style="margin-left: auto;">+ Save Tweet</button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" class="filter-search" id="tw-search" placeholder="Search tweets...">
+                <select class="filter-dropdown" id="tw-sort">
+                    <option value="newest">Newest First</option>
+                    <option value="likes">Most Likes</option>
+                    <option value="bookmarks">Most Bookmarks</option>
+                    <option value="retweets">Most Retweets</option>
+                </select>
+            </div>
+
+            <div class="tweet-list" id="tweet-list">
+                <p style="color: var(--text-muted); padding: 20px;">Loading...</p>
+            </div>
+        </div>
+
+        <!-- AD COPY TAB -->
+        <div class="tab-content" id="adcopy-tab">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value" id="adcopy-total">0</span>
+                    <span class="stat-label">Total Ad Headlines</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="adcopy-problem">0</span>
+                    <span class="stat-label">Problem/Agitate</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="adcopy-curiosity">0</span>
+                    <span class="stat-label">Curiosity</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="adcopy-proof">0</span>
+                    <span class="stat-label">Social Proof</span>
+                </div>
+            </div>
+
+            <div class="input-wrapper" style="flex-direction: column; gap: 12px;">
+                <textarea class="text-input textarea" id="adcopy-input" placeholder="Paste an ad headline or copy to analyze..."></textarea>
+                <div style="display: flex; gap: 12px;">
+                    <select class="filter-dropdown" id="adcopy-niche-select" style="flex: 1;">
+                        <option value="general">General</option>
+                        <option value="health">Health/Supplements</option>
+                        <option value="saas">SaaS/Software</option>
+                        <option value="ecom">E-commerce</option>
+                        <option value="info">Info Products</option>
+                        <option value="finance">Finance</option>
+                    </select>
+                    <select class="filter-dropdown" id="adcopy-type-select">
+                        <option value="">Auto-detect Type</option>
+                        <option value="problem_agitate">Problem/Agitate</option>
+                        <option value="curiosity">Curiosity</option>
+                        <option value="social_proof">Social Proof</option>
+                        <option value="contrarian">Contrarian</option>
+                        <option value="story">Story</option>
+                        <option value="question">Question</option>
+                        <option value="shock">Shock</option>
+                    </select>
+                    <button class="add-btn" id="add-adcopy-btn">+ Add</button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" class="filter-search" id="adcopy-search" placeholder="Search ad copy...">
+                <select class="filter-dropdown" id="adcopy-type-filter">
+                    <option value="">All Types</option>
+                    <option value="problem_agitate">Problem/Agitate</option>
+                    <option value="curiosity">Curiosity</option>
+                    <option value="social_proof">Social Proof</option>
+                    <option value="contrarian">Contrarian</option>
+                    <option value="story">Story</option>
+                    <option value="question">Question</option>
+                    <option value="shock">Shock</option>
+                </select>
+                <select class="filter-dropdown" id="adcopy-niche-filter">
+                    <option value="">All Niches</option>
+                    <option value="health">Health</option>
+                    <option value="saas">SaaS</option>
+                    <option value="ecom">E-commerce</option>
+                    <option value="info">Info Products</option>
+                    <option value="finance">Finance</option>
+                </select>
+            </div>
+
+            <div class="adcopy-list" id="adcopy-list">
+                <p style="color: var(--text-muted); padding: 20px;">Loading...</p>
+            </div>
+        </div>
+
+        <!-- IMAGE ADS TAB -->
+        <div class="tab-content" id="adimages-tab">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value" id="adimg-total">0</span>
+                    <span class="stat-label">Total Image Ads</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="adimg-health">0</span>
+                    <span class="stat-label">Health</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="adimg-ecom">0</span>
+                    <span class="stat-label">E-commerce</span>
+                </div>
+            </div>
+
+            <div class="upload-zone" id="adimage-upload">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <p class="upload-text">Drop ad screenshots here or click to upload</p>
+                <p class="upload-hint">PNG, JPG up to 10MB — AI will analyze layout, copy, hook, and CTA</p>
+                <input type="file" id="adimage-file-input" accept="image/*" style="display: none;">
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" class="filter-search" id="adimg-search" placeholder="Search image ads...">
+                <select class="filter-dropdown" id="adimg-type-filter">
+                    <option value="">All Hook Types</option>
+                    <option value="problem_agitate">Problem/Agitate</option>
+                    <option value="curiosity">Curiosity</option>
+                    <option value="social_proof">Social Proof</option>
+                    <option value="contrarian">Contrarian</option>
+                    <option value="shock">Shock</option>
+                </select>
+                <select class="filter-dropdown" id="adimg-niche-filter">
+                    <option value="">All Niches</option>
+                    <option value="health">Health</option>
+                    <option value="saas">SaaS</option>
+                    <option value="ecom">E-commerce</option>
+                    <option value="info">Info Products</option>
+                    <option value="finance">Finance</option>
+                </select>
+            </div>
+
+            <div class="swipe-grid" id="adimage-grid">
+                <p style="color: var(--text-muted); padding: 20px;">Loading...</p>
             </div>
         </div>
     </div>
+
+    <div class="toast" id="toast"></div>
 
     <script>
         // Nav toggle
@@ -687,12 +880,41 @@
             }
         });
 
-        // Configuration - Replace these with your actual URLs
+        // Configuration
         const CONFIG = {
             WEBHOOK_SWIPE: 'https://n8n.dtthomas.cloud/webhook/swipe',
             SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
             SUPABASE_ANON_KEY: 'sb_publishable_TnW2BTNaZvow6Gm8DbxU-w_5YyQN3Av'
         };
+
+        // Module-level data arrays (full datasets, unfiltered)
+        let allThumbnails = [], allHeadlines = [], allHooks = [];
+        let allTweets = [], allAdCopy = [], allAdImages = [];
+
+        // Utilities
+        function debounce(fn, ms) {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn(...args), ms);
+            };
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function fmt(n) {
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+            return String(n || 0);
+        }
+
+        function escAttr(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+        function escTpl(s) { return (s || '').replace(/`/g, '').replace(/\n/g, ' '); }
 
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
@@ -704,168 +926,12 @@
             });
         });
 
-        // Thumbnail upload
-        const thumbnailUpload = document.getElementById('thumbnail-upload');
-        const thumbnailFileInput = document.getElementById('thumbnail-file-input');
-
-        thumbnailUpload.addEventListener('click', () => thumbnailFileInput.click());
-        thumbnailUpload.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            thumbnailUpload.classList.add('dragover');
-        });
-        thumbnailUpload.addEventListener('dragleave', () => thumbnailUpload.classList.remove('dragover'));
-        thumbnailUpload.addEventListener('drop', (e) => {
-            e.preventDefault();
-            thumbnailUpload.classList.remove('dragover');
-            handleThumbnailUpload(e.dataTransfer.files[0]);
-        });
-        thumbnailFileInput.addEventListener('change', (e) => {
-            if (e.target.files[0]) handleThumbnailUpload(e.target.files[0]);
-        });
-
-        async function handleThumbnailUpload(file) {
-            if (!file) return;
-
-            console.log('Starting thumbnail upload:', file.name, file.size);
-
-            // Show loading state
-            const uploadZone = document.getElementById('thumbnail-upload');
-            const originalHTML = uploadZone.innerHTML;
-            uploadZone.innerHTML = '<p style="color: var(--accent);">Uploading & analyzing...</p>';
-            uploadZone.style.pointerEvents = 'none';
-
-            // Convert to base64
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const base64 = e.target.result.split(',')[1];
-                console.log('Base64 ready, length:', base64.length);
-
-                try {
-                    console.log('Sending to:', CONFIG.WEBHOOK_SWIPE);
-                    const response = await fetch(CONFIG.WEBHOOK_SWIPE, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: 'thumbnail',
-                            image_base64: base64,
-                            filename: `thumb_${Date.now()}.png`,
-                            niche: document.getElementById('thumb-niche-filter').value || 'general'
-                        })
-                    });
-
-                    console.log('Response status:', response.status);
-                    const data = await response.json();
-                    console.log('Response data:', data);
-
-                    alert('Thumbnail uploaded! Processing...');
-                    loadThumbnails(); // Refresh the list
-                } catch (error) {
-                    console.error('Upload failed:', error);
-                    alert('Upload failed: ' + error.message);
-                } finally {
-                    uploadZone.innerHTML = originalHTML;
-                    uploadZone.style.pointerEvents = 'auto';
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Add headline
-        document.getElementById('add-headline-btn').addEventListener('click', async () => {
-            const btn = document.getElementById('add-headline-btn');
-            const text = document.getElementById('headline-input').value.trim();
-            const niche = document.getElementById('headline-niche-select').value;
-
-            if (!text) {
-                alert('Please enter a headline');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Adding...';
-
-            try {
-                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/yt_headline_swipes`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': CONFIG.SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({
-                        content: text,
-                        niche: niche || 'general'
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to save');
-                }
-
-                document.getElementById('headline-input').value = '';
-                loadHeadlines();
-            } catch (error) {
-                console.error('Add headline failed:', error);
-                alert('Failed to add headline. Check console.');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '+ Add';
-            }
-        });
-
-        // Add hook
-        document.getElementById('add-hook-btn').addEventListener('click', async () => {
-            const btn = document.getElementById('add-hook-btn');
-            const text = document.getElementById('hook-input').value.trim();
-            const niche = document.getElementById('hook-niche-select').value;
-
-            if (!text) {
-                alert('Please enter a hook script');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Adding...';
-
-            try {
-                const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/yt_hook_swipes`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': CONFIG.SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({
-                        content: text,
-                        niche: niche || 'general'
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to save');
-                }
-
-                document.getElementById('hook-input').value = '';
-                loadHooks();
-            } catch (error) {
-                console.error('Add hook failed:', error);
-                alert('Failed to add hook. Check console.');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '+ Add Hook';
-            }
-        });
-
-        // Load data from Supabase
-        async function loadSwipes() {
-            await Promise.all([loadHeadlines(), loadHooks(), loadThumbnails()]);
-        }
-
-        async function supabaseFetch(table) {
-            const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}?order=created_at.desc`, {
+        // Supabase helpers
+        async function supabaseFetch(table, query) {
+            const url = query
+                ? `${CONFIG.SUPABASE_URL}/rest/v1/${table}?${query}`
+                : `${CONFIG.SUPABASE_URL}/rest/v1/${table}?order=created_at.desc`;
+            const res = await fetch(url, {
                 headers: {
                     'apikey': CONFIG.SUPABASE_ANON_KEY,
                     'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
@@ -874,165 +940,553 @@
             return res.json();
         }
 
-        async function loadHeadlines() {
-            try {
-                const headlines = await supabaseFetch('yt_headline_swipes');
-                const list = document.getElementById('headline-list');
-                document.getElementById('headline-total').textContent = headlines.length;
-
-                if (headlines.length === 0) {
-                    list.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No headlines yet. Add one above!</p>';
-                    return;
-                }
-
-                list.innerHTML = headlines.map(h => `
-                    <div class="headline-card">
-                        <p class="headline-raw">${h.raw_text || 'No text'}</p>
-                        <div class="headline-pattern">${h.pattern || 'No pattern detected'}</div>
-                        <div class="headline-meta">
-                            <div class="swipe-card-tags">
-                                ${(h.triggers || []).map(t => `<span class="tag trigger">${t.toUpperCase()}</span>`).join('')}
-                                <span class="tag niche">${(h.niche || 'general').toUpperCase()}</span>
-                            </div>
-                            <div class="swipe-card-actions">
-                                <button class="card-action-btn" onclick="navigator.clipboard.writeText('${(h.pattern || '').replace(/'/g, "\\'")}')">Copy Pattern</button>
-                                <button class="card-action-btn delete" onclick="deleteSwipe('yt_headline_swipes', '${h.id}')">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                console.error('Failed to load headlines:', e);
-            }
+        async function supabaseInsert(table, data) {
+            const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': CONFIG.SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw new Error(`Insert failed: ${res.status}`);
         }
 
-        async function loadHooks() {
-            try {
-                const hooks = await supabaseFetch('yt_hook_swipes');
-                const list = document.getElementById('hook-list');
-                document.getElementById('hook-total').textContent = hooks.length;
+        // =====================================================
+        // THUMBNAIL UPLOAD
+        // =====================================================
+        const thumbnailUpload = document.getElementById('thumbnail-upload');
+        const thumbnailFileInput = document.getElementById('thumbnail-file-input');
 
-                if (hooks.length === 0) {
-                    list.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No hooks yet. Add one above!</p>';
-                    return;
+        thumbnailUpload.addEventListener('click', () => thumbnailFileInput.click());
+        thumbnailUpload.addEventListener('dragover', (e) => { e.preventDefault(); thumbnailUpload.classList.add('dragover'); });
+        thumbnailUpload.addEventListener('dragleave', () => thumbnailUpload.classList.remove('dragover'));
+        thumbnailUpload.addEventListener('drop', (e) => { e.preventDefault(); thumbnailUpload.classList.remove('dragover'); handleThumbnailUpload(e.dataTransfer.files[0]); });
+        thumbnailFileInput.addEventListener('change', (e) => { if (e.target.files[0]) handleThumbnailUpload(e.target.files[0]); });
+
+        async function handleThumbnailUpload(file) {
+            if (!file) return;
+            const uploadZone = document.getElementById('thumbnail-upload');
+            const originalHTML = uploadZone.innerHTML;
+            uploadZone.innerHTML = '<p style="color: var(--accent);">Uploading & analyzing...</p>';
+            uploadZone.style.pointerEvents = 'none';
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64 = e.target.result.split(',')[1];
+                try {
+                    await fetch(CONFIG.WEBHOOK_SWIPE, {
+                        method: 'POST', mode: 'cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'thumbnail', image_base64: base64, filename: `thumb_${Date.now()}.png`, niche: document.getElementById('thumb-niche-filter').value || 'general' })
+                    });
+                    showToast('Thumbnail uploaded! Processing...');
+                    loadThumbnails();
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    showToast('Upload failed: ' + error.message);
+                } finally {
+                    uploadZone.innerHTML = originalHTML;
+                    uploadZone.style.pointerEvents = 'auto';
                 }
+            };
+            reader.readAsDataURL(file);
+        }
 
-                list.innerHTML = hooks.map(h => {
-                    const meta = h.metadata || {};
-                    const formula = meta.formula || {};
-                    return `
-                    <div class="hook-card">
-                        <div class="swipe-card-tags" style="margin-bottom: 12px;">
-                            <span class="tag hook-type">${(h.hook_type || 'hook').toUpperCase()}</span>
-                            ${meta.tone ? `<span class="tag" style="background: var(--blue-dim); color: var(--blue);">${meta.tone.toUpperCase()}</span>` : ''}
-                            ${meta.pov ? `<span class="tag" style="background: var(--warning-dim); color: var(--warning);">${meta.pov.replace('_', ' ').toUpperCase()}</span>` : ''}
+        // =====================================================
+        // ADD HEADLINE — webhook for AI analysis
+        // =====================================================
+        document.getElementById('add-headline-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('add-headline-btn');
+            const text = document.getElementById('headline-input').value.trim();
+            const niche = document.getElementById('headline-niche-select').value;
+            if (!text) { showToast('Please enter a headline'); return; }
+
+            btn.disabled = true; btn.textContent = 'Analyzing...';
+            try {
+                const r = await fetch(CONFIG.WEBHOOK_SWIPE, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'headline', content: text, niche: niche || 'general' }) });
+                if (!r.ok) throw new Error('Failed');
+                document.getElementById('headline-input').value = '';
+                showToast('Headline saved & analyzing...');
+                loadHeadlines();
+            } catch (e) { console.error(e); showToast('Failed to add headline'); }
+            finally { btn.disabled = false; btn.textContent = '+ Add'; }
+        });
+
+        // =====================================================
+        // ADD HOOK — webhook for AI analysis
+        // =====================================================
+        document.getElementById('add-hook-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('add-hook-btn');
+            const text = document.getElementById('hook-input').value.trim();
+            const niche = document.getElementById('hook-niche-select').value;
+            if (!text) { showToast('Please enter a hook script'); return; }
+
+            btn.disabled = true; btn.textContent = 'Analyzing...';
+            try {
+                const r = await fetch(CONFIG.WEBHOOK_SWIPE, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'hook', content: text, niche: niche || 'general' }) });
+                if (!r.ok) throw new Error('Failed');
+                document.getElementById('hook-input').value = '';
+                showToast('Hook saved & analyzing...');
+                loadHooks();
+            } catch (e) { console.error(e); showToast('Failed to add hook'); }
+            finally { btn.disabled = false; btn.textContent = '+ Add Hook'; }
+        });
+
+        // =====================================================
+        // ADD TWEET — direct to Supabase (no AI analysis needed)
+        // =====================================================
+        document.getElementById('add-tweet-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('add-tweet-btn');
+            const content = document.getElementById('tw-content-input').value.trim();
+            if (!content) { showToast('Please paste a tweet'); return; }
+
+            const username = document.getElementById('tw-username-input').value.trim().replace(/^@/, '') || null;
+            const likes = parseInt(document.getElementById('tw-likes-input').value) || 0;
+            const bookmarks = parseInt(document.getElementById('tw-bookmarks-input').value) || 0;
+            const retweets = parseInt(document.getElementById('tw-retweets-input').value) || 0;
+
+            btn.disabled = true; btn.textContent = 'Saving...';
+            try {
+                await supabaseInsert('tw_swipefile', { content, username, likes, bookmarks, retweets, content_type: 'tweet' });
+                document.getElementById('tw-content-input').value = '';
+                document.getElementById('tw-username-input').value = '';
+                document.getElementById('tw-likes-input').value = '';
+                document.getElementById('tw-bookmarks-input').value = '';
+                document.getElementById('tw-retweets-input').value = '';
+                showToast('Tweet saved!');
+                loadTweets();
+            } catch (e) { console.error(e); showToast('Failed to save tweet'); }
+            finally { btn.disabled = false; btn.textContent = '+ Save Tweet'; }
+        });
+
+        // =====================================================
+        // ADD AD COPY — webhook for AI analysis
+        // =====================================================
+        document.getElementById('add-adcopy-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('add-adcopy-btn');
+            const text = document.getElementById('adcopy-input').value.trim();
+            const niche = document.getElementById('adcopy-niche-select').value;
+            const hookType = document.getElementById('adcopy-type-select').value;
+            if (!text) { showToast('Please paste ad copy'); return; }
+
+            btn.disabled = true; btn.textContent = 'Analyzing...';
+            try {
+                const r = await fetch(CONFIG.WEBHOOK_SWIPE, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'ad_headline', content: text, niche: niche || 'general', hook_type: hookType || undefined }) });
+                if (!r.ok) throw new Error('Failed');
+                document.getElementById('adcopy-input').value = '';
+                showToast('Ad copy saved & analyzing...');
+                loadAdCopy();
+            } catch (e) { console.error(e); showToast('Failed to add ad copy'); }
+            finally { btn.disabled = false; btn.textContent = '+ Add'; }
+        });
+
+        // =====================================================
+        // IMAGE AD UPLOAD — webhook for AI analysis
+        // =====================================================
+        const adimageUpload = document.getElementById('adimage-upload');
+        const adimageFileInput = document.getElementById('adimage-file-input');
+
+        adimageUpload.addEventListener('click', () => adimageFileInput.click());
+        adimageUpload.addEventListener('dragover', (e) => { e.preventDefault(); adimageUpload.classList.add('dragover'); });
+        adimageUpload.addEventListener('dragleave', () => adimageUpload.classList.remove('dragover'));
+        adimageUpload.addEventListener('drop', (e) => { e.preventDefault(); adimageUpload.classList.remove('dragover'); handleAdImageUpload(e.dataTransfer.files[0]); });
+        adimageFileInput.addEventListener('change', (e) => { if (e.target.files[0]) handleAdImageUpload(e.target.files[0]); });
+
+        async function handleAdImageUpload(file) {
+            if (!file) return;
+            const uploadZone = document.getElementById('adimage-upload');
+            const originalHTML = uploadZone.innerHTML;
+            uploadZone.innerHTML = '<p style="color: var(--accent);">Uploading & analyzing ad...</p>';
+            uploadZone.style.pointerEvents = 'none';
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64 = e.target.result.split(',')[1];
+                try {
+                    await fetch(CONFIG.WEBHOOK_SWIPE, {
+                        method: 'POST', mode: 'cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'ad_image', image_base64: base64, filename: `adimg_${Date.now()}.png`, niche: document.getElementById('adimg-niche-filter').value || 'general' })
+                    });
+                    showToast('Image ad uploaded! Processing...');
+                    loadAdImages();
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    showToast('Upload failed: ' + error.message);
+                } finally {
+                    uploadZone.innerHTML = originalHTML;
+                    uploadZone.style.pointerEvents = 'auto';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // =====================================================
+        // THUMBNAILS: load → stats → filter → render
+        // =====================================================
+        async function loadThumbnails() {
+            try {
+                allThumbnails = await supabaseFetch('yt_thumbnail_swipes');
+                updateThumbStats();
+                applyThumbFilters();
+            } catch (e) { console.error('Failed to load thumbnails:', e); }
+        }
+
+        function updateThumbStats() {
+            document.getElementById('thumb-total').textContent = allThumbnails.length;
+            document.getElementById('thumb-curiosity').textContent = allThumbnails.filter(t => (t.triggers || []).some(tr => tr.toLowerCase().includes('curiosity'))).length;
+            document.getElementById('thumb-shock').textContent = allThumbnails.filter(t => (t.triggers || []).some(tr => tr.toLowerCase().includes('shock') || tr.toLowerCase().includes('contrast'))).length;
+        }
+
+        function applyThumbFilters() {
+            const search = document.getElementById('thumb-search').value.toLowerCase().trim();
+            const triggerFilter = document.getElementById('thumb-trigger-filter').value;
+            const nicheFilter = document.getElementById('thumb-niche-filter').value;
+            let filtered = allThumbnails.filter(t => {
+                if (search) { const h = [t.composition, t.text_overlay, t.niche].filter(Boolean).join(' ').toLowerCase(); if (!h.includes(search)) return false; }
+                if (triggerFilter && !(t.triggers || []).some(tr => tr.toLowerCase().includes(triggerFilter))) return false;
+                if (nicheFilter && (t.niche || '').toLowerCase() !== nicheFilter.toLowerCase()) return false;
+                return true;
+            });
+            renderThumbnails(filtered);
+        }
+
+        function renderThumbnails(thumbs) {
+            const grid = document.getElementById('thumbnail-grid');
+            if (thumbs.length === 0) { grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No thumbnails found.</p>'; return; }
+            grid.innerHTML = thumbs.map(t => `
+                <div class="swipe-card">
+                    <div class="swipe-card-image">${t.image_url ? `<img src="${t.image_url}" alt="Thumbnail" style="width:100%;height:100%;object-fit:cover;">` : '<span>No image</span>'}</div>
+                    <div class="swipe-card-body">
+                        <div class="swipe-card-tags">
+                            ${(t.triggers || []).map(tr => `<span class="tag trigger">${tr.toUpperCase()}</span>`).join('')}
+                            <span class="tag niche">${(t.niche || 'general').toUpperCase()}</span>
+                        </div>
+                        <p class="swipe-card-description">${t.composition || 'No composition data'}</p>
+                        <div class="swipe-card-meta">
+                            <span class="swipe-card-date">${new Date(t.created_at).toLocaleDateString()}</span>
+                            <div class="swipe-card-actions"><button class="card-action-btn delete" onclick="deleteSwipe('yt_thumbnail_swipes', '${t.id}')">Delete</button></div>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        // =====================================================
+        // HEADLINES: load → stats → filter → render
+        // =====================================================
+        async function loadHeadlines() {
+            try { allHeadlines = await supabaseFetch('yt_headline_swipes'); updateHeadlineStats(); applyHeadlineFilters(); }
+            catch (e) { console.error('Failed to load headlines:', e); }
+        }
+
+        function updateHeadlineStats() {
+            document.getElementById('headline-total').textContent = allHeadlines.length;
+            document.getElementById('headline-howto').textContent = allHeadlines.filter(h => { const p = (h.pattern || '').toLowerCase(); const t = (h.raw_text || '').toLowerCase(); return p.includes('how to') || p.includes('howto') || t.includes('how to'); }).length;
+            document.getElementById('headline-contrarian').textContent = allHeadlines.filter(h => { const p = (h.pattern || '').toLowerCase(); return p.includes('contrarian') || (h.triggers || []).some(t => t.toLowerCase() === 'contrarian'); }).length;
+        }
+
+        function applyHeadlineFilters() {
+            const search = document.getElementById('headline-search').value.toLowerCase().trim();
+            const patternFilter = document.getElementById('headline-pattern-filter').value;
+            let filtered = allHeadlines.filter(h => {
+                if (search) { const hay = [h.raw_text, h.pattern, h.niche].filter(Boolean).join(' ').toLowerCase(); if (!hay.includes(search)) return false; }
+                if (patternFilter) {
+                    const p = (h.pattern || '').toLowerCase(); const t = (h.raw_text || '').toLowerCase();
+                    if (patternFilter === 'howto' && !p.includes('how to') && !p.includes('howto') && !t.includes('how to')) return false;
+                    if (patternFilter === 'contrarian' && !p.includes('contrarian') && !(h.triggers || []).some(tr => tr.toLowerCase() === 'contrarian')) return false;
+                    if (patternFilter === 'numbers' && !p.includes('number') && !p.includes('stat') && !/\d/.test(h.raw_text || '')) return false;
+                }
+                return true;
+            });
+            renderHeadlines(filtered);
+        }
+
+        function renderHeadlines(headlines) {
+            const list = document.getElementById('headline-list');
+            if (headlines.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No headlines found.</p>'; return; }
+            list.innerHTML = headlines.map(h => `
+                <div class="headline-card">
+                    <p class="headline-raw">${h.raw_text || 'No text'}</p>
+                    <div class="headline-pattern">${h.pattern || 'No pattern detected'}</div>
+                    <div class="headline-meta">
+                        <div class="swipe-card-tags">
                             ${(h.triggers || []).map(t => `<span class="tag trigger">${t.toUpperCase()}</span>`).join('')}
                             <span class="tag niche">${(h.niche || 'general').toUpperCase()}</span>
                         </div>
-
-                        <p class="hook-raw">${h.raw_text || 'No text'}</p>
-
-                        <div class="headline-pattern" style="margin: 12px 0;">
-                            <strong>Pattern:</strong> ${h.pattern || 'N/A'}
-                        </div>
-
-                        ${meta.opening_line ? `
-                        <div style="background: var(--purple-dim); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px;">
-                            <strong style="color: var(--purple);">Opening Line:</strong><br>
-                            <span style="color: var(--text-primary);">${meta.opening_line}</span>
-                        </div>
-                        ` : ''}
-
-                        ${formula.step1 ? `
-                        <div style="background: var(--bg-tertiary); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; font-size: 13px;">
-                            <strong style="color: var(--text-secondary);">Formula:</strong><br>
-                            <span style="color: var(--accent);">1.</span> ${formula.step1}<br>
-                            ${formula.step2 ? `<span style="color: var(--accent);">2.</span> ${formula.step2}<br>` : ''}
-                            ${formula.step3 ? `<span style="color: var(--accent);">3.</span> ${formula.step3}` : ''}
-                        </div>
-                        ` : ''}
-
-                        ${meta.why_it_works ? `
-                        <div style="font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 12px;">
-                            <strong>Why it works:</strong> ${meta.why_it_works}
-                        </div>
-                        ` : ''}
-
-                        ${meta.power_words && meta.power_words.length > 0 ? `
-                        <div style="margin-bottom: 12px;">
-                            <strong style="font-size: 11px; color: var(--text-muted);">POWER WORDS:</strong>
-                            <span style="font-size: 13px; color: var(--text-secondary);"> ${meta.power_words.join(', ')}</span>
-                        </div>
-                        ` : ''}
-
-                        <div class="hook-meta">
-                            <span class="swipe-card-date">${new Date(h.created_at).toLocaleDateString()}</span>
-                            <div class="swipe-card-actions">
-                                <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${(h.pattern || '').replace(/`/g, '').replace(/\n/g, ' ')}\`)">Copy Pattern</button>
-                                <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${(h.raw_text || '').replace(/`/g, '').replace(/\n/g, ' ')}\`)">Copy Hook</button>
-                                <button class="card-action-btn delete" onclick="deleteSwipe('yt_hook_swipes', '${h.id}')">Delete</button>
-                            </div>
+                        <div class="swipe-card-actions">
+                            <button class="card-action-btn" onclick="navigator.clipboard.writeText('${escAttr(h.pattern)}'); showToast('Pattern copied!')">Copy Pattern</button>
+                            <button class="card-action-btn delete" onclick="deleteSwipe('yt_headline_swipes', '${h.id}')">Delete</button>
                         </div>
                     </div>
-                `}).join('');
-            } catch (e) {
-                console.error('Failed to load hooks:', e);
-            }
+                </div>`).join('');
         }
 
-        async function loadThumbnails() {
-            try {
-                const thumbs = await supabaseFetch('yt_thumbnail_swipes');
-                const grid = document.getElementById('thumbnail-grid');
-                document.getElementById('thumb-total').textContent = thumbs.length;
+        // =====================================================
+        // HOOKS: load → stats → filter → render
+        // =====================================================
+        async function loadHooks() {
+            try { allHooks = await supabaseFetch('yt_hook_swipes'); updateHookStats(); applyHookFilters(); }
+            catch (e) { console.error('Failed to load hooks:', e); }
+        }
 
-                if (thumbs.length === 0) {
-                    grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No thumbnails yet. Upload one above!</p>';
-                    return;
-                }
+        function updateHookStats() {
+            document.getElementById('hook-total').textContent = allHooks.length;
+            document.getElementById('hook-curiosity').textContent = allHooks.filter(h => (h.hook_type || '').toLowerCase().includes('curiosity')).length;
+            document.getElementById('hook-contrarian').textContent = allHooks.filter(h => (h.hook_type || '').toLowerCase().includes('contrarian')).length;
+            document.getElementById('hook-story').textContent = allHooks.filter(h => (h.hook_type || '').toLowerCase().includes('story')).length;
+        }
 
-                grid.innerHTML = thumbs.map(t => `
-                    <div class="swipe-card">
-                        <div class="swipe-card-image">
-                            ${t.image_url ? `<img src="${t.image_url}" alt="Thumbnail" style="width:100%;height:100%;object-fit:cover;">` : '<span>No image</span>'}
-                        </div>
-                        <div class="swipe-card-body">
-                            <div class="swipe-card-tags">
-                                ${(t.triggers || []).map(tr => `<span class="tag trigger">${tr.toUpperCase()}</span>`).join('')}
-                                <span class="tag niche">${(t.niche || 'general').toUpperCase()}</span>
-                            </div>
-                            <p class="swipe-card-description">${t.composition || 'No composition data'}</p>
-                            <div class="swipe-card-meta">
-                                <span class="swipe-card-date">${new Date(t.created_at).toLocaleDateString()}</span>
-                                <div class="swipe-card-actions">
-                                    <button class="card-action-btn delete" onclick="deleteSwipe('yt_thumbnail_swipes', '${t.id}')">Delete</button>
-                                </div>
-                            </div>
+        function applyHookFilters() {
+            const search = document.getElementById('hook-search').value.toLowerCase().trim();
+            const typeFilter = document.getElementById('hook-type-filter').value;
+            const nicheFilter = document.getElementById('hook-niche-filter').value;
+            let filtered = allHooks.filter(h => {
+                if (search) { const hay = [h.raw_text, h.pattern, h.niche, h.hook_type].filter(Boolean).join(' ').toLowerCase(); if (!hay.includes(search)) return false; }
+                if (typeFilter && (h.hook_type || '').toLowerCase() !== typeFilter.toLowerCase()) return false;
+                if (nicheFilter && (h.niche || '').toLowerCase() !== nicheFilter.toLowerCase()) return false;
+                return true;
+            });
+            renderHooks(filtered);
+        }
+
+        function renderHooks(hooks) {
+            const list = document.getElementById('hook-list');
+            if (hooks.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No hooks found.</p>'; return; }
+            list.innerHTML = hooks.map(h => {
+                const meta = h.metadata || {};
+                const formula = meta.formula || {};
+                return `
+                <div class="hook-card">
+                    <div class="swipe-card-tags" style="margin-bottom: 12px;">
+                        <span class="tag hook-type">${(h.hook_type || 'hook').toUpperCase()}</span>
+                        ${meta.tone ? `<span class="tag" style="background: var(--blue-dim); color: var(--blue);">${meta.tone.toUpperCase()}</span>` : ''}
+                        ${meta.pov ? `<span class="tag" style="background: var(--orange-dim); color: var(--orange);">${meta.pov.replace('_', ' ').toUpperCase()}</span>` : ''}
+                        ${(h.triggers || []).map(t => `<span class="tag trigger">${t.toUpperCase()}</span>`).join('')}
+                        <span class="tag niche">${(h.niche || 'general').toUpperCase()}</span>
+                    </div>
+                    <p class="hook-raw">${h.raw_text || 'No text'}</p>
+                    <div class="headline-pattern" style="margin: 12px 0;"><strong>Pattern:</strong> ${h.pattern || 'N/A'}</div>
+                    ${meta.opening_line ? `<div style="background: var(--purple-dim); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px;"><strong style="color: var(--purple);">Opening Line:</strong><br><span style="color: var(--text-primary);">${meta.opening_line}</span></div>` : ''}
+                    ${formula.step1 ? `<div style="background: var(--bg-tertiary); padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; font-size: 13px;"><strong style="color: var(--text-secondary);">Formula:</strong><br><span style="color: var(--accent);">1.</span> ${formula.step1}<br>${formula.step2 ? `<span style="color: var(--accent);">2.</span> ${formula.step2}<br>` : ''}${formula.step3 ? `<span style="color: var(--accent);">3.</span> ${formula.step3}` : ''}</div>` : ''}
+                    ${meta.why_it_works ? `<div style="font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 12px;"><strong>Why it works:</strong> ${meta.why_it_works}</div>` : ''}
+                    ${meta.power_words && meta.power_words.length > 0 ? `<div style="margin-bottom: 12px;"><strong style="font-size: 11px; color: var(--text-muted);">POWER WORDS:</strong><span style="font-size: 13px; color: var(--text-secondary);"> ${meta.power_words.join(', ')}</span></div>` : ''}
+                    <div class="hook-meta">
+                        <span class="swipe-card-date">${new Date(h.created_at).toLocaleDateString()}</span>
+                        <div class="swipe-card-actions">
+                            <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${escTpl(h.pattern)}\`); showToast('Pattern copied!')">Copy Pattern</button>
+                            <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${escTpl(h.raw_text)}\`); showToast('Hook copied!')">Copy Hook</button>
+                            <button class="card-action-btn delete" onclick="deleteSwipe('yt_hook_swipes', '${h.id}')">Delete</button>
                         </div>
                     </div>
-                `).join('');
-            } catch (e) {
-                console.error('Failed to load thumbnails:', e);
-            }
+                </div>`;
+            }).join('');
         }
 
+        // =====================================================
+        // TWITTER: load → stats → filter → render
+        // =====================================================
+        async function loadTweets() {
+            try { allTweets = await supabaseFetch('tw_swipefile', 'select=*&order=created_at.desc&limit=500'); updateTweetStats(); applyTweetFilters(); }
+            catch (e) { console.error('Failed to load tweets:', e); }
+        }
+
+        function updateTweetStats() {
+            document.getElementById('tw-total').textContent = allTweets.length;
+            const totalLikes = allTweets.reduce((s, t) => s + (t.likes || 0), 0);
+            document.getElementById('tw-avg-likes').textContent = allTweets.length ? fmt(Math.round(totalLikes / allTweets.length)) : '0';
+            const maxBm = allTweets.reduce((max, t) => Math.max(max, t.bookmarks || 0), 0);
+            document.getElementById('tw-top-bookmarks').textContent = fmt(maxBm);
+        }
+
+        function applyTweetFilters() {
+            const search = document.getElementById('tw-search').value.toLowerCase().trim();
+            const sort = document.getElementById('tw-sort').value;
+            let filtered = allTweets.filter(t => {
+                if (search) { const hay = [t.content, t.username].filter(Boolean).join(' ').toLowerCase(); if (!hay.includes(search)) return false; }
+                return true;
+            });
+            filtered.sort((a, b) => {
+                if (sort === 'likes') return (b.likes || 0) - (a.likes || 0);
+                if (sort === 'bookmarks') return (b.bookmarks || 0) - (a.bookmarks || 0);
+                if (sort === 'retweets') return (b.retweets || 0) - (a.retweets || 0);
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
+            renderTweets(filtered);
+        }
+
+        function renderTweets(tweets) {
+            const list = document.getElementById('tweet-list');
+            if (tweets.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No tweets found. Paste one above or use the TW Scraper.</p>'; return; }
+            list.innerHTML = tweets.map(t => `
+                <div class="tweet-card">
+                    ${t.username ? `<span class="tweet-username">@${t.username}</span>` : ''}
+                    <p class="tweet-content">${t.content || ''}</p>
+                    <div class="tweet-engagement">
+                        <span><strong>${fmt(t.likes)}</strong> likes</span>
+                        <span><strong>${fmt(t.bookmarks)}</strong> bookmarks</span>
+                        <span><strong>${fmt(t.retweets)}</strong> retweets</span>
+                        ${t.replies ? `<span><strong>${fmt(t.replies)}</strong> replies</span>` : ''}
+                    </div>
+                    <div class="swipe-card-meta">
+                        <span class="swipe-card-date">${new Date(t.created_at).toLocaleDateString()}</span>
+                        <div class="swipe-card-actions">
+                            <button class="card-action-btn" onclick="navigator.clipboard.writeText(\`${escTpl(t.content)}\`); showToast('Tweet copied!')">Copy</button>
+                            <button class="card-action-btn delete" onclick="deleteSwipe('tw_swipefile', '${t.id}')">Delete</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        // =====================================================
+        // AD COPY: load → stats → filter → render
+        // =====================================================
+        async function loadAdCopy() {
+            try { allAdCopy = await supabaseFetch('ad_headline_swipes'); updateAdCopyStats(); applyAdCopyFilters(); }
+            catch (e) { console.error('Failed to load ad copy:', e); }
+        }
+
+        function updateAdCopyStats() {
+            document.getElementById('adcopy-total').textContent = allAdCopy.length;
+            document.getElementById('adcopy-problem').textContent = allAdCopy.filter(a => (a.hook_type || '').toLowerCase().includes('problem')).length;
+            document.getElementById('adcopy-curiosity').textContent = allAdCopy.filter(a => (a.hook_type || '').toLowerCase().includes('curiosity')).length;
+            document.getElementById('adcopy-proof').textContent = allAdCopy.filter(a => (a.hook_type || '').toLowerCase().includes('social_proof') || (a.hook_type || '').toLowerCase().includes('proof')).length;
+        }
+
+        function applyAdCopyFilters() {
+            const search = document.getElementById('adcopy-search').value.toLowerCase().trim();
+            const typeFilter = document.getElementById('adcopy-type-filter').value;
+            const nicheFilter = document.getElementById('adcopy-niche-filter').value;
+            let filtered = allAdCopy.filter(a => {
+                if (search) { const hay = [a.raw_text, a.pattern, a.niche, a.hook_type].filter(Boolean).join(' ').toLowerCase(); if (!hay.includes(search)) return false; }
+                if (typeFilter && (a.hook_type || '').toLowerCase() !== typeFilter.toLowerCase()) return false;
+                if (nicheFilter && (a.niche || '').toLowerCase() !== nicheFilter.toLowerCase()) return false;
+                return true;
+            });
+            renderAdCopy(filtered);
+        }
+
+        function renderAdCopy(items) {
+            const list = document.getElementById('adcopy-list');
+            if (items.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No ad copy found. Paste one above!</p>'; return; }
+            list.innerHTML = items.map(a => `
+                <div class="adcopy-card">
+                    <div class="swipe-card-tags" style="margin-bottom: 12px;">
+                        <span class="tag ad">${(a.hook_type || 'AD').toUpperCase()}</span>
+                        ${(a.triggers || []).map(t => `<span class="tag trigger">${t.toUpperCase()}</span>`).join('')}
+                        <span class="tag niche">${(a.niche || 'general').toUpperCase()}</span>
+                    </div>
+                    <p class="headline-raw">${a.raw_text || 'No text'}</p>
+                    ${a.pattern ? `<div class="headline-pattern">${a.pattern}</div>` : ''}
+                    <div class="headline-meta">
+                        <span class="swipe-card-date">${new Date(a.created_at).toLocaleDateString()}</span>
+                        <div class="swipe-card-actions">
+                            <button class="card-action-btn" onclick="navigator.clipboard.writeText('${escAttr(a.raw_text)}'); showToast('Ad copy copied!')">Copy</button>
+                            ${a.pattern ? `<button class="card-action-btn" onclick="navigator.clipboard.writeText('${escAttr(a.pattern)}'); showToast('Pattern copied!')">Copy Pattern</button>` : ''}
+                            <button class="card-action-btn delete" onclick="deleteSwipe('ad_headline_swipes', '${a.id}')">Delete</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        // =====================================================
+        // IMAGE ADS: load → stats → filter → render
+        // =====================================================
+        async function loadAdImages() {
+            try { allAdImages = await supabaseFetch('ad_image_swipes'); updateAdImageStats(); applyAdImageFilters(); }
+            catch (e) { console.error('Failed to load image ads:', e); }
+        }
+
+        function updateAdImageStats() {
+            document.getElementById('adimg-total').textContent = allAdImages.length;
+            document.getElementById('adimg-health').textContent = allAdImages.filter(a => (a.niche || '').toLowerCase() === 'health').length;
+            document.getElementById('adimg-ecom').textContent = allAdImages.filter(a => (a.niche || '').toLowerCase() === 'ecom').length;
+        }
+
+        function applyAdImageFilters() {
+            const search = document.getElementById('adimg-search').value.toLowerCase().trim();
+            const typeFilter = document.getElementById('adimg-type-filter').value;
+            const nicheFilter = document.getElementById('adimg-niche-filter').value;
+            let filtered = allAdImages.filter(a => {
+                if (search) { const hay = [a.headline_text, a.composition, a.niche, a.hook_type].filter(Boolean).join(' ').toLowerCase(); if (!hay.includes(search)) return false; }
+                if (typeFilter && (a.hook_type || '').toLowerCase() !== typeFilter.toLowerCase()) return false;
+                if (nicheFilter && (a.niche || '').toLowerCase() !== nicheFilter.toLowerCase()) return false;
+                return true;
+            });
+            renderAdImages(filtered);
+        }
+
+        function renderAdImages(items) {
+            const grid = document.getElementById('adimage-grid');
+            if (items.length === 0) { grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No image ads found. Upload one above!</p>'; return; }
+            grid.innerHTML = items.map(a => `
+                <div class="swipe-card">
+                    <div class="swipe-card-image">${a.image_url ? `<img src="${a.image_url}" alt="Ad" style="width:100%;height:100%;object-fit:cover;">` : '<span>No image</span>'}</div>
+                    <div class="swipe-card-body">
+                        <div class="swipe-card-tags">
+                            <span class="tag ad">${(a.hook_type || 'AD').toUpperCase()}</span>
+                            ${(a.triggers || []).map(tr => `<span class="tag trigger">${tr.toUpperCase()}</span>`).join('')}
+                            <span class="tag niche">${(a.niche || 'general').toUpperCase()}</span>
+                        </div>
+                        ${a.headline_text ? `<p style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">${a.headline_text}</p>` : ''}
+                        <p class="swipe-card-description">${a.composition || a.cta_text || 'No analysis yet'}</p>
+                        <div class="swipe-card-meta">
+                            <span class="swipe-card-date">${new Date(a.created_at).toLocaleDateString()}</span>
+                            <div class="swipe-card-actions"><button class="card-action-btn delete" onclick="deleteSwipe('ad_image_swipes', '${a.id}')">Delete</button></div>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        // =====================================================
+        // DELETE (shared)
+        // =====================================================
         async function deleteSwipe(table, id) {
             if (!confirm('Delete this swipe?')) return;
             try {
                 await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
                     method: 'DELETE',
-                    headers: {
-                        'apikey': CONFIG.SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-                    }
+                    headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` }
                 });
+                showToast('Deleted');
                 loadSwipes();
-            } catch (e) {
-                console.error('Delete failed:', e);
-            }
+            } catch (e) { console.error('Delete failed:', e); showToast('Delete failed'); }
         }
 
-        // Initial load
+        // =====================================================
+        // EVENT LISTENERS — filters
+        // =====================================================
+        // Thumbnails
+        document.getElementById('thumb-search').addEventListener('input', debounce(applyThumbFilters, 300));
+        document.getElementById('thumb-trigger-filter').addEventListener('change', applyThumbFilters);
+        document.getElementById('thumb-niche-filter').addEventListener('change', applyThumbFilters);
+        // Headlines
+        document.getElementById('headline-search').addEventListener('input', debounce(applyHeadlineFilters, 300));
+        document.getElementById('headline-pattern-filter').addEventListener('change', applyHeadlineFilters);
+        // Hooks
+        document.getElementById('hook-search').addEventListener('input', debounce(applyHookFilters, 300));
+        document.getElementById('hook-type-filter').addEventListener('change', applyHookFilters);
+        document.getElementById('hook-niche-filter').addEventListener('change', applyHookFilters);
+        // Twitter
+        document.getElementById('tw-search').addEventListener('input', debounce(applyTweetFilters, 300));
+        document.getElementById('tw-sort').addEventListener('change', applyTweetFilters);
+        // Ad Copy
+        document.getElementById('adcopy-search').addEventListener('input', debounce(applyAdCopyFilters, 300));
+        document.getElementById('adcopy-type-filter').addEventListener('change', applyAdCopyFilters);
+        document.getElementById('adcopy-niche-filter').addEventListener('change', applyAdCopyFilters);
+        // Image Ads
+        document.getElementById('adimg-search').addEventListener('input', debounce(applyAdImageFilters, 300));
+        document.getElementById('adimg-type-filter').addEventListener('change', applyAdImageFilters);
+        document.getElementById('adimg-niche-filter').addEventListener('change', applyAdImageFilters);
+
+        // =====================================================
+        // INITIAL LOAD
+        // =====================================================
+        async function loadSwipes() {
+            await Promise.all([loadThumbnails(), loadHeadlines(), loadHooks(), loadTweets(), loadAdCopy(), loadAdImages()]);
+        }
         loadSwipes();
     </script>
 </body>
