@@ -1,0 +1,131 @@
+{
+  "name": "07 - Image Ad Swipe Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "image-ad-swipe",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook: Image Ad Swipe",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ bucket: 'assets', path: `ad-images/${Date.now()}_${$json.body.filename}`, base64: $json.body.image_base64 }) }}",
+        "options": {}
+      },
+      "name": "Prepare Upload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "notes": "Prepare file for Supabase Storage upload"
+    },
+    {
+      "parameters": {
+        "url": "=https://wqclspynbdghfsosqygg.supabase.co/storage/v1/object/assets/ad-images/{{ $json.body.filename }}",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer YOUR_SUPABASE_SERVICE_KEY",
+          "Content-Type": "image/png"
+        },
+        "body": "={{ Buffer.from($json.body.image_base64, 'base64') }}",
+        "options": {}
+      },
+      "name": "Supabase: Upload Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300],
+      "notes": "Upload image to Supabase Storage assets/ad-images/ folder. Returns public URL."
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "headers": {
+          "x-api-key": "YOUR_ANTHROPIC_API_KEY",
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "claude-sonnet-4-20250514",
+          "max_tokens": 2000,
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "image",
+                  "source": {
+                    "type": "base64",
+                    "media_type": "image/png",
+                    "data": "={{ $node['Webhook: Image Ad Swipe'].json.body.image_base64 }}"
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "Analyze this image ad and extract BOTH the visual design AND the copy. You are an expert ad analyst who deconstructs winning ads.\n\nOutput ONLY valid JSON with no markdown:\n{\n  \"headline_text\": \"The main headline text visible on the ad\",\n  \"body_copy\": \"Any body/supporting text\",\n  \"cta_text\": \"The call-to-action text (button text, 'Shop Now', etc)\",\n  \"hook_type\": \"problem_agitate|curiosity|social_proof|contrarian|story|shock|authority|transformation\",\n  \"copy_angle\": \"What persuasion angle is the copy using?\",\n  \"emotional_appeal\": \"What emotion does this ad target?\",\n  \"layout_description\": \"Detailed layout: where is the headline, body copy, CTA, image, logo positioned? What is the visual hierarchy?\",\n  \"color_palette\": {\"primary\": \"#hex\", \"secondary\": \"#hex\", \"accent\": \"#hex\", \"text\": \"#hex\", \"background\": \"#hex\"},\n  \"font_style\": \"Bold sans-serif / Script + serif / etc\",\n  \"visual_elements\": \"What visual elements are used? (product photo, lifestyle image, illustration, icons, badges, before/after)\",\n  \"triggers\": [\"array\", \"of\", \"psychological\", \"triggers\"],\n  \"recreation_prompt\": \"A highly detailed prompt to recreate this exact visual style using an AI image generator. Include: exact layout grid (what goes where), typography style and size hierarchy, color scheme with hex codes, image treatment/style, spacing and padding, visual elements and their positions, overall mood and aesthetic. Be extremely specific — this prompt will be used with NanoBanana image generation to create new ads in this exact style but with different copy.\",\n  \"niche\": \"detected niche category\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Claude: Analyze Ad Image (Vision)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 300],
+      "notes": "Claude Vision analyzes the image ad — extracts all visible copy AND visual design patterns including a detailed recreation prompt for NanoBanana."
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse Claude's response and merge with metadata\nconst data = $input.first().json;\nconst webhookData = $node['Webhook: Image Ad Swipe'].json.body;\n\ntry {\n  // Extract JSON from Claude response\n  let responseText = data.content[0].text;\n  // Strip markdown code blocks if present\n  responseText = responseText.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  const analysis = JSON.parse(responseText);\n  \n  // Get the public URL of the uploaded image\n  const imageUrl = `https://wqclspynbdghfsosqygg.supabase.co/storage/v1/object/public/assets/ad-images/${webhookData.filename}`;\n  \n  return [{\n    json: {\n      image_url: imageUrl,\n      headline_text: analysis.headline_text || null,\n      body_copy: analysis.body_copy || null,\n      cta_text: analysis.cta_text || null,\n      hook_type: analysis.hook_type || null,\n      copy_angle: analysis.copy_angle || null,\n      emotional_appeal: analysis.emotional_appeal || null,\n      layout_description: analysis.layout_description || null,\n      color_palette: analysis.color_palette || {},\n      font_style: analysis.font_style || null,\n      visual_elements: analysis.visual_elements || null,\n      recreation_prompt: analysis.recreation_prompt || null,\n      triggers: analysis.triggers || [],\n      niche: analysis.niche || webhookData.niche || 'general',\n      performance_tag: 'untested'\n    }\n  }];\n} catch (e) {\n  // If parsing fails, return raw text as notes\n  return [{\n    json: {\n      image_url: `https://wqclspynbdghfsosqygg.supabase.co/storage/v1/object/public/assets/ad-images/${webhookData.filename}`,\n      niche: webhookData.niche || 'general',\n      notes: data.content?.[0]?.text || 'Analysis failed',\n      performance_tag: 'untested'\n    }\n  }];\n}"
+      },
+      "name": "Parse Ad Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://wqclspynbdghfsosqygg.supabase.co/rest/v1/image_ad_swipes",
+        "method": "POST",
+        "headers": {
+          "apikey": "YOUR_SUPABASE_SERVICE_KEY",
+          "Authorization": "Bearer YOUR_SUPABASE_SERVICE_KEY",
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "name": "Supabase: Insert Image Ad Swipe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, id: $json[0]?.id || $json.id, headline: $json[0]?.headline_text || $json.headline_text || 'Uploaded' }) }}"
+      },
+      "name": "Respond: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Image Ad Swipe": { "main": [[{ "node": "Prepare Upload", "type": "main", "index": 0 }]] },
+    "Prepare Upload": { "main": [[{ "node": "Supabase: Upload Image", "type": "main", "index": 0 }]] },
+    "Supabase: Upload Image": { "main": [[{ "node": "Claude: Analyze Ad Image (Vision)", "type": "main", "index": 0 }]] },
+    "Claude: Analyze Ad Image (Vision)": { "main": [[{ "node": "Parse Ad Analysis", "type": "main", "index": 0 }]] },
+    "Parse Ad Analysis": { "main": [[{ "node": "Supabase: Insert Image Ad Swipe", "type": "main", "index": 0 }]] },
+    "Supabase: Insert Image Ad Swipe": { "main": [[{ "node": "Respond: Success", "type": "main", "index": 0 }]] }
+  }
+}

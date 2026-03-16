@@ -1,0 +1,135 @@
+{
+  "name": "08 - Image Ad Copy Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "image-ad-copy",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook: Image Ad Copy",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://wqclspynbdghfsosqygg.supabase.co/rest/v1/brand_profiles?id=eq.{{ $json.body.brand_id }}&limit=1",
+        "method": "GET",
+        "headers": {
+          "apikey": "YOUR_SUPABASE_SERVICE_KEY",
+          "Authorization": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+        },
+        "options": {}
+      },
+      "name": "Fetch Brand Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 200],
+      "notes": "Fetch brand context for on-brand copy generation"
+    },
+    {
+      "parameters": {
+        "url": "=https://wqclspynbdghfsosqygg.supabase.co/rest/v1/offer_contexts?id=eq.{{ $json.body.offer_id }}&limit=1",
+        "method": "GET",
+        "headers": {
+          "apikey": "YOUR_SUPABASE_SERVICE_KEY",
+          "Authorization": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+        },
+        "options": {}
+      },
+      "name": "Fetch Offer Context",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 400],
+      "notes": "Fetch offer details (pain points, ICP, awareness level, etc.)"
+    },
+    {
+      "parameters": {
+        "url": "=https://wqclspynbdghfsosqygg.supabase.co/rest/v1/image_ad_swipes?niche=eq.{{ $json.body.niche }}&limit=5&order=created_at.desc",
+        "method": "GET",
+        "headers": {
+          "apikey": "YOUR_SUPABASE_SERVICE_KEY",
+          "Authorization": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+        },
+        "options": {}
+      },
+      "name": "Fetch Swipe Patterns",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 600],
+      "notes": "Fetch related image ad swipes for copy pattern reference"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Merge all fetched data into context for Claude\nconst webhook = $node['Webhook: Image Ad Copy'].json.body;\nconst brand = $node['Fetch Brand Profile'].json[0] || {};\nconst offer = $node['Fetch Offer Context'].json[0] || {};\nconst swipes = $node['Fetch Swipe Patterns'].json || [];\n\n// Format swipe examples\nconst swipeExamples = swipes.map((s, i) => \n  `Swipe ${i+1}: Headline: \"${s.headline_text || 'N/A'}\" | Body: \"${s.body_copy || 'N/A'}\" | CTA: \"${s.cta_text || 'N/A'}\" | Angle: ${s.copy_angle || 'N/A'} | Hook: ${s.hook_type || 'N/A'}`\n).join('\\n');\n\nreturn [{\n  json: {\n    webhook,\n    brand,\n    offer,\n    swipe_examples: swipeExamples,\n    swipe_count: swipes.length\n  }\n}];"
+      },
+      "name": "Prepare Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "headers": {
+          "x-api-key": "YOUR_ANTHROPIC_API_KEY",
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "claude-sonnet-4-20250514",
+          "max_tokens": 4000,
+          "messages": [
+            {
+              "role": "user",
+              "content": "You are an expert direct response copywriter specializing in image ads (Facebook, Instagram, display). Write copy that SELLS.\n\nBRAND CONTEXT:\n- Brand: {{ $json.brand.name || 'Not specified' }}\n- Tone: {{ $json.brand.tone || 'Professional, persuasive' }}\n- Voice: {{ $json.brand.voice_guidelines || 'Clear, direct, benefit-focused' }}\n- Avoid words: {{ ($json.brand.avoid_words || []).join(', ') || 'None specified' }}\n- Target audience: {{ $json.brand.target_audience || 'Not specified' }}\n\nOFFER CONTEXT:\n- Product: {{ $json.offer.product_name || 'Not specified' }}\n- Description: {{ $json.offer.product_description || 'Not specified' }}\n- Offer: {{ $json.offer.offer_details || 'Not specified' }}\n- Price: {{ $json.offer.price_point || 'Not specified' }}\n- Awareness level: {{ $json.offer.awareness_level || 'problem_aware' }}\n- Pain points: {{ ($json.offer.pain_points || []).join(', ') || 'Not specified' }}\n- Desires: {{ ($json.offer.desires || []).join(', ') || 'Not specified' }}\n- Unique mechanism: {{ $json.offer.unique_mechanism || 'Not specified' }}\n- Proof points: {{ ($json.offer.proof_points || []).join(', ') || 'Not specified' }}\n- ICP: {{ $json.offer.icp || 'Not specified' }}\n\nSWIPE FILE PATTERNS:\n{{ $json.swipe_examples || 'No swipes available' }}\n\nFORMAT: {{ $json.webhook.format || '1080x1080' }}\nANGLES TO USE: {{ ($json.webhook.angles || ['problem_agitate', 'curiosity']).join(', ') }}\n\nGenerate {{ $json.webhook.num_variants || 5 }} DIFFERENT image ad copy variants. Each must:\n1. Use a different persuasion angle from the requested list\n2. Match the brand tone and avoid banned words\n3. Be appropriate for the awareness level (unaware = educate first, most_aware = go straight for the sale)\n4. Be concise enough for an IMAGE AD:\n   - Headline: 3-8 words (punchy, scroll-stopping)\n   - Body: 1-2 short sentences max\n   - CTA: 2-4 words (action-oriented)\n\nOutput ONLY valid JSON:\n{\n  \"variants\": [\n    {\n      \"headline\": \"Short punchy headline\",\n      \"body_copy\": \"Supporting text, 1-2 sentences max\",\n      \"cta\": \"CTA button text\",\n      \"angle\": \"which angle this uses\",\n      \"rationale\": \"1-sentence reason why this angle works for this awareness level\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Claude: Generate Image Ad Copy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [950, 400],
+      "notes": "Claude generates N copy variants using brand context, offer data, and swipe patterns as reference."
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse Claude response and create generation record\nconst data = $input.first().json;\nconst webhook = $node['Webhook: Image Ad Copy'].json.body;\n\ntry {\n  let responseText = data.content[0].text;\n  responseText = responseText.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  const parsed = JSON.parse(responseText);\n  \n  return [{\n    json: {\n      success: true,\n      generation_id: 'gen-' + Date.now(),\n      variants: parsed.variants || [],\n      brand_id: webhook.brand_id,\n      offer_id: webhook.offer_id,\n      swipe_id: webhook.swipe_id\n    }\n  }];\n} catch (e) {\n  return [{\n    json: {\n      success: false,\n      error: 'Failed to parse copy variants',\n      raw: data.content?.[0]?.text || 'No response'\n    }\n  }];\n}"
+      },
+      "name": "Parse Copy Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1150, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "name": "Respond: Copy Variants",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1350, 400]
+    }
+  ],
+  "connections": {
+    "Webhook: Image Ad Copy": {
+      "main": [[
+        { "node": "Fetch Brand Profile", "type": "main", "index": 0 },
+        { "node": "Fetch Offer Context", "type": "main", "index": 0 },
+        { "node": "Fetch Swipe Patterns", "type": "main", "index": 0 }
+      ]]
+    },
+    "Fetch Brand Profile": { "main": [[{ "node": "Prepare Context", "type": "main", "index": 0 }]] },
+    "Fetch Offer Context": { "main": [[{ "node": "Prepare Context", "type": "main", "index": 0 }]] },
+    "Fetch Swipe Patterns": { "main": [[{ "node": "Prepare Context", "type": "main", "index": 0 }]] },
+    "Prepare Context": { "main": [[{ "node": "Claude: Generate Image Ad Copy", "type": "main", "index": 0 }]] },
+    "Claude: Generate Image Ad Copy": { "main": [[{ "node": "Parse Copy Output", "type": "main", "index": 0 }]] },
+    "Parse Copy Output": { "main": [[{ "node": "Respond: Copy Variants", "type": "main", "index": 0 }]] }
+  }
+}

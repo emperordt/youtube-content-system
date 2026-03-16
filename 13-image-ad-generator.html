@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Ad Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --danger-dim: #ff444420;
+            --warning: #ffaa00;
+            --warning-dim: #ffaa0020;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --blue: #3b82f6;
+            --blue-dim: #3b82f620;
+            --orange: #f97316;
+            --orange-dim: #f9731620;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ===== NAV ===== */
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .nav-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 14px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-toggle.active { border-color: var(--accent); color: var(--accent); }
+
+        .nav-panel {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 200px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            border-radius: 0 0 0 12px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 99;
+            box-shadow: -4px 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .nav-panel.open { display: flex; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+        /* ===== LAYOUT ===== */
+        .container {
+            padding: 92px 48px 48px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .page-title { font-size: 36px; font-weight: 600; }
+        .page-subtitle { font-size: 15px; color: var(--text-secondary); margin-top: 8px; }
+
+        .three-panel-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr 1fr;
+            gap: 24px;
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .panel-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .panel-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* ===== FORM ELEMENTS ===== */
+        .form-group { margin-bottom: 20px; }
+
+        .form-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .form-select {
+            width: 100%;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-textarea {
+            width: 100%;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: var(--text-primary);
+            resize: vertical;
+            transition: border-color 0.15s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-textarea::placeholder { color: var(--text-muted); }
+
+        /* ===== BRAND SUMMARY ===== */
+        .brand-summary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .brand-summary-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .color-swatches {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .brand-tone {
+            font-size: 12px;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ===== OFFER SUMMARY ===== */
+        .offer-summary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .offer-product {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .offer-awareness {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            background: var(--purple-dim);
+            color: var(--purple);
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
+        .offer-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+
+        .offer-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: var(--orange-dim);
+            color: var(--orange);
+        }
+
+        .offer-mechanism {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ===== SWIPE PREVIEW ===== */
+        .swipe-preview {
+            margin-top: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .swipe-preview-empty {
+            padding: 24px 12px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .swipe-preview-img {
+            width: 100%;
+            display: block;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .swipe-preview-info {
+            padding: 10px 12px;
+        }
+
+        .swipe-preview-headline {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .swipe-preview-cta {
+            font-size: 11px;
+            color: var(--accent);
+        }
+
+        .swipe-preview-layout {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ===== CHECKBOX GROUP ===== */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 12px;
+        }
+
+        .checkbox-item:hover { border-color: var(--border-hover); }
+        .checkbox-item.selected {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .checkbox-item input { display: none; }
+
+        /* ===== GENERATE BUTTON ===== */
+        .generate-btn {
+            width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            padding: 18px 32px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .generate-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===== VARIANT CARDS ===== */
+        .variant-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: border-color 0.15s ease;
+        }
+
+        .variant-card.excluded {
+            opacity: 0.4;
+        }
+
+        .variant-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .variant-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .variant-checkbox.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .variant-checkbox.checked::after {
+            content: '';
+            width: 8px;
+            height: 5px;
+            border-left: 2px solid var(--bg-primary);
+            border-bottom: 2px solid var(--bg-primary);
+            transform: rotate(-45deg) translateY(-1px);
+        }
+
+        .variant-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .variant-angle-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--purple-dim);
+            color: var(--purple);
+            margin-left: auto;
+        }
+
+        .variant-field { margin-bottom: 10px; }
+        .variant-field:last-child { margin-bottom: 0; }
+
+        .variant-field-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .variant-field .form-textarea {
+            min-height: 38px;
+            overflow: hidden;
+            resize: none;
+        }
+
+        .variant-field .form-textarea[data-field="body_copy"] {
+            min-height: 60px;
+        }
+
+        /* ===== ACTION BAR ===== */
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .action-btn.dashed {
+            border-style: dashed;
+        }
+
+        .action-btn.purple {
+            background: var(--purple);
+            border-color: var(--purple);
+            color: #fff;
+        }
+
+        .action-btn.purple:hover {
+            background: #b06af7;
+            border-color: #b06af7;
+        }
+
+        /* ===== REGENERATE INPUT ===== */
+        .regen-input-row {
+            display: none;
+            gap: 8px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .regen-input-row.visible { display: flex; }
+
+        .regen-input {
+            flex: 1;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: var(--text-primary);
+        }
+
+        .regen-input:focus { outline: none; border-color: var(--accent); }
+
+        .regen-send {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: var(--purple);
+            border: none;
+            color: #fff;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* ===== IMAGE OUTPUT CARDS ===== */
+        .image-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .image-card-img-container {
+            width: 100%;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .image-card-img-container.ratio-1-1 { aspect-ratio: 1 / 1; }
+        .image-card-img-container.ratio-9-16 { aspect-ratio: 9 / 16; max-height: 480px; }
+        .image-card-img-container.ratio-1200-628 { aspect-ratio: 1200 / 628; }
+
+        .image-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-placeholder {
+            padding: 32px 16px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .image-card-copy {
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .image-card-headline {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .image-card-body {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .image-card-cta {
+            font-size: 13px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .image-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .perf-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .perf-tag.untested { background: var(--bg-tertiary); color: var(--text-muted); border: 1px solid var(--border); }
+        .perf-tag.testing { background: var(--warning-dim); color: var(--warning); border: 1px solid var(--warning); }
+        .perf-tag.winner { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); }
+        .perf-tag.loser { background: var(--danger-dim); color: var(--danger); border: 1px solid var(--danger); }
+
+        .img-action-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-left: auto;
+        }
+
+        .img-action-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .img-action-btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        .img-action-btn.primary {
+            background: var(--accent);
+            border: none;
+            color: var(--bg-primary);
+        }
+
+        .img-action-btn.primary:hover { background: var(--accent-hover); }
+
+        .review-link {
+            display: block;
+            text-align: center;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--accent);
+            text-decoration: none;
+            border-top: 1px solid var(--border);
+            transition: background 0.15s ease;
+        }
+
+        .review-link:hover { background: var(--accent-dim); }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-container {
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ===== LOADING SPINNER ===== */
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-size: 14px;
+            color: var(--text-primary);
+            z-index: 200;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success { border-color: var(--accent); }
+        .toast.error { border-color: var(--danger); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .three-panel-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 92px 24px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">CONTENT_ENGINE//v1</div>
+        <button class="nav-toggle" id="nav-toggle">Menu</button>
+    </nav>
+    <div class="nav-panel" id="nav-panel">
+        <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+        <a href="02-swipe-file.html" class="nav-link">Swipe File</a>
+        <a href="08-twitter-generator.html" class="nav-link">TW Generate</a>
+        <a href="11-twitter-swipes.html" class="nav-link">TW Swipes</a>
+        <a href="09-twitter-scraper.html" class="nav-link">TW Scraper</a>
+        <a href="10-hook-bank.html" class="nav-link">TW Hooks</a>
+        <a href="06-ad-swipes.html" class="nav-link">Ad Video</a>
+        <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+        <a href="12-brand-profiles.html" class="nav-link">Brands</a>
+        <a href="13-image-ad-generator.html" class="nav-link active">Img Ad Gen</a>
+        <a href="14-image-ad-review.html" class="nav-link">Img Ad Review</a>
+        <a href="05-history.html" class="nav-link">History</a>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Image Ad Generator</h1>
+            <p class="page-subtitle">Generate on-brand image ads with AI copy + NanoBanana rendering</p>
+        </div>
+
+        <div class="three-panel-layout">
+            <!-- ========== LEFT PANEL: Config & Context ========== -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">Config</h3>
+                </div>
+                <div class="panel-body">
+                    <!-- Brand Selector -->
+                    <div class="form-group">
+                        <label class="form-label">Brand / Client</label>
+                        <select class="form-select" id="brand-select">
+                            <option value="">Select a brand...</option>
+                        </select>
+                        <div id="brand-summary" style="display: none;"></div>
+                    </div>
+
+                    <!-- Apply Brand Styling Toggle -->
+                    <div class="form-group" id="brand-toggle-group" style="display: none;">
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border);">
+                            <input type="checkbox" id="apply-brand-styling" checked style="width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer;">
+                            <div>
+                                <div style="font-size: 14px; color: var(--text-primary);">Apply brand styling to design</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Uncheck for native/disguised ad designs</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Offer Selector -->
+                    <div class="form-group">
+                        <label class="form-label">Offer Context</label>
+                        <select class="form-select" id="offer-select" disabled>
+                            <option value="">Select a brand first...</option>
+                        </select>
+                        <div id="offer-summary" style="display: none;"></div>
+                    </div>
+
+                    <!-- Pain Points / Desires (from offer or manual) -->
+                    <div class="form-group" id="pain-desires-group">
+                        <label class="form-label">Pain Points & Desires</label>
+                        <div id="pain-points-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;"></div>
+                        <textarea class="form-textarea" id="custom-pain-points" placeholder="Add custom pain points / desires (comma-separated)..." style="min-height: 60px; font-size: 13px;"></textarea>
+                    </div>
+
+                    <!-- Swipe Template Selector -->
+                    <div class="form-group">
+                        <label class="form-label">Style Reference (Swipe)</label>
+                        <select class="form-select" id="swipe-select">
+                            <option value="">Select a swipe...</option>
+                        </select>
+                        <div class="swipe-preview" id="swipe-preview">
+                            <div class="swipe-preview-empty">Select a swipe to preview its style</div>
+                        </div>
+                    </div>
+
+                    <!-- Ad Format -->
+                    <div class="form-group">
+                        <label class="form-label">Ad Format</label>
+                        <select class="form-select" id="format-select">
+                            <option value="1080x1080">1080x1080 Square</option>
+                            <option value="1080x1920">1080x1920 Story</option>
+                            <option value="1200x628">1200x628 Landscape</option>
+                        </select>
+                    </div>
+
+                    <!-- Awareness Level with Count -->
+                    <div class="form-group">
+                        <label class="form-label">Awareness Levels (how many variants each)</label>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <select class="form-select" style="width: 60px; padding: 8px; text-align: center; font-size: 13px;" id="count-unaware"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="5">5</option></select>
+                                <span style="font-size: 13px; color: var(--text-secondary);">Unaware <span style="color: var(--text-muted);">— story/curiosity, no product mention</span></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <select class="form-select" style="width: 60px; padding: 8px; text-align: center; font-size: 13px;" id="count-problem"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="5">5</option></select>
+                                <span style="font-size: 13px; color: var(--text-secondary);">Problem Aware <span style="color: var(--text-muted);">— crystallize the pain</span></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <select class="form-select" style="width: 60px; padding: 8px; text-align: center; font-size: 13px;" id="count-solution"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="5">5</option></select>
+                                <span style="font-size: 13px; color: var(--text-secondary);">Solution Aware <span style="color: var(--text-muted);">— desire + mechanism</span></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <select class="form-select" style="width: 60px; padding: 8px; text-align: center; font-size: 13px;" id="count-product"><option value="0">0</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="5">5</option></select>
+                                <span style="font-size: 13px; color: var(--text-secondary);">Product Aware <span style="color: var(--text-muted);">— sharpen the differentiator</span></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <select class="form-select" style="width: 60px; padding: 8px; text-align: center; font-size: 13px;" id="count-most"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="5">5</option></select>
+                                <span style="font-size: 13px; color: var(--text-secondary);">Most Aware <span style="color: var(--text-muted);">— product + deal/offer</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Copy Angles -->
+                    <div class="form-group">
+                        <label class="form-label">Copy Angles</label>
+                        <div class="checkbox-group" id="angle-checkboxes">
+                            <div class="checkbox-item selected" data-value="problem_agitate">
+                                <input type="checkbox" value="problem_agitate" checked>
+                                Problem/Agitate
+                            </div>
+                            <div class="checkbox-item selected" data-value="curiosity">
+                                <input type="checkbox" value="curiosity" checked>
+                                Curiosity
+                            </div>
+                            <div class="checkbox-item" data-value="social_proof">
+                                <input type="checkbox" value="social_proof">
+                                Social Proof
+                            </div>
+                            <div class="checkbox-item" data-value="contrarian">
+                                <input type="checkbox" value="contrarian">
+                                Contrarian
+                            </div>
+                            <div class="checkbox-item" data-value="transformation">
+                                <input type="checkbox" value="transformation">
+                                Transformation
+                            </div>
+                            <div class="checkbox-item" data-value="authority">
+                                <input type="checkbox" value="authority">
+                                Authority
+                            </div>
+                            <div class="checkbox-item" data-value="urgency">
+                                <input type="checkbox" value="urgency">
+                                Urgency
+                            </div>
+                            <div class="checkbox-item" data-value="native_disguise">
+                                <input type="checkbox" value="native_disguise">
+                                Native/Disguise
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Variant Count -->
+                    <div class="form-group">
+                        <label class="form-label">Variants to Generate</label>
+                        <select class="form-select" id="variant-count-select">
+                            <option value="3">3</option>
+                            <option value="5" selected>5</option>
+                            <option value="7">7</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+
+                    <!-- Generate Copy Button -->
+                    <button class="generate-btn" id="generate-copy-btn">GENERATE COPY &rarr;</button>
+                </div>
+            </div>
+
+            <!-- ========== CENTER PANEL: Copy QC Workspace ========== -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">Copy Workspace</h3>
+                    <span class="panel-badge" id="variant-count-badge">0 VARIANTS</span>
+                </div>
+                <div class="panel-body" id="copy-panel-body">
+                    <!-- Empty state -->
+                    <div class="empty-state" id="copy-empty">
+                        Generate copy to start editing variants here
+                    </div>
+
+                    <!-- Loading state -->
+                    <div id="copy-loading" style="display: none;">
+                        <div class="progress-container">
+                            <div class="loading-spinner"></div>
+                            <p style="color: var(--text-muted); font-size: 14px;">Generating copy variants...</p>
+                        </div>
+                    </div>
+
+                    <!-- Variants container -->
+                    <div id="variants-container" style="display: none;">
+                        <div class="action-bar">
+                            <button class="action-btn" id="select-toggle-btn" onclick="toggleSelectAll()">Select All</button>
+                            <button class="action-btn dashed" onclick="addVariant()">+ Add Variant</button>
+                            <button class="action-btn purple" id="regen-btn" onclick="showRegenInput()">Regenerate Selected</button>
+                        </div>
+                        <div class="regen-input-row" id="regen-input-row">
+                            <input type="text" class="regen-input" id="regen-prompt" placeholder="Refinement prompt (e.g., make it more urgent)...">
+                            <button class="regen-send" onclick="regenerateSelected()">Send</button>
+                        </div>
+                        <div id="variant-cards"></div>
+                        <button class="generate-btn" id="generate-images-btn" disabled onclick="generateImages()">GENERATE IMAGES (0 selected) &rarr;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== RIGHT PANEL: Image Output ========== -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">Generated Images</h3>
+                    <span class="panel-badge" id="image-count-badge">0 IMAGES</span>
+                </div>
+                <div class="panel-body" id="image-panel-body">
+                    <!-- Empty state -->
+                    <div class="empty-state" id="image-empty">
+                        Edit your copy, then generate images to see results here
+                    </div>
+
+                    <!-- Loading state -->
+                    <div id="image-loading" style="display: none;">
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="image-progress-fill"></div>
+                            </div>
+                            <p class="progress-text" id="image-progress-text">Generating image 1 of 5...</p>
+                        </div>
+                    </div>
+
+                    <!-- Images container -->
+                    <div id="images-container" style="display: none;"></div>
+                </div>
+                <a href="14-image-ad-review.html" class="review-link" id="review-link" style="display: none;">View All in Review &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ==========================================
+        // CONFIG
+        // ==========================================
+        const CONFIG = {
+            SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
+            SUPABASE_ANON_KEY: 'sb_publishable_TnW2BTNaZvow6Gm8DbxU-w_5YyQN3Av',
+            WEBHOOK_IMAGE_AD_COPY: 'https://n8n.dtthomas.cloud/webhook/image-ad-copy',
+            WEBHOOK_IMAGE_AD_RENDER: 'https://n8n.dtthomas.cloud/webhook/image-ad-render'
+        };
+
+        const HEADERS = {
+            'apikey': CONFIG.SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
+
+        // ==========================================
+        // STATE
+        // ==========================================
+        let brands = [];
+        let offers = [];
+        let swipes = [];
+        let selectedBrand = null;
+        let selectedOffer = null;
+        let selectedSwipe = null;
+        let currentGenerationId = null;
+        let variants = [];
+        let generatedImages = [];
+
+        // ==========================================
+        // NAV TOGGLE
+        // ==========================================
+        document.getElementById('nav-toggle').addEventListener('click', function() {
+            document.getElementById('nav-panel').classList.toggle('open');
+            this.classList.toggle('active');
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-panel') && !e.target.closest('.nav-toggle')) {
+                document.getElementById('nav-panel').classList.remove('open');
+                document.getElementById('nav-toggle').classList.remove('active');
+            }
+        });
+
+        // ==========================================
+        // CHECKBOX TOGGLE
+        // ==========================================
+        document.querySelectorAll('#angle-checkboxes .checkbox-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const cb = item.querySelector('input');
+                cb.checked = !cb.checked;
+                item.classList.toggle('selected', cb.checked);
+            });
+        });
+
+        // Show/hide brand styling toggle when brand is selected
+        document.getElementById('brand-select').addEventListener('change', function() {
+            document.getElementById('brand-toggle-group').style.display = this.value ? 'block' : 'none';
+        });
+
+        // Populate pain points/desires when offer changes
+        let selectedPainPoints = [];
+        let selectedDesires = [];
+
+        function renderPainDesiresTags() {
+            const container = document.getElementById('pain-points-tags');
+            if (!selectedOffer) { container.innerHTML = ''; selectedPainPoints = []; selectedDesires = []; return; }
+            const pains = selectedOffer.pain_points || [];
+            const desires = selectedOffer.desires || [];
+            selectedPainPoints = [];
+            selectedDesires = [];
+            container.innerHTML = [
+                ...pains.map((p, i) => `<span class="selectable-tag" data-type="pain" data-index="${i}" data-value="${escHtml(p)}" onclick="togglePainDesireTag(this)" style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;border:1px solid var(--danger);background:transparent;color:var(--danger);opacity:0.5;transition:all 0.15s ease;">${escHtml(p)}</span>`),
+                ...desires.map((d, i) => `<span class="selectable-tag" data-type="desire" data-index="${i}" data-value="${escHtml(d)}" onclick="togglePainDesireTag(this)" style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);opacity:0.5;transition:all 0.15s ease;">${escHtml(d)}</span>`)
+            ].join('');
+        }
+
+        function togglePainDesireTag(el) {
+            const type = el.dataset.type;
+            const value = el.dataset.value;
+            const isSelected = el.dataset.selected === 'true';
+
+            if (isSelected) {
+                el.dataset.selected = 'false';
+                el.style.opacity = '0.5';
+                el.style.background = 'transparent';
+                if (type === 'pain') selectedPainPoints = selectedPainPoints.filter(p => p !== value);
+                else selectedDesires = selectedDesires.filter(d => d !== value);
+            } else {
+                el.dataset.selected = 'true';
+                el.style.opacity = '1';
+                el.style.background = type === 'pain' ? 'var(--danger-dim, #ff444420)' : 'var(--accent-dim)';
+                if (type === 'pain') selectedPainPoints.push(value);
+                else selectedDesires.push(value);
+            }
+        }
+
+        // ==========================================
+        // TOAST
+        // ==========================================
+        function escHtml(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} visible`;
+            setTimeout(() => { toast.classList.remove('visible'); }, 3000);
+        }
+
+        // ==========================================
+        // SUPABASE HELPERS
+        // ==========================================
+        async function supabaseGet(table, query = '') {
+            const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}?${query}`, { headers: HEADERS });
+            if (!res.ok) throw new Error(`Supabase GET ${table} failed: ${res.status}`);
+            return res.json();
+        }
+
+        async function supabasePatch(table, id, data) {
+            const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+                method: 'PATCH',
+                headers: HEADERS,
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw new Error(`Supabase PATCH ${table} failed: ${res.status}`);
+            return res.json();
+        }
+
+        // ==========================================
+        // LOAD BRANDS
+        // ==========================================
+        async function loadBrands() {
+            try {
+                brands = await supabaseGet('brand_profiles', 'select=*&order=name.asc');
+                const select = document.getElementById('brand-select');
+                brands.forEach(b => {
+                    const opt = document.createElement('option');
+                    opt.value = b.id;
+                    opt.textContent = b.name;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Failed to load brands:', e);
+            }
+        }
+
+        // ==========================================
+        // LOAD SWIPES
+        // ==========================================
+        async function loadSwipes() {
+            try {
+                swipes = await supabaseGet('image_ad_swipes', 'select=*&order=created_at.desc');
+                const select = document.getElementById('swipe-select');
+                swipes.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.headline_text || s.id.substring(0, 8);
+                    select.appendChild(opt);
+                });
+
+                // Check sessionStorage for pre-selected swipe
+                const storedSwipe = sessionStorage.getItem('imageAdSwipe');
+                if (storedSwipe) {
+                    try {
+                        const swipeData = JSON.parse(storedSwipe);
+                        if (swipeData.id) {
+                            select.value = swipeData.id;
+                            onSwipeChange(swipeData.id);
+                        }
+                        sessionStorage.removeItem('imageAdSwipe');
+                    } catch (e) { /* ignore */ }
+                }
+            } catch (e) {
+                console.error('Failed to load swipes:', e);
+            }
+        }
+
+        // ==========================================
+        // BRAND CHANGE
+        // ==========================================
+        document.getElementById('brand-select').addEventListener('change', async function() {
+            const brandId = this.value;
+            const summaryEl = document.getElementById('brand-summary');
+            const offerSelect = document.getElementById('offer-select');
+            const offerSummary = document.getElementById('offer-summary');
+
+            // Clear offer
+            offerSelect.innerHTML = '<option value="">Select an offer...</option>';
+            offerSummary.style.display = 'none';
+            selectedOffer = null;
+
+            if (!brandId) {
+                summaryEl.style.display = 'none';
+                offerSelect.disabled = true;
+                offerSelect.innerHTML = '<option value="">Select a brand first...</option>';
+                selectedBrand = null;
+                selectedOffer = null;
+                renderPainDesiresTags();
+                return;
+            }
+
+            selectedBrand = brands.find(b => b.id === brandId);
+            if (!selectedBrand) return;
+
+            // Show brand summary
+            const colors = selectedBrand.colors || selectedBrand.brand_colors || [];
+            const colorsArr = Array.isArray(colors) ? colors : (typeof colors === 'string' ? colors.split(',').map(c => c.trim()) : []);
+
+            summaryEl.innerHTML = `
+                <div class="brand-summary">
+                    <div class="brand-summary-name">${selectedBrand.name}</div>
+                    ${colorsArr.length ? `<div class="color-swatches">${colorsArr.map(c => `<div class="color-swatch" style="background: ${c};"></div>`).join('')}</div>` : ''}
+                    <div class="brand-tone">${selectedBrand.tone || selectedBrand.voice_tone || 'No tone specified'}</div>
+                </div>
+            `;
+            summaryEl.style.display = 'block';
+
+            // Load offers
+            offerSelect.disabled = false;
+            try {
+                offers = await supabaseGet('offer_contexts', `select=*&brand_id=eq.${brandId}&order=created_at.desc`);
+                offers.forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.id;
+                    opt.textContent = o.product || o.name || o.id.substring(0, 8);
+                    offerSelect.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Failed to load offers:', e);
+            }
+        });
+
+        // ==========================================
+        // OFFER CHANGE
+        // ==========================================
+        document.getElementById('offer-select').addEventListener('change', function() {
+            const offerId = this.value;
+            const summaryEl = document.getElementById('offer-summary');
+
+            if (!offerId) {
+                summaryEl.style.display = 'none';
+                selectedOffer = null;
+                return;
+            }
+
+            selectedOffer = offers.find(o => o.id === offerId);
+            if (!selectedOffer) return;
+
+            const painPoints = selectedOffer.pain_points || [];
+            const painArr = Array.isArray(painPoints) ? painPoints : (typeof painPoints === 'string' ? painPoints.split(',').map(p => p.trim()) : []);
+
+            summaryEl.innerHTML = `
+                <div class="offer-summary">
+                    <div class="offer-product">${selectedOffer.product || selectedOffer.name || 'Unnamed'}</div>
+                    ${selectedOffer.awareness_level ? `<span class="offer-awareness">${selectedOffer.awareness_level}</span>` : ''}
+                    ${painArr.length ? `<div class="offer-tags">${painArr.map(p => `<span class="offer-tag">${p}</span>`).join('')}</div>` : ''}
+                    ${selectedOffer.mechanism ? `<div class="offer-mechanism">${selectedOffer.mechanism}</div>` : ''}
+                </div>
+            `;
+            summaryEl.style.display = 'block';
+            renderPainDesiresTags();
+        });
+
+        // ==========================================
+        // SWIPE CHANGE
+        // ==========================================
+        document.getElementById('swipe-select').addEventListener('change', function() {
+            onSwipeChange(this.value);
+        });
+
+        function onSwipeChange(swipeId) {
+            const previewEl = document.getElementById('swipe-preview');
+
+            if (!swipeId) {
+                selectedSwipe = null;
+                previewEl.innerHTML = '<div class="swipe-preview-empty">Select a swipe to preview its style</div>';
+                return;
+            }
+
+            selectedSwipe = swipes.find(s => s.id === swipeId);
+            if (!selectedSwipe) {
+                previewEl.innerHTML = '<div class="swipe-preview-empty">Swipe not found</div>';
+                return;
+            }
+
+            let html = '';
+            if (selectedSwipe.image_url) {
+                html += `<img class="swipe-preview-img" src="${selectedSwipe.image_url}" alt="Swipe preview" onerror="this.style.display='none'">`;
+            }
+            html += '<div class="swipe-preview-info">';
+            if (selectedSwipe.headline_text) {
+                html += `<div class="swipe-preview-headline">${selectedSwipe.headline_text}</div>`;
+            }
+            if (selectedSwipe.cta_text) {
+                html += `<div class="swipe-preview-cta">${selectedSwipe.cta_text}</div>`;
+            }
+            if (selectedSwipe.layout_description) {
+                html += `<div class="swipe-preview-layout">${selectedSwipe.layout_description}</div>`;
+            }
+            html += '</div>';
+
+            previewEl.innerHTML = html;
+        }
+
+        // ==========================================
+        // GENERATE COPY (STEP 1)
+        // ==========================================
+        document.getElementById('generate-copy-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('generate-copy-btn');
+            const selectedAngles = Array.from(document.querySelectorAll('#angle-checkboxes input:checked')).map(i => i.value);
+            const variantCount = parseInt(document.getElementById('variant-count-select').value);
+            const format = document.getElementById('format-select').value;
+
+            // Validate required fields
+            if (!selectedBrand) { showToast('Select a brand first'); return; }
+            if (!selectedOffer) { showToast('Select an offer first'); return; }
+
+            // Show loading
+            btn.disabled = true;
+            btn.textContent = 'GENERATING...';
+            document.getElementById('copy-empty').style.display = 'none';
+            document.getElementById('copy-loading').style.display = 'block';
+            document.getElementById('variants-container').style.display = 'none';
+
+            // Build awareness level breakdown
+            const awarenessBreakdown = {
+                unaware: parseInt(document.getElementById('count-unaware').value) || 0,
+                problem_aware: parseInt(document.getElementById('count-problem').value) || 0,
+                solution_aware: parseInt(document.getElementById('count-solution').value) || 0,
+                product_aware: parseInt(document.getElementById('count-product').value) || 0,
+                most_aware: parseInt(document.getElementById('count-most').value) || 0
+            };
+            const totalFromAwareness = Object.values(awarenessBreakdown).reduce((a, b) => a + b, 0);
+
+            // Gather custom pain points
+            const customPains = document.getElementById('custom-pain-points').value.trim();
+            const extraPainPoints = customPains ? customPains.split(',').map(p => p.trim()).filter(Boolean) : [];
+
+            const payload = {
+                brand_id: selectedBrand?.id || null,
+                offer_id: selectedOffer?.id || null,
+                swipe_id: selectedSwipe?.id || null,
+                apply_brand_styling: document.getElementById('apply-brand-styling').checked,
+                niche: selectedOffer?.niche || selectedBrand?.niche || 'general',
+                num_variants: totalFromAwareness > 0 ? totalFromAwareness : variantCount,
+                awareness_breakdown: awarenessBreakdown,
+                angles: selectedAngles,
+                selected_pain_points: [...selectedPainPoints, ...extraPainPoints],
+                selected_desires: selectedDesires,
+                format: format
+            };
+
+            try {
+                const response = await fetch(CONFIG.WEBHOOK_IMAGE_AD_COPY, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                console.log('n8n response:', JSON.stringify(data, null, 2));
+
+                if (data.success && data.variants) {
+                    currentGenerationId = data.generation_id;
+                    variants = data.variants.map((v, i) => ({ ...v, _index: i, _selected: true }));
+                } else {
+                    throw new Error(data.error || 'Generation failed');
+                }
+            } catch (error) {
+                console.error('Copy generation failed, using sample data:', error);
+                const sample = getSampleVariants();
+                currentGenerationId = sample.generation_id;
+                variants = sample.variants.map((v, i) => ({ ...v, _index: i, _selected: true }));
+            }
+
+            // Render variants
+            renderVariants();
+            document.getElementById('copy-loading').style.display = 'none';
+            document.getElementById('variants-container').style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = 'GENERATE COPY &rarr;';
+            showToast(`${variants.length} copy variants generated`);
+        });
+
+        // ==========================================
+        // SAMPLE VARIANTS (FALLBACK)
+        // ==========================================
+        function getSampleVariants() {
+            return {
+                success: true,
+                generation_id: 'demo-' + Date.now(),
+                variants: [
+                    { headline: "Your Liver Is Begging For Help", body_copy: "Most supplements mask the symptoms. This targets the root cause at a cellular level.", cta: "Try It Risk-Free \u2192", angle: "problem_agitate", rationale: "Targets problem-aware audience with pain point" },
+                    { headline: "What Your Doctor Won't Tell You About Liver Health", body_copy: "Clinical studies show this ancient herb outperforms leading supplements 3:1.", cta: "See The Research \u2192", angle: "curiosity", rationale: "Curiosity gap leveraging authority distrust" },
+                    { headline: "47,000 Customers Can't Be Wrong", body_copy: "Join thousands who've transformed their energy levels in just 14 days.", cta: "Join Them Today \u2192", angle: "social_proof", rationale: "Social proof with specific numbers" },
+                    { headline: "Stop Wasting Money On Supplements That Don't Work", body_copy: "You've tried everything. Here's why nothing worked \u2014 until now.", cta: "Discover The Difference \u2192", angle: "contrarian", rationale: "Contrarian angle challenging status quo" },
+                    { headline: "From Exhausted to Energized in 14 Days", body_copy: "The transformation starts at the cellular level. No pills. No side effects. Just results.", cta: "Start Your Transformation \u2192", angle: "transformation", rationale: "Transformation story with timeframe" }
+                ]
+            };
+        }
+
+        // ==========================================
+        // RENDER VARIANTS
+        // ==========================================
+        function renderVariants() {
+            const container = document.getElementById('variant-cards');
+            container.innerHTML = '';
+
+            variants.forEach((v, i) => {
+                const card = document.createElement('div');
+                card.className = `variant-card${v._selected ? '' : ' excluded'}`;
+                card.dataset.index = i;
+                card.innerHTML = `
+                    <div class="variant-header">
+                        <div class="variant-checkbox ${v._selected ? 'checked' : ''}" onclick="toggleVariant(${i})"></div>
+                        <span class="variant-label">Variant ${i + 1}</span>
+                        ${v.awareness_level ? `<span class="variant-angle-badge" style="background:var(--blue-dim,#3b82f620);color:var(--blue,#3b82f6);">${v.awareness_level.replace(/_/g, ' ').toUpperCase()}</span>` : ''}
+                        <span class="variant-angle-badge">${(v.angle || 'general').replace(/_/g, ' ').toUpperCase()}</span>
+                    </div>
+                    <div class="variant-field">
+                        <div class="variant-field-label">Headline</div>
+                        <textarea class="form-textarea" rows="1" data-field="headline" data-index="${i}" oninput="autoResize(this); updateVariantField(${i}, 'headline', this.value)">${v.headline || ''}</textarea>
+                    </div>
+                    <div class="variant-field">
+                        <div class="variant-field-label">Body Copy</div>
+                        <textarea class="form-textarea" rows="2" data-field="body_copy" data-index="${i}" oninput="autoResize(this); updateVariantField(${i}, 'body_copy', this.value)">${v.body_copy || ''}</textarea>
+                    </div>
+                    <div class="variant-field">
+                        <div class="variant-field-label">CTA</div>
+                        <textarea class="form-textarea" rows="1" data-field="cta" data-index="${i}" oninput="autoResize(this); updateVariantField(${i}, 'cta', this.value)">${v.cta || ''}</textarea>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Auto-resize all textareas after browser paints them
+            requestAnimationFrame(() => {
+                container.querySelectorAll('textarea').forEach(ta => autoResize(ta));
+            });
+
+            updateCounts();
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = '0';
+            textarea.style.height = Math.max(textarea.scrollHeight, 38) + 'px';
+        }
+
+        function updateVariantField(index, field, value) {
+            variants[index][field] = value;
+        }
+
+        function toggleVariant(index) {
+            variants[index]._selected = !variants[index]._selected;
+            const card = document.querySelector(`.variant-card[data-index="${index}"]`);
+            const checkbox = card.querySelector('.variant-checkbox');
+            if (variants[index]._selected) {
+                card.classList.remove('excluded');
+                checkbox.classList.add('checked');
+            } else {
+                card.classList.add('excluded');
+                checkbox.classList.remove('checked');
+            }
+            updateCounts();
+        }
+
+        function updateCounts() {
+            const selectedCount = variants.filter(v => v._selected).length;
+            document.getElementById('variant-count-badge').textContent = `${variants.length} VARIANTS`;
+
+            const imgBtn = document.getElementById('generate-images-btn');
+            imgBtn.textContent = `GENERATE IMAGES (${selectedCount} selected) \u2192`;
+            imgBtn.disabled = selectedCount === 0;
+        }
+
+        // ==========================================
+        // SELECT ALL / DESELECT ALL
+        // ==========================================
+        function toggleSelectAll() {
+            const allSelected = variants.every(v => v._selected);
+            variants.forEach((v, i) => {
+                v._selected = !allSelected;
+            });
+            renderVariants();
+            document.getElementById('select-toggle-btn').textContent = allSelected ? 'Select All' : 'Deselect All';
+        }
+
+        // ==========================================
+        // ADD VARIANT
+        // ==========================================
+        function addVariant() {
+            variants.push({
+                headline: '',
+                body_copy: '',
+                cta: '',
+                angle: 'custom',
+                rationale: '',
+                _index: variants.length,
+                _selected: true
+            });
+            renderVariants();
+            showToast('Blank variant added');
+        }
+
+        // ==========================================
+        // REGENERATE SELECTED
+        // ==========================================
+        function showRegenInput() {
+            const row = document.getElementById('regen-input-row');
+            row.classList.toggle('visible');
+            if (row.classList.contains('visible')) {
+                document.getElementById('regen-prompt').focus();
+            }
+        }
+
+        async function regenerateSelected() {
+            const prompt = document.getElementById('regen-prompt').value.trim();
+            const selectedVariants = variants.filter(v => v._selected);
+            if (selectedVariants.length === 0) {
+                showToast('No variants selected', 'error');
+                return;
+            }
+
+            document.getElementById('regen-input-row').classList.remove('visible');
+
+            const payload = {
+                brand_id: selectedBrand?.id || null,
+                offer_id: selectedOffer?.id || null,
+                swipe_id: selectedSwipe?.id || null,
+                refinement_prompt: prompt,
+                variants_to_refine: selectedVariants.map(v => ({
+                    headline: v.headline,
+                    body_copy: v.body_copy,
+                    cta: v.cta,
+                    angle: v.angle
+                })),
+                format: document.getElementById('format-select').value
+            };
+
+            try {
+                const response = await fetch(CONFIG.WEBHOOK_IMAGE_AD_COPY, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (data.success && data.variants) {
+                    // Replace selected variants with new ones
+                    let newIdx = 0;
+                    variants = variants.map(v => {
+                        if (v._selected && newIdx < data.variants.length) {
+                            const newV = data.variants[newIdx++];
+                            return { ...newV, _index: v._index, _selected: true };
+                        }
+                        return v;
+                    });
+                    renderVariants();
+                    showToast('Selected variants regenerated');
+                } else {
+                    throw new Error('Regeneration failed');
+                }
+            } catch (e) {
+                console.error('Regeneration failed:', e);
+                showToast('Regeneration failed — edit variants manually', 'error');
+            }
+
+            document.getElementById('regen-prompt').value = '';
+        }
+
+        // ==========================================
+        // GENERATE IMAGES (STEP 2) — ASYNC WITH POLLING
+        // ==========================================
+        let pollInterval = null;
+        let expectedImageCount = 0;
+        let pollStartTime = null;
+
+        async function generateImages() {
+            const selectedVars = variants.filter(v => v._selected);
+            if (selectedVars.length === 0) return;
+
+            const format = document.getElementById('format-select').value;
+            expectedImageCount = selectedVars.length;
+            pollStartTime = new Date().toISOString();
+
+            // Show loading
+            document.getElementById('image-empty').style.display = 'none';
+            document.getElementById('image-loading').style.display = 'block';
+            document.getElementById('images-container').style.display = 'block';
+            document.getElementById('review-link').style.display = 'none';
+
+            const progressFill = document.getElementById('image-progress-fill');
+            const progressText = document.getElementById('image-progress-text');
+            progressFill.style.width = '5%';
+            progressText.textContent = `Generating ${selectedVars.length} images in background...`;
+
+            const payload = {
+                generation_id: currentGenerationId,
+                variants: selectedVars.map(v => ({
+                    headline: v.headline,
+                    body_copy: v.body_copy,
+                    cta: v.cta,
+                    angle: v.angle
+                })),
+                swipe_id: selectedSwipe?.id || null,
+                brand_id: selectedBrand?.id || null,
+                apply_brand_styling: document.getElementById('apply-brand-styling')?.checked !== false,
+                format: format
+            };
+
+            // Fire and forget — don't wait for all images
+            try {
+                fetch(CONFIG.WEBHOOK_IMAGE_AD_RENDER, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(e => console.log('Render webhook fire-and-forget:', e));
+
+                showToast(`Generating ${selectedVars.length} images — they'll appear as they finish`);
+
+                // Start polling for new images in Supabase
+                generatedImages = [];
+                document.getElementById('images-container').innerHTML = '';
+                startPolling();
+
+            } catch (e) {
+                console.error('Failed to trigger image generation:', e);
+                showToast('Failed to start image generation');
+                document.getElementById('image-loading').style.display = 'none';
+            }
+        }
+
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+
+            let pollCount = 0;
+            const maxPolls = 120; // 10 minutes max (5s interval)
+
+            pollInterval = setInterval(async () => {
+                pollCount++;
+                if (pollCount > maxPolls) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    document.getElementById('image-loading').style.display = 'none';
+                    showToast('Polling timed out — check Ad Review page for results');
+                    return;
+                }
+
+                try {
+                    // Fetch images created after we started generating
+                    const url = `${CONFIG.SUPABASE_URL}/rest/v1/image_ad_outputs?created_at=gte.${pollStartTime}&order=created_at.asc`;
+                    const response = await fetch(url, {
+                        headers: {
+                            'apikey': CONFIG.SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                        }
+                    });
+
+                    if (!response.ok) return;
+                    const images = await response.json();
+
+                    if (images.length > generatedImages.length) {
+                        // New images found — update the display
+                        generatedImages = images;
+                        renderImages();
+
+                        const progressFill = document.getElementById('image-progress-fill');
+                        const progressText = document.getElementById('image-progress-text');
+                        const pct = Math.round((images.length / expectedImageCount) * 100);
+                        progressFill.style.width = pct + '%';
+                        progressText.textContent = `${images.length} of ${expectedImageCount} images generated...`;
+
+                        showToast(`Image ${images.length} of ${expectedImageCount} ready`);
+                    }
+
+                    // All done?
+                    if (images.length >= expectedImageCount) {
+                        clearInterval(pollInterval);
+                        pollInterval = null;
+                        document.getElementById('image-loading').style.display = 'none';
+                        document.getElementById('review-link').style.display = 'block';
+                        showToast(`All ${images.length} images generated!`);
+                    }
+                } catch (e) {
+                    console.log('Poll error:', e);
+                }
+            }, 5000); // Poll every 5 seconds
+        }
+
+        // ==========================================
+        // RENDER IMAGES
+        // ==========================================
+        function renderImages() {
+            const container = document.getElementById('images-container');
+            const format = document.getElementById('format-select').value;
+            let ratioClass = 'ratio-1-1';
+            if (format === '1080x1920') ratioClass = 'ratio-9-16';
+            if (format === '1200x628') ratioClass = 'ratio-1200-628';
+
+            container.innerHTML = '';
+
+            generatedImages.forEach((img, i) => {
+                const copy = img.copy_variant || {};
+                const perfTag = img.performance_tag || 'untested';
+
+                const card = document.createElement('div');
+                card.className = 'image-card';
+                card.dataset.index = i;
+
+                let imageContent;
+                if (img.image_url) {
+                    imageContent = `<img class="image-card-img" src="${img.image_url}" alt="Ad image ${i + 1}">`;
+                } else {
+                    imageContent = `<div class="image-placeholder">Image generation requires n8n webhook &mdash; copy saved to database</div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="image-card-img-container ${ratioClass}">
+                        ${imageContent}
+                    </div>
+                    <div class="image-card-copy">
+                        <div class="image-card-headline">${copy.headline || ''}</div>
+                        <div class="image-card-body">${copy.body_copy || ''}</div>
+                        <div class="image-card-cta">${copy.cta || ''}</div>
+                    </div>
+                    <div class="image-card-actions">
+                        <span class="perf-tag ${perfTag}" data-img-index="${i}" onclick="cyclePerformanceTag(${i})">${perfTag.toUpperCase()}</span>
+                        ${img.image_url ? `<button class="img-action-btn secondary" onclick="downloadImage(${i})" style="margin-left: auto;">Download</button>` : '<span style="margin-left: auto;"></span>'}
+                        <button class="img-action-btn primary" onclick="saveImage(${i})">Save</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('image-count-badge').textContent = `${generatedImages.length} IMAGES`;
+        }
+
+        // ==========================================
+        // PERFORMANCE TAG CYCLING
+        // ==========================================
+        const PERF_STATES = ['untested', 'testing', 'winner', 'loser'];
+
+        function cyclePerformanceTag(index) {
+            const img = generatedImages[index];
+            const current = img.performance_tag || 'untested';
+            const nextIdx = (PERF_STATES.indexOf(current) + 1) % PERF_STATES.length;
+            const next = PERF_STATES[nextIdx];
+
+            img.performance_tag = next;
+
+            // Update UI
+            const tag = document.querySelector(`.perf-tag[data-img-index="${index}"]`);
+            tag.className = `perf-tag ${next}`;
+            tag.textContent = next.toUpperCase();
+
+            // Update Supabase if real ID
+            if (img.id && !img.id.startsWith('placeholder-')) {
+                supabasePatch('image_ad_outputs', img.id, { performance_tag: next }).catch(e => {
+                    console.error('Failed to update performance tag:', e);
+                });
+            }
+
+            showToast(`Tagged as ${next.toUpperCase()}`);
+        }
+
+        // ==========================================
+        // DOWNLOAD & SAVE
+        // ==========================================
+        function downloadImage(index) {
+            const img = generatedImages[index];
+            if (!img.image_url) return;
+
+            const a = document.createElement('a');
+            a.href = img.image_url;
+            a.download = `image-ad-${index + 1}.png`;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        async function saveImage(index) {
+            const img = generatedImages[index];
+            showToast('Image saved');
+            // In production: POST to image_ad_outputs table
+        }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        async function init() {
+            await Promise.all([
+                loadBrands(),
+                loadSwipes()
+            ]);
+        }
+
+        init();
+    </script>
+</body>
+</html>

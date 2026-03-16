@@ -248,8 +248,157 @@ INSERT INTO hook_swipes (raw_text, hook_type, pattern, opening_mechanism, trigge
 -- SELECT * FROM generation_outputs WHERE generation_id = 'your-uuid' ORDER BY type, created_at;
 
 -- Get recent generations with selected outputs
--- SELECT g.*, 
+-- SELECT g.*,
 --        (SELECT jsonb_agg(content) FROM generation_outputs WHERE generation_id = g.id AND is_selected = true) as selected
--- FROM generations g 
--- ORDER BY created_at DESC 
+-- FROM generations g
+-- ORDER BY created_at DESC
 -- LIMIT 20;
+
+-- ============================================
+-- BRAND PROFILES (Image Ad System)
+-- ============================================
+CREATE TABLE brand_profiles (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    brand_colors JSONB DEFAULT '{}', -- {"primary": "#hex", "secondary": "#hex", "accent": "#hex"}
+    fonts TEXT,
+    tone TEXT, -- "premium, scientific, warm"
+    voice_guidelines TEXT,
+    visual_style TEXT,
+    logo_url TEXT,
+    target_audience TEXT,
+    brand_keywords TEXT[] DEFAULT '{}',
+    avoid_words TEXT[] DEFAULT '{}',
+    notes TEXT,
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_brand_profiles_name ON brand_profiles(name);
+
+CREATE TRIGGER update_brand_profiles_updated_at
+    BEFORE UPDATE ON brand_profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- OFFER CONTEXTS (Image Ad System)
+-- ============================================
+CREATE TABLE offer_contexts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    brand_id UUID REFERENCES brand_profiles(id) ON DELETE SET NULL,
+    name TEXT NOT NULL,
+    product_name TEXT NOT NULL,
+    product_description TEXT,
+    offer_details TEXT,
+    price_point TEXT,
+    awareness_level TEXT, -- unaware, problem_aware, solution_aware, product_aware, most_aware
+    pain_points TEXT[] DEFAULT '{}',
+    desires TEXT[] DEFAULT '{}',
+    icp TEXT, -- Ideal Customer Profile
+    unique_mechanism TEXT,
+    proof_points TEXT[] DEFAULT '{}',
+    objections TEXT[] DEFAULT '{}',
+    competitors TEXT,
+    research_notes TEXT,
+    niche TEXT,
+    status TEXT DEFAULT 'active', -- active, paused, archived
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_offer_contexts_brand ON offer_contexts(brand_id);
+CREATE INDEX idx_offer_contexts_status ON offer_contexts(status);
+CREATE INDEX idx_offer_contexts_niche ON offer_contexts(niche);
+
+CREATE TRIGGER update_offer_contexts_updated_at
+    BEFORE UPDATE ON offer_contexts
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- IMAGE AD SWIPES
+-- ============================================
+CREATE TABLE image_ad_swipes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    image_url TEXT,
+    headline_text TEXT,
+    body_copy TEXT,
+    cta_text TEXT,
+    hook_type TEXT,
+    copy_angle TEXT,
+    emotional_appeal TEXT,
+    layout_description TEXT,
+    color_palette JSONB DEFAULT '{}',
+    font_style TEXT,
+    visual_elements TEXT,
+    recreation_prompt TEXT, -- Detailed NanoBanana-ready prompt
+    triggers TEXT[] DEFAULT '{}',
+    niche TEXT,
+    performance_tag TEXT DEFAULT 'untested', -- untested, testing, winner, loser
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_image_ad_swipes_hook_type ON image_ad_swipes(hook_type);
+CREATE INDEX idx_image_ad_swipes_niche ON image_ad_swipes(niche);
+CREATE INDEX idx_image_ad_swipes_perf ON image_ad_swipes(performance_tag);
+CREATE INDEX idx_image_ad_swipes_created ON image_ad_swipes(created_at DESC);
+
+-- ============================================
+-- IMAGE AD GENERATIONS
+-- ============================================
+CREATE TABLE image_ad_generations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    brand_id UUID REFERENCES brand_profiles(id),
+    offer_id UUID REFERENCES offer_contexts(id),
+    swipe_id UUID REFERENCES image_ad_swipes(id),
+    copy_variants JSONB NOT NULL DEFAULT '[]',
+    generation_config JSONB DEFAULT '{}',
+    status TEXT DEFAULT 'draft', -- draft, generating, completed
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_image_ad_gen_brand ON image_ad_generations(brand_id);
+CREATE INDEX idx_image_ad_gen_offer ON image_ad_generations(offer_id);
+CREATE INDEX idx_image_ad_gen_created ON image_ad_generations(created_at DESC);
+
+CREATE TRIGGER update_image_ad_gen_updated_at
+    BEFORE UPDATE ON image_ad_generations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- IMAGE AD OUTPUTS
+-- ============================================
+CREATE TABLE image_ad_outputs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    generation_id UUID NOT NULL REFERENCES image_ad_generations(id) ON DELETE CASCADE,
+    image_url TEXT,
+    copy_variant JSONB,
+    image_prompt TEXT,
+    reference_image_url TEXT,
+    performance_tag TEXT DEFAULT 'untested', -- untested, testing, winner, loser
+    notes TEXT,
+    is_selected BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_image_ad_outputs_gen ON image_ad_outputs(generation_id);
+CREATE INDEX idx_image_ad_outputs_perf ON image_ad_outputs(performance_tag);
+CREATE INDEX idx_image_ad_outputs_created ON image_ad_outputs(created_at DESC);
+
+-- RLS Policies (allow all for single-user system)
+ALTER TABLE brand_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE offer_contexts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE image_ad_swipes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE image_ad_generations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE image_ad_outputs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all" ON brand_profiles FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON offer_contexts FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON image_ad_swipes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON image_ad_generations FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON image_ad_outputs FOR ALL USING (true) WITH CHECK (true);

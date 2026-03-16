@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Ad Review</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --danger-dim: #ff444420;
+            --warning: #ffaa00;
+            --warning-dim: #ffaa0020;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --blue: #3b82f6;
+            --blue-dim: #3b82f620;
+            --orange: #f97316;
+            --orange-dim: #f9731620;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Nav */
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .nav-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 14px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-toggle.active { border-color: var(--accent); color: var(--accent); }
+
+        .nav-panel {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 200px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            border-radius: 0 0 0 12px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 99;
+            box-shadow: -4px 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .nav-panel.open { display: flex; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+        /* Container */
+        .container {
+            padding: 92px 48px 48px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Page header */
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .page-title { font-size: 32px; font-weight: 600; }
+        .page-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+
+        .stat { display: flex; flex-direction: column; gap: 4px; }
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .stat-value.total { color: var(--text-primary); }
+        .stat-value.untested { color: var(--text-muted); }
+        .stat-value.testing { color: var(--warning); }
+        .stat-value.winners { color: var(--accent); }
+        .stat-value.losers { color: var(--danger); }
+
+        /* Filter bar */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar input,
+        .filter-bar select {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            transition: border-color 0.15s ease;
+        }
+
+        .filter-bar input:focus,
+        .filter-bar select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .filter-bar input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-bar select {
+            min-width: 150px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23606065' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+
+        .filter-bar select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Image grid */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            padding-bottom: 80px;
+        }
+
+        .image-grid.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-sub {
+            font-size: 13px;
+        }
+
+        /* Image card */
+        .image-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .image-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .image-card.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent), inset 0 0 40px var(--accent-dim);
+        }
+
+        /* Selection checkbox */
+        .card-checkbox {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            background: rgba(10, 10, 11, 0.7);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .card-checkbox:hover {
+            border-color: var(--accent);
+        }
+
+        .card-checkbox.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .card-checkbox.checked::after {
+            content: '';
+            width: 6px;
+            height: 10px;
+            border: 2px solid var(--bg-primary);
+            border-top: none;
+            border-left: none;
+            transform: rotate(45deg) translateY(-1px);
+        }
+
+        /* Performance badge */
+        .perf-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .perf-badge.untested { background: rgba(96, 96, 101, 0.9); color: var(--text-primary); }
+        .perf-badge.testing { background: rgba(255, 170, 0, 0.9); color: #000; }
+        .perf-badge.winner { background: rgba(0, 255, 136, 0.9); color: #000; }
+        .perf-badge.loser { background: rgba(255, 68, 68, 0.9); color: #fff; }
+
+        /* Card image area */
+        .card-image {
+            aspect-ratio: 1 / 1;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+        }
+
+        .card-image-placeholder svg {
+            width: 48px;
+            height: 48px;
+            opacity: 0.4;
+        }
+
+        .card-image-placeholder span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Card body */
+        .card-body { padding: 16px; }
+
+        .card-headline {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-bodycopy {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-cta {
+            font-size: 12px;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .card-brand-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            background: var(--purple-dim);
+            color: var(--purple);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .card-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+        }
+
+        /* Batch actions bar */
+        .batch-bar {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 16px 24px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        .batch-bar.visible { display: flex; }
+
+        .batch-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--accent);
+        }
+
+        .batch-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .batch-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.15s ease;
+        }
+
+        .batch-btn.testing {
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+        .batch-btn.testing:hover { background: var(--warning-dim); }
+
+        .batch-btn.winner {
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+        .batch-btn.winner:hover { background: var(--accent-dim); }
+
+        .batch-btn.loser {
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        .batch-btn.loser:hover { background: var(--danger-dim); }
+
+        .batch-btn.delete {
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        .batch-btn.delete:hover { background: var(--danger); color: #fff; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 200;
+            overflow-y: auto;
+            padding: 40px;
+        }
+
+        .modal-overlay.active { display: block; }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 500px 1fr;
+            overflow: hidden;
+        }
+
+        .modal-image {
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+
+        .modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .modal-image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted);
+        }
+
+        .modal-image-placeholder svg {
+            width: 80px;
+            height: 80px;
+            opacity: 0.3;
+        }
+
+        .modal-image-placeholder span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .modal-content {
+            padding: 32px;
+            overflow-y: auto;
+            max-height: 85vh;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .modal-title { font-size: 20px; font-weight: 600; }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 28px;
+            line-height: 1;
+            position: absolute;
+            top: 24px;
+            right: 24px;
+        }
+
+        .modal-close:hover { color: var(--text-primary); }
+
+        .modal-section { margin-bottom: 24px; }
+
+        .modal-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        /* Performance tag selector */
+        .perf-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .perf-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .perf-btn.untested {
+            border: 1px solid var(--text-muted);
+            color: var(--text-muted);
+            background: transparent;
+        }
+        .perf-btn.untested.active {
+            background: var(--text-muted);
+            color: var(--bg-primary);
+        }
+
+        .perf-btn.testing {
+            border: 1px solid var(--warning);
+            color: var(--warning);
+            background: transparent;
+        }
+        .perf-btn.testing.active {
+            background: var(--warning);
+            color: #000;
+        }
+
+        .perf-btn.winner {
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            background: transparent;
+        }
+        .perf-btn.winner.active {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .perf-btn.loser {
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            background: transparent;
+        }
+        .perf-btn.loser.active {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        /* Copy row */
+        .copy-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .copy-text {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .copy-text.headline {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .copy-text.cta {
+            color: var(--accent);
+        }
+
+        .copy-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .copy-btn.copied {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Collapsible prompt */
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            transition: all 0.15s ease;
+        }
+
+        .collapsible-header:hover {
+            background: var(--border);
+        }
+
+        .collapsible-header .modal-label {
+            margin-bottom: 0;
+        }
+
+        .collapsible-arrow {
+            font-size: 12px;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .collapsible-header.open .collapsible-arrow {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-body {
+            display: none;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-radius: 0 0 8px 8px;
+            margin-top: -8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .collapsible-body.open { display: block; }
+
+        /* Notes textarea */
+        .notes-textarea {
+            width: 100%;
+            min-height: 80px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.15s ease;
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .notes-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Modal actions */
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .modal-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex: 1;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .modal-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .modal-btn.secondary:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-btn.primary {
+            background: var(--accent);
+            border: none;
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+
+        .modal-btn.primary:hover { background: var(--accent-hover); }
+
+        .modal-btn.danger {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .modal-btn.danger:hover { background: var(--danger-dim); }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .toast.success { border-color: var(--accent); }
+        .toast.warning { border-color: var(--warning); }
+        .toast.error { border-color: var(--danger); }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .container {
+                padding: 80px 16px 48px;
+            }
+
+            .modal {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-image {
+                max-height: 50vh;
+            }
+
+            .stats-bar {
+                flex-wrap: wrap;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+            }
+
+            .filter-bar input,
+            .filter-bar select {
+                min-width: 100%;
+            }
+
+            .batch-bar {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+
+            .batch-actions {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .perf-selector {
+                flex-wrap: wrap;
+            }
+
+            .modal-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">CONTENT_ENGINE//v1</div>
+        <button class="nav-toggle" id="nav-toggle">Menu</button>
+    </nav>
+    <div class="nav-panel" id="nav-panel">
+        <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+        <a href="02-swipe-file.html" class="nav-link">Swipe File</a>
+        <a href="08-twitter-generator.html" class="nav-link">TW Generate</a>
+        <a href="11-twitter-swipes.html" class="nav-link">TW Swipes</a>
+        <a href="09-twitter-scraper.html" class="nav-link">TW Scraper</a>
+        <a href="10-hook-bank.html" class="nav-link">TW Hooks</a>
+        <a href="06-ad-swipes.html" class="nav-link">Ad Video</a>
+        <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+        <a href="12-brand-profiles.html" class="nav-link">Brands</a>
+        <a href="13-image-ad-generator.html" class="nav-link">Img Ad Gen</a>
+        <a href="14-image-ad-review.html" class="nav-link active">Img Ad Review</a>
+        <a href="05-history.html" class="nav-link">History</a>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Image Ad Review</h1>
+                <p class="page-subtitle">Track performance across all generated image ads</p>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="stats-bar">
+            <div class="stat">
+                <span class="stat-value total" id="stat-total">0</span>
+                <span class="stat-label">Total Generated</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value untested" id="stat-untested">0</span>
+                <span class="stat-label">Untested</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value testing" id="stat-testing">0</span>
+                <span class="stat-label">Testing</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value winners" id="stat-winners">0</span>
+                <span class="stat-label">Winners</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value losers" id="stat-losers">0</span>
+                <span class="stat-label">Losers</span>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <input type="text" id="filter-search" placeholder="Search headlines, body copy, CTAs...">
+            <select id="filter-perf">
+                <option value="">All Performance</option>
+                <option value="untested">Untested</option>
+                <option value="testing">Testing</option>
+                <option value="winner">Winner</option>
+                <option value="loser">Loser</option>
+            </select>
+            <select id="filter-brand">
+                <option value="">All Brands</option>
+            </select>
+            <select id="filter-offer">
+                <option value="">All Offers</option>
+            </select>
+            <select id="filter-sort">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+            </select>
+        </div>
+
+        <!-- Image Grid -->
+        <div class="image-grid" id="image-grid"></div>
+    </div>
+
+    <!-- Batch Actions Bar -->
+    <div class="batch-bar" id="batch-bar">
+        <span class="batch-count" id="batch-count">0 selected</span>
+        <div class="batch-actions">
+            <button class="batch-btn testing" onclick="batchUpdateTag(getSelectedIds(), 'testing')">Mark Testing</button>
+            <button class="batch-btn winner" onclick="batchUpdateTag(getSelectedIds(), 'winner')">Mark Winner</button>
+            <button class="batch-btn loser" onclick="batchUpdateTag(getSelectedIds(), 'loser')">Mark Loser</button>
+            <button class="batch-btn delete" onclick="batchDelete(getSelectedIds())">Delete Selected</button>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="modal">
+            <div class="modal-image" id="modal-image"></div>
+            <div class="modal-content">
+                <button class="modal-close" id="modal-close">&times;</button>
+
+                <div class="modal-header">
+                    <h2 class="modal-title">Ad Details</h2>
+                </div>
+
+                <!-- Performance Tag Selector -->
+                <div class="modal-section">
+                    <div class="modal-label">Performance Tag</div>
+                    <div class="perf-selector" id="modal-perf-selector">
+                        <button class="perf-btn untested" data-tag="untested" onclick="modalUpdateTag('untested')">Untested</button>
+                        <button class="perf-btn testing" data-tag="testing" onclick="modalUpdateTag('testing')">Testing</button>
+                        <button class="perf-btn winner" data-tag="winner" onclick="modalUpdateTag('winner')">Winner</button>
+                        <button class="perf-btn loser" data-tag="loser" onclick="modalUpdateTag('loser')">Loser</button>
+                    </div>
+                </div>
+
+                <!-- Copy Section -->
+                <div class="modal-section">
+                    <div class="modal-label">Headline</div>
+                    <div class="copy-row">
+                        <div class="copy-text headline" id="modal-headline"></div>
+                        <button class="copy-btn" onclick="copyText('modal-headline', this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <div class="modal-label">Body Copy</div>
+                    <div class="copy-row">
+                        <div class="copy-text" id="modal-body"></div>
+                        <button class="copy-btn" onclick="copyText('modal-body', this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <div class="modal-label">CTA</div>
+                    <div class="copy-row">
+                        <div class="copy-text cta" id="modal-cta"></div>
+                        <button class="copy-btn" onclick="copyText('modal-cta', this)">Copy</button>
+                    </div>
+                </div>
+
+                <!-- Image Prompt (collapsible) -->
+                <div class="modal-section">
+                    <div class="collapsible-header" id="prompt-toggle" onclick="toggleCollapsible('prompt')">
+                        <span class="modal-label">Image Prompt</span>
+                        <span class="collapsible-arrow">&#9660;</span>
+                    </div>
+                    <div class="collapsible-body" id="prompt-body"></div>
+                </div>
+
+                <!-- Notes -->
+                <div class="modal-section">
+                    <div class="modal-label">Notes</div>
+                    <textarea class="notes-textarea" id="modal-notes" placeholder="Add performance notes, test results, observations..."></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="modal-actions">
+                    <button class="modal-btn secondary" onclick="downloadImage()">Download Image</button>
+                    <button class="modal-btn danger" onclick="deleteOutput()">Delete</button>
+                    <button class="modal-btn primary" onclick="useCopyInGenerator()">Use Copy in Generator &rarr;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const CONFIG = {
+            SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
+            SUPABASE_ANON_KEY: 'sb_publishable_TnW2BTNaZvow6Gm8DbxU-w_5YyQN3Av'
+        };
+
+        function supabaseHeaders() {
+            return {
+                'apikey': CONFIG.SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            };
+        }
+
+        // ==================== STATE ====================
+        let allOutputs = [];
+        let brands = [];
+        let offers = [];
+        let selectedIds = new Set();
+        let currentModalOutput = null;
+        let useSampleData = false;
+
+        // ==================== NAV ====================
+        const navToggle = document.getElementById('nav-toggle');
+        const navPanel = document.getElementById('nav-panel');
+
+        navToggle.addEventListener('click', () => {
+            navPanel.classList.toggle('open');
+            navToggle.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!navPanel.contains(e.target) && !navToggle.contains(e.target)) {
+                navPanel.classList.remove('open');
+                navToggle.classList.remove('active');
+            }
+        });
+
+        // ==================== SAMPLE DATA ====================
+        function getSampleOutputs() {
+            return [
+                {
+                    id: '1', image_url: '',
+                    copy_variant: { headline: "Your Liver Is Begging For Help", body_copy: "Most supplements mask the symptoms. This targets the root cause.", cta: "Try It Risk-Free \u2192" },
+                    image_prompt: "Clean supplement ad, dark green background, bold white headline top, product bottle center, subtle gradient, minimal design, high contrast text",
+                    performance_tag: 'winner', notes: 'Best performer in March batch',
+                    created_at: new Date().toISOString(),
+                    image_ad_generations: { brand_id: 'b1', offer_id: 'o1', generation_config: { format: '1080x1080' } }
+                },
+                {
+                    id: '2', image_url: '',
+                    copy_variant: { headline: "What Doctors Won't Tell You", body_copy: "Clinical studies show this ancient herb outperforms leading supplements 3:1.", cta: "See Research \u2192" },
+                    image_prompt: "Authority-style ad, navy background, serif headline, medical imagery subtle, trust badges bottom, clean professional layout",
+                    performance_tag: 'testing', notes: '',
+                    created_at: new Date(Date.now() - 86400000).toISOString(),
+                    image_ad_generations: { brand_id: 'b1', offer_id: 'o1', generation_config: { format: '1080x1080' } }
+                },
+                {
+                    id: '3', image_url: '',
+                    copy_variant: { headline: "47,000 Customers Can't Be Wrong", body_copy: "Join thousands who transformed their energy in 14 days.", cta: "Join Them \u2192" },
+                    image_prompt: "Social proof ad, warm tones, testimonial-style layout, large number highlight, community feel, bright accents",
+                    performance_tag: 'untested', notes: '',
+                    created_at: new Date(Date.now() - 172800000).toISOString(),
+                    image_ad_generations: { brand_id: 'b2', offer_id: null, generation_config: { format: '1080x1920' } }
+                },
+                {
+                    id: '4', image_url: '',
+                    copy_variant: { headline: "Stop Wasting Money on Supplements", body_copy: "You've tried everything. Here's why nothing worked.", cta: "Discover Why \u2192" },
+                    image_prompt: "Contrarian ad, red accent lines, dark background, confrontational headline, money imagery, bold sans-serif",
+                    performance_tag: 'loser', notes: 'CTR below 0.5%',
+                    created_at: new Date(Date.now() - 259200000).toISOString(),
+                    image_ad_generations: { brand_id: 'b2', offer_id: null, generation_config: { format: '1200x628' } }
+                },
+                {
+                    id: '5', image_url: '',
+                    copy_variant: { headline: "The #1 Mistake Killing Your Gut Health", body_copy: "Gastroenterologists reveal the hidden trigger behind bloating, fatigue, and brain fog.", cta: "Watch Free Video \u2192" },
+                    image_prompt: "Educational ad, split layout, before/after feel, medical authority, blue and white palette, infographic style",
+                    performance_tag: 'untested', notes: '',
+                    created_at: new Date(Date.now() - 345600000).toISOString(),
+                    image_ad_generations: { brand_id: null, offer_id: null, generation_config: { format: '1080x1080' } }
+                },
+                {
+                    id: '6', image_url: '',
+                    copy_variant: { headline: "Warning: Do NOT Buy Another Supplement Until You Read This", body_copy: "Big Pharma doesn't want you to know about this $2/day solution.", cta: "Read The Truth \u2192" },
+                    image_prompt: "Warning-style ad, caution yellow border, bold black headline, newspaper editorial feel, attention-grabbing layout",
+                    performance_tag: 'testing', notes: 'A/B testing against variant #2',
+                    created_at: new Date(Date.now() - 432000000).toISOString(),
+                    image_ad_generations: { brand_id: 'b1', offer_id: 'o1', generation_config: { format: '1200x628' } }
+                }
+            ];
+        }
+
+        function getSampleBrands() {
+            return [
+                { id: 'b1', brand_name: 'NutraVive' },
+                { id: 'b2', brand_name: 'GreenLeaf Co' }
+            ];
+        }
+
+        function getSampleOffers() {
+            return [
+                { id: 'o1', offer_name: 'Liver Detox Bundle', brand_id: 'b1' },
+                { id: 'o2', offer_name: 'Energy Stack', brand_id: 'b2' }
+            ];
+        }
+
+        // ==================== DATA LOADING ====================
+        async function loadOutputs() {
+            try {
+                const response = await fetch(
+                    `${CONFIG.SUPABASE_URL}/rest/v1/image_ad_outputs?select=*,image_ad_generations(brand_id,offer_id,swipe_id,generation_config)&order=created_at.desc`,
+                    { headers: supabaseHeaders() }
+                );
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    allOutputs = data;
+                } else {
+                    useSampleData = true;
+                    allOutputs = getSampleOutputs();
+                }
+            } catch (err) {
+                console.warn('Supabase unavailable, using sample data:', err);
+                useSampleData = true;
+                allOutputs = getSampleOutputs();
+            }
+        }
+
+        async function loadBrands() {
+            try {
+                const response = await fetch(
+                    `${CONFIG.SUPABASE_URL}/rest/v1/brand_profiles?select=id,brand_name&order=brand_name.asc`,
+                    { headers: supabaseHeaders() }
+                );
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    brands = data;
+                } else {
+                    brands = getSampleBrands();
+                }
+            } catch (err) {
+                brands = getSampleBrands();
+            }
+        }
+
+        async function loadOffers() {
+            try {
+                const response = await fetch(
+                    `${CONFIG.SUPABASE_URL}/rest/v1/offer_contexts?select=id,offer_name,brand_id&order=offer_name.asc`,
+                    { headers: supabaseHeaders() }
+                );
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    offers = data;
+                } else {
+                    offers = getSampleOffers();
+                }
+            } catch (err) {
+                offers = getSampleOffers();
+            }
+        }
+
+        // ==================== RENDERING ====================
+        function updateStats() {
+            const total = allOutputs.length;
+            const untested = allOutputs.filter(o => !o.performance_tag || o.performance_tag === 'untested').length;
+            const testing = allOutputs.filter(o => o.performance_tag === 'testing').length;
+            const winners = allOutputs.filter(o => o.performance_tag === 'winner').length;
+            const losers = allOutputs.filter(o => o.performance_tag === 'loser').length;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-untested').textContent = untested;
+            document.getElementById('stat-testing').textContent = testing;
+            document.getElementById('stat-winners').textContent = winners;
+            document.getElementById('stat-losers').textContent = losers;
+        }
+
+        function populateFilterDropdowns() {
+            const brandSelect = document.getElementById('filter-brand');
+            brandSelect.innerHTML = '<option value="">All Brands</option>';
+            brands.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.id;
+                opt.textContent = b.brand_name;
+                brandSelect.appendChild(opt);
+            });
+
+            updateOfferDropdown();
+        }
+
+        function updateOfferDropdown() {
+            const brandId = document.getElementById('filter-brand').value;
+            const offerSelect = document.getElementById('filter-offer');
+            offerSelect.innerHTML = '<option value="">All Offers</option>';
+
+            const filtered = brandId ? offers.filter(o => o.brand_id === brandId) : offers;
+            filtered.forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o.id;
+                opt.textContent = o.offer_name;
+                offerSelect.appendChild(opt);
+            });
+        }
+
+        function getFilteredOutputs() {
+            const search = document.getElementById('filter-search').value.toLowerCase();
+            const perfFilter = document.getElementById('filter-perf').value;
+            const brandFilter = document.getElementById('filter-brand').value;
+            const offerFilter = document.getElementById('filter-offer').value;
+            const sort = document.getElementById('filter-sort').value;
+
+            let filtered = [...allOutputs];
+
+            // Search filter
+            if (search) {
+                filtered = filtered.filter(o => {
+                    const cv = o.copy_variant || {};
+                    const text = [cv.headline, cv.body_copy, cv.cta].filter(Boolean).join(' ').toLowerCase();
+                    return text.includes(search);
+                });
+            }
+
+            // Performance filter
+            if (perfFilter) {
+                filtered = filtered.filter(o => {
+                    const tag = o.performance_tag || 'untested';
+                    return tag === perfFilter;
+                });
+            }
+
+            // Brand filter
+            if (brandFilter) {
+                filtered = filtered.filter(o => {
+                    const gen = o.image_ad_generations;
+                    return gen && gen.brand_id === brandFilter;
+                });
+            }
+
+            // Offer filter
+            if (offerFilter) {
+                filtered = filtered.filter(o => {
+                    const gen = o.image_ad_generations;
+                    return gen && gen.offer_id === offerFilter;
+                });
+            }
+
+            // Sort
+            filtered.sort((a, b) => {
+                const da = new Date(a.created_at);
+                const db = new Date(b.created_at);
+                return sort === 'newest' ? db - da : da - db;
+            });
+
+            return filtered;
+        }
+
+        function getBrandName(brandId) {
+            if (!brandId) return null;
+            const brand = brands.find(b => b.id === brandId);
+            return brand ? brand.brand_name : null;
+        }
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('image-grid');
+            const filtered = getFilteredOutputs();
+
+            if (filtered.length === 0) {
+                grid.className = 'image-grid empty';
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21,15 16,10 5,21"/>
+                            </svg>
+                        </div>
+                        <div class="empty-state-text">No image ads found</div>
+                        <div class="empty-state-sub">Try adjusting your filters or generate some ads first</div>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.className = 'image-grid';
+            grid.innerHTML = filtered.map(output => {
+                const cv = output.copy_variant || {};
+                const tag = output.performance_tag || 'untested';
+                const gen = output.image_ad_generations || {};
+                const brandName = getBrandName(gen.brand_id);
+                const isSelected = selectedIds.has(output.id);
+
+                return `
+                    <div class="image-card ${isSelected ? 'selected' : ''}" data-id="${output.id}">
+                        <div class="card-checkbox ${isSelected ? 'checked' : ''}" onclick="toggleSelect(event, '${output.id}')"></div>
+                        <span class="perf-badge ${tag}">${tag}</span>
+                        <div class="card-image" onclick="openModal('${output.id}')">
+                            ${output.image_url
+                                ? `<img src="${output.image_url}" alt="${cv.headline || 'Ad image'}" loading="lazy">`
+                                : `<div class="card-image-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21,15 16,10 5,21"/>
+                                    </svg>
+                                    <span>No Image</span>
+                                </div>`
+                            }
+                        </div>
+                        <div class="card-body" onclick="openModal('${output.id}')">
+                            <div class="card-headline">${cv.headline || 'Untitled Ad'}</div>
+                            <div class="card-bodycopy">${cv.body_copy || ''}</div>
+                            <div class="card-cta">${cv.cta || ''}</div>
+                            <div class="card-meta">
+                                ${brandName ? `<span class="card-brand-tag">${brandName}</span>` : '<span></span>'}
+                                <span class="card-date">${formatDate(output.created_at)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== SELECTION ====================
+        function toggleSelect(event, id) {
+            event.stopPropagation();
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            updateBatchBar();
+            renderGrid();
+        }
+
+        function getSelectedIds() {
+            return Array.from(selectedIds);
+        }
+
+        function updateBatchBar() {
+            const bar = document.getElementById('batch-bar');
+            const count = selectedIds.size;
+            if (count > 0) {
+                bar.classList.add('visible');
+                document.getElementById('batch-count').textContent = `${count} selected`;
+            } else {
+                bar.classList.remove('visible');
+            }
+        }
+
+        // ==================== PERFORMANCE TAG UPDATE ====================
+        async function updatePerformanceTag(outputId, newTag) {
+            // Update local state
+            const output = allOutputs.find(o => o.id === outputId);
+            if (output) {
+                output.performance_tag = newTag;
+            }
+
+            // Update Supabase if not sample data
+            if (!useSampleData) {
+                try {
+                    await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/image_ad_outputs?id=eq.${outputId}`, {
+                        method: 'PATCH',
+                        headers: { ...supabaseHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                        body: JSON.stringify({ performance_tag: newTag })
+                    });
+                } catch (err) {
+                    console.error('Failed to update performance tag:', err);
+                }
+            }
+
+            updateStats();
+            renderGrid();
+        }
+
+        async function batchUpdateTag(ids, tag) {
+            for (const id of ids) {
+                await updatePerformanceTag(id, tag);
+            }
+
+            const tagLabel = tag.charAt(0).toUpperCase() + tag.slice(1);
+            showToast(`Marked ${ids.length} ad${ids.length > 1 ? 's' : ''} as ${tagLabel}!`, 'success');
+
+            selectedIds.clear();
+            updateBatchBar();
+            renderGrid();
+        }
+
+        async function batchDelete(ids) {
+            if (!confirm(`Delete ${ids.length} selected ad${ids.length > 1 ? 's' : ''}? This cannot be undone.`)) return;
+
+            for (const id of ids) {
+                await deleteOutputById(id);
+            }
+
+            showToast(`Deleted ${ids.length} ad${ids.length > 1 ? 's' : ''}`, 'error');
+
+            selectedIds.clear();
+            updateBatchBar();
+            updateStats();
+            renderGrid();
+        }
+
+        async function deleteOutputById(id) {
+            allOutputs = allOutputs.filter(o => o.id !== id);
+
+            if (!useSampleData) {
+                try {
+                    await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/image_ad_outputs?id=eq.${id}`, {
+                        method: 'DELETE',
+                        headers: supabaseHeaders()
+                    });
+                } catch (err) {
+                    console.error('Failed to delete output:', err);
+                }
+            }
+        }
+
+        // ==================== NOTES UPDATE ====================
+        async function updateNotes(outputId, notes) {
+            const output = allOutputs.find(o => o.id === outputId);
+            if (output) {
+                output.notes = notes;
+            }
+
+            if (!useSampleData) {
+                try {
+                    await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/image_ad_outputs?id=eq.${outputId}`, {
+                        method: 'PATCH',
+                        headers: { ...supabaseHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                        body: JSON.stringify({ notes: notes })
+                    });
+                } catch (err) {
+                    console.error('Failed to update notes:', err);
+                }
+            }
+        }
+
+        // ==================== MODAL ====================
+        function openModal(id) {
+            const output = allOutputs.find(o => o.id === id);
+            if (!output) return;
+
+            currentModalOutput = output;
+            const cv = output.copy_variant || {};
+            const tag = output.performance_tag || 'untested';
+
+            // Image
+            const modalImage = document.getElementById('modal-image');
+            if (output.image_url) {
+                modalImage.innerHTML = `<img src="${output.image_url}" alt="${cv.headline || 'Ad image'}">`;
+            } else {
+                modalImage.innerHTML = `
+                    <div class="modal-image-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21,15 16,10 5,21"/>
+                        </svg>
+                        <span>No Image Generated</span>
+                    </div>
+                `;
+            }
+
+            // Performance tag buttons
+            document.querySelectorAll('#modal-perf-selector .perf-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tag === tag);
+            });
+
+            // Copy
+            document.getElementById('modal-headline').textContent = cv.headline || 'No headline';
+            document.getElementById('modal-body').textContent = cv.body_copy || 'No body copy';
+            document.getElementById('modal-cta').textContent = cv.cta || 'No CTA';
+
+            // Prompt
+            document.getElementById('prompt-body').textContent = output.image_prompt || 'No prompt available';
+            document.getElementById('prompt-toggle').classList.remove('open');
+            document.getElementById('prompt-body').classList.remove('open');
+
+            // Notes
+            const notesEl = document.getElementById('modal-notes');
+            notesEl.value = output.notes || '';
+            notesEl.onblur = () => {
+                if (currentModalOutput && notesEl.value !== (currentModalOutput.notes || '')) {
+                    updateNotes(currentModalOutput.id, notesEl.value);
+                    showToast('Notes saved', 'success');
+                }
+            };
+
+            // Show modal
+            document.getElementById('modal-overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('active');
+            document.body.style.overflow = '';
+            currentModalOutput = null;
+        }
+
+        function modalUpdateTag(tag) {
+            if (!currentModalOutput) return;
+
+            updatePerformanceTag(currentModalOutput.id, tag);
+
+            // Update active button
+            document.querySelectorAll('#modal-perf-selector .perf-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tag === tag);
+            });
+
+            const tagLabel = tag.charAt(0).toUpperCase() + tag.slice(1);
+            showToast(`Marked as ${tagLabel}!`, 'success');
+        }
+
+        // ==================== MODAL ACTIONS ====================
+        function copyText(elementId, btn) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                btn.classList.add('copied');
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.textContent = 'Copy';
+                }, 1500);
+            });
+        }
+
+        function toggleCollapsible(section) {
+            const header = document.getElementById(`${section}-toggle`);
+            const body = document.getElementById(`${section}-body`);
+            header.classList.toggle('open');
+            body.classList.toggle('open');
+        }
+
+        function downloadImage() {
+            if (!currentModalOutput || !currentModalOutput.image_url) {
+                showToast('No image to download', 'warning');
+                return;
+            }
+
+            const a = document.createElement('a');
+            a.href = currentModalOutput.image_url;
+            a.download = `ad-${currentModalOutput.id}.png`;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        async function deleteOutput() {
+            if (!currentModalOutput) return;
+            if (!confirm('Delete this ad output? This cannot be undone.')) return;
+
+            const id = currentModalOutput.id;
+            await deleteOutputById(id);
+
+            closeModal();
+            updateStats();
+            renderGrid();
+            showToast('Ad deleted', 'error');
+        }
+
+        function useCopyInGenerator() {
+            if (!currentModalOutput) return;
+
+            const cv = currentModalOutput.copy_variant || {};
+            sessionStorage.setItem('image_ad_prefill', JSON.stringify({
+                headline: cv.headline || '',
+                body_copy: cv.body_copy || '',
+                cta: cv.cta || ''
+            }));
+
+            window.location.href = '13-image-ad-generator.html';
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        }
+
+        // ==================== EVENT LISTENERS ====================
+
+        // Modal close
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-overlay')) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Filters
+        document.getElementById('filter-search').addEventListener('input', renderGrid);
+        document.getElementById('filter-perf').addEventListener('change', renderGrid);
+        document.getElementById('filter-brand').addEventListener('change', () => {
+            updateOfferDropdown();
+            renderGrid();
+        });
+        document.getElementById('filter-offer').addEventListener('change', renderGrid);
+        document.getElementById('filter-sort').addEventListener('change', renderGrid);
+
+        // ==================== INIT ====================
+        async function init() {
+            await Promise.all([loadOutputs(), loadBrands(), loadOffers()]);
+            populateFilterDropdowns();
+            updateStats();
+            renderGrid();
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand & Offer Context Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --danger-dim: #ff444420;
+            --warning: #ffaa00;
+            --warning-dim: #ffaa0020;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --blue: #3b82f6;
+            --blue-dim: #3b82f620;
+            --orange: #f97316;
+            --orange-dim: #f9731620;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Nav */
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .nav-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 14px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-toggle.active { border-color: var(--accent); color: var(--accent); }
+
+        .nav-panel {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 200px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            border-radius: 0 0 0 12px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 99;
+            box-shadow: -4px 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .nav-panel.open { display: flex; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+        /* Container */
+        .container {
+            padding: 92px 48px 48px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title { font-size: 32px; font-weight: 600; }
+        .page-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+
+        .stat { display: flex; flex-direction: column; gap: 4px; }
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .stat-label { font-size: 12px; color: var(--text-muted); }
+
+        /* Two-column layout */
+        .two-col-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+
+        /* Section headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-new {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-new:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .filter-dropdown {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .filter-dropdown:focus { outline: none; border-color: var(--accent); }
+
+        /* Cards */
+        .card-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+        }
+
+        .card-actions {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .card:hover .card-actions { opacity: 1; }
+
+        .card-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .card-btn.edit {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .card-btn.edit:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .card-btn.delete {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .card-btn.delete:hover {
+            background: var(--danger-dim);
+        }
+
+        /* Brand card specifics */
+        .brand-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-right: 120px;
+        }
+
+        .color-swatches {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .color-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+        }
+
+        .brand-tone {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .brand-audience {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .brand-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        /* Offer card specifics */
+        .offer-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            padding-right: 120px;
+        }
+
+        .offer-product {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .offer-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .awareness-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .awareness-badge.unaware { background: var(--danger-dim); color: var(--danger); }
+        .awareness-badge.problem_aware { background: var(--orange-dim); color: var(--orange); }
+        .awareness-badge.solution_aware { background: var(--warning-dim); color: var(--warning); }
+        .awareness-badge.product_aware { background: var(--blue-dim); color: var(--blue); }
+        .awareness-badge.most_aware { background: var(--accent-dim); color: var(--accent); }
+
+        .pain-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--purple-dim);
+            color: var(--purple);
+        }
+
+        .offer-brand-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .offer-brand-link span {
+            color: var(--accent);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+            background: var(--bg-secondary);
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            z-index: 200;
+            overflow-y: auto;
+            padding: 40px;
+        }
+
+        .modal-overlay.active { display: block; }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            max-width: 720px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title { font-size: 20px; font-weight: 600; }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .modal-close:hover { color: var(--text-primary); }
+
+        .modal-body {
+            padding: 28px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .form-group { margin-bottom: 24px; }
+
+        .form-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            transition: border-color 0.15s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-input::placeholder { color: var(--text-muted); }
+
+        .form-textarea {
+            width: 100%;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            resize: vertical;
+            transition: border-color 0.15s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-textarea::placeholder { color: var(--text-muted); }
+
+        .form-select {
+            width: 100%;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-row.two-col {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .color-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .color-input-group label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+
+        .color-input-wrapper input[type="color"] {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
+            padding: 0;
+        }
+
+        .color-input-wrapper input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-input-wrapper input[type="color"]::-webkit-color-swatch {
+            border: 2px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .color-hex {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-primary);
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 80px;
+            padding: 4px 0;
+        }
+
+        .color-hex:focus {
+            color: var(--accent);
+        }
+
+        /* Tag input */
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            min-height: 48px;
+            cursor: text;
+            transition: border-color 0.15s ease;
+        }
+
+        .tag-input-container:focus-within {
+            border-color: var(--accent);
+        }
+
+        .tag-input-container input {
+            flex: 1;
+            min-width: 100px;
+            background: transparent;
+            border: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        .tag-input-container input::placeholder { color: var(--text-muted); }
+
+        .tag-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 4px 10px;
+            background: var(--purple-dim);
+            color: var(--purple);
+            border-radius: 4px;
+        }
+
+        .tag-item .tag-remove {
+            cursor: pointer;
+            opacity: 0.7;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .tag-item .tag-remove:hover { opacity: 1; }
+
+        /* File input */
+        .file-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .file-input-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .file-input-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .file-input-name {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .logo-preview {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--border);
+        }
+
+        /* Modal footer */
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            padding: 20px 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .modal-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 14px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .modal-btn.cancel {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .modal-btn.cancel:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-btn.save {
+            background: var(--accent);
+            border: none;
+            color: var(--bg-primary);
+        }
+
+        .modal-btn.save:hover { background: var(--accent-hover); }
+
+        .modal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            padding: 14px 20px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        @keyframes toastIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes toastOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .two-col-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 80px 16px 32px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .form-row.two-col {
+                grid-template-columns: 1fr;
+            }
+            .stats-bar {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">CONTENT_ENGINE//v1</div>
+        <button class="nav-toggle" id="nav-toggle">Menu</button>
+    </nav>
+    <div class="nav-panel" id="nav-panel">
+        <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+        <a href="02-swipe-file.html" class="nav-link">Swipe File</a>
+        <a href="08-twitter-generator.html" class="nav-link">TW Generate</a>
+        <a href="11-twitter-swipes.html" class="nav-link">TW Swipes</a>
+        <a href="09-twitter-scraper.html" class="nav-link">TW Scraper</a>
+        <a href="10-hook-bank.html" class="nav-link">TW Hooks</a>
+        <a href="06-ad-swipes.html" class="nav-link">Ad Video</a>
+        <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+        <a href="12-brand-profiles.html" class="nav-link active">Brands</a>
+        <a href="13-image-ad-generator.html" class="nav-link">Img Ad Gen</a>
+        <a href="14-image-ad-review.html" class="nav-link">Img Ad Review</a>
+        <a href="05-history.html" class="nav-link">History</a>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Brand & Offer Context</h1>
+            <p class="page-subtitle">Manage brand profiles and offer contexts for consistent, on-brand content generation</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-value" id="stat-brands">0</span>
+                <span class="stat-label">Total Brands</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="stat-offers">0</span>
+                <span class="stat-label">Total Offers</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="stat-active">0</span>
+                <span class="stat-label">Active Offers</span>
+            </div>
+        </div>
+
+        <div class="two-col-layout">
+            <!-- LEFT: Brand Profiles -->
+            <div class="brands-column">
+                <div class="section-header">
+                    <h2 class="section-title">Brand Profiles</h2>
+                    <button class="btn-new" onclick="openBrandModal()">+ New Brand</button>
+                </div>
+                <div class="card-grid" id="brands-grid">
+                    <div class="empty-state">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top:12px">Loading brands...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Offer Contexts -->
+            <div class="offers-column">
+                <div class="section-header">
+                    <h2 class="section-title">Offer Contexts</h2>
+                    <div class="section-actions">
+                        <select class="filter-dropdown" id="offer-brand-filter" onchange="filterOffersByBrand()">
+                            <option value="">All Brands</option>
+                        </select>
+                        <button class="btn-new" onclick="openOfferModal()">+ New Offer</button>
+                    </div>
+                </div>
+                <div class="card-grid" id="offers-grid">
+                    <div class="empty-state">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top:12px">Loading offers...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Brand Modal -->
+    <div class="modal-overlay" id="brand-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="brand-modal-title">New Brand Profile</h3>
+                <button class="modal-close" onclick="closeBrandModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="brand-id">
+
+                <div class="form-group">
+                    <label class="form-label">Name *</label>
+                    <input type="text" class="form-input" id="brand-name" placeholder="e.g., Quantum Botanics">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Brand Colors</label>
+                    <div class="form-row">
+                        <div class="color-input-group">
+                            <label>Primary</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="brand-color-primary" value="#00ff88" onchange="updateColorHex(this)">
+                                <input type="text" class="color-hex" id="hex-primary" value="#00ff88" oninput="updateColorFromHex(this, 'brand-color-primary')" placeholder="#000000">
+                            </div>
+                        </div>
+                        <div class="color-input-group">
+                            <label>Secondary</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="brand-color-secondary" value="#111113" onchange="updateColorHex(this)">
+                                <input type="text" class="color-hex" id="hex-secondary" value="#111113" oninput="updateColorFromHex(this, 'brand-color-secondary')" placeholder="#000000">
+                            </div>
+                        </div>
+                        <div class="color-input-group">
+                            <label>Accent</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="brand-color-accent" value="#a855f7" onchange="updateColorHex(this)">
+                                <input type="text" class="color-hex" id="hex-accent" value="#a855f7" oninput="updateColorFromHex(this, 'brand-color-accent')" placeholder="#000000">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fonts</label>
+                    <input type="text" class="form-input" id="brand-fonts" placeholder="e.g., Playfair Display, Inter">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tone</label>
+                    <textarea class="form-textarea" id="brand-tone" rows="2" placeholder="e.g., premium, scientific, warm"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Voice Guidelines</label>
+                    <textarea class="form-textarea" id="brand-voice" rows="4" placeholder="e.g., Speak like a trusted advisor. Use second person. Avoid hype..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Visual Style</label>
+                    <textarea class="form-textarea" id="brand-visual" rows="2" placeholder="e.g., Clean, botanical, earth tones"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Target Audience</label>
+                    <textarea class="form-textarea" id="brand-audience" rows="2" placeholder="e.g., Health-conscious women 30-55 who are tired of mainstream supplements"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Brand Keywords</label>
+                    <div class="tag-input-container" id="brand-keywords-container" onclick="this.querySelector('input').focus()">
+                        <input type="text" placeholder="Type and press Enter or comma..." id="brand-keywords-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Avoid Words</label>
+                    <div class="tag-input-container" id="brand-avoid-container" onclick="this.querySelector('input').focus()">
+                        <input type="text" placeholder="Words to never use..." id="brand-avoid-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Logo</label>
+                    <div class="file-input-wrapper">
+                        <button class="file-input-btn" onclick="document.getElementById('brand-logo-file').click()">Choose File</button>
+                        <span class="file-input-name" id="brand-logo-name">No file chosen</span>
+                        <input type="file" id="brand-logo-file" accept="image/*" style="display:none" onchange="handleLogoSelect(this)">
+                        <img id="brand-logo-preview" class="logo-preview" style="display:none">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeBrandModal()">Cancel</button>
+                <button class="modal-btn save" id="brand-save-btn" onclick="saveBrand()">Save Brand</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offer Modal -->
+    <div class="modal-overlay" id="offer-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="offer-modal-title">New Offer Context</h3>
+                <button class="modal-close" onclick="closeOfferModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="offer-id">
+
+                <div class="form-group">
+                    <label class="form-label">Name *</label>
+                    <input type="text" class="form-input" id="offer-name" placeholder="e.g., Liver Detox Launch Q1">
+                </div>
+
+                <div class="form-row two-col">
+                    <div class="form-group">
+                        <label class="form-label">Linked Brand</label>
+                        <select class="form-select" id="offer-brand">
+                            <option value="">-- Select Brand --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Niche</label>
+                        <select class="form-select" id="offer-niche">
+                            <option value="health">Health</option>
+                            <option value="saas">SaaS</option>
+                            <option value="ecom">E-commerce</option>
+                            <option value="info">Info Products</option>
+                            <option value="finance">Finance</option>
+                            <option value="herbalism">Herbalism</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Product Name *</label>
+                    <input type="text" class="form-input" id="offer-product-name" placeholder="e.g., LiverGuard Pro">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Product Description</label>
+                    <textarea class="form-textarea" id="offer-product-desc" rows="3" placeholder="Describe the product, what it does, key ingredients or features..."></textarea>
+                </div>
+
+                <div class="form-row two-col">
+                    <div class="form-group">
+                        <label class="form-label">Offer Details</label>
+                        <textarea class="form-textarea" id="offer-details" rows="2" placeholder="$47 + free shipping, 60-day guarantee"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Price Point</label>
+                        <input type="text" class="form-input" id="offer-price" placeholder="e.g., $47">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Awareness Level</label>
+                    <select class="form-select" id="offer-awareness">
+                        <option value="unaware">Unaware</option>
+                        <option value="problem_aware">Problem Aware</option>
+                        <option value="solution_aware">Solution Aware</option>
+                        <option value="product_aware">Product Aware</option>
+                        <option value="most_aware">Most Aware</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Pain Points</label>
+                    <div class="tag-input-container" id="offer-pains-container" onclick="this.querySelector('input').focus()">
+                        <input type="text" placeholder="Type and press Enter or comma..." id="offer-pains-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Desires</label>
+                    <div class="tag-input-container" id="offer-desires-container" onclick="this.querySelector('input').focus()">
+                        <input type="text" placeholder="What they want to achieve..." id="offer-desires-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ICP (Ideal Customer Profile)</label>
+                    <textarea class="form-textarea" id="offer-icp" rows="3" placeholder="Describe the ideal customer in detail..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Unique Mechanism</label>
+                    <textarea class="form-textarea" id="offer-mechanism" rows="2" placeholder="What makes this product work differently?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Proof Points</label>
+                    <div class="tag-input-container" id="offer-proof-container" onclick="this.querySelector('input').focus()">
+                        <input type="text" placeholder="Studies, testimonials, numbers..." id="offer-proof-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Objections</label>
+                    <div class="tag-input-container" id="offer-objections-container" onclick="this.querySelector('input').focus()">
+                        <input type="text" placeholder="Common objections to overcome..." id="offer-objections-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Competitors</label>
+                    <textarea class="form-textarea" id="offer-competitors" rows="2" placeholder="Who are you competing against?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Research Notes</label>
+                    <textarea class="form-textarea" id="offer-notes" rows="4" placeholder="Any additional research, links, insights..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeOfferModal()">Cancel</button>
+                <button class="modal-btn save" id="offer-save-btn" onclick="saveOffer()">Save Offer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // ─── Nav Toggle ─────────────────────────────────────────
+        document.getElementById('nav-toggle').addEventListener('click', function() {
+            document.getElementById('nav-panel').classList.toggle('open');
+            this.classList.toggle('active');
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-panel') && !e.target.closest('.nav-toggle')) {
+                document.getElementById('nav-panel').classList.remove('open');
+                document.getElementById('nav-toggle').classList.remove('active');
+            }
+        });
+
+        // ─── Config ─────────────────────────────────────────────
+        const CONFIG = {
+            SUPABASE_URL: 'https://wqclspynbdghfsosqygg.supabase.co',
+            SUPABASE_ANON_KEY: 'sb_publishable_TnW2BTNaZvow6Gm8DbxU-w_5YyQN3Av'
+        };
+
+        const HEADERS = {
+            'apikey': CONFIG.SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
+
+        const HEADERS_READ = {
+            'apikey': CONFIG.SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        };
+
+        // ─── State ──────────────────────────────────────────────
+        let brands = [];
+        let offers = [];
+        let brandLogoDataUrl = null;
+
+        // ─── Toast ──────────────────────────────────────────────
+        function showToast(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ─── Supabase Helpers ───────────────────────────────────
+        async function sbGet(table, query = '') {
+            const url = `${CONFIG.SUPABASE_URL}/rest/v1/${table}?order=created_at.desc${query ? '&' + query : ''}`;
+            const res = await fetch(url, { headers: HEADERS_READ });
+            if (!res.ok) throw new Error(`GET ${table} failed: ${res.status}`);
+            return res.json();
+        }
+
+        async function sbPost(table, body) {
+            const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}`, {
+                method: 'POST',
+                headers: HEADERS,
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(`POST ${table} failed: ${err}`);
+            }
+            return res.json();
+        }
+
+        async function sbPatch(table, id, body) {
+            const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+                method: 'PATCH',
+                headers: HEADERS,
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(`PATCH ${table} failed: ${err}`);
+            }
+            return res.json();
+        }
+
+        async function sbDelete(table, id) {
+            const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+                method: 'DELETE',
+                headers: HEADERS_READ
+            });
+            if (!res.ok) throw new Error(`DELETE ${table} failed: ${res.status}`);
+        }
+
+        // ─── Color Hex Update ───────────────────────────────────
+        function updateColorHex(input) {
+            const target = input.id.replace('brand-color-', 'hex-');
+            document.getElementById(target).value = input.value;
+        }
+
+        function updateColorFromHex(input, colorInputId) {
+            let val = input.value.trim();
+            if (!val.startsWith('#')) val = '#' + val;
+            if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+                document.getElementById(colorInputId).value = val;
+            }
+        }
+
+        // ─── Tag Input System ───────────────────────────────────
+        class TagInput {
+            constructor(containerId, inputId) {
+                this.container = document.getElementById(containerId);
+                this.input = document.getElementById(inputId);
+                this.tags = [];
+
+                this.input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        this.addFromInput();
+                    }
+                    if (e.key === 'Backspace' && this.input.value === '' && this.tags.length > 0) {
+                        this.removeTag(this.tags.length - 1);
+                    }
+                });
+
+                this.input.addEventListener('blur', () => {
+                    this.addFromInput();
+                });
+            }
+
+            addFromInput() {
+                const raw = this.input.value.split(',');
+                raw.forEach(t => {
+                    const val = t.trim();
+                    if (val && !this.tags.includes(val)) {
+                        this.tags.push(val);
+                    }
+                });
+                this.input.value = '';
+                this.render();
+            }
+
+            addTag(val) {
+                val = val.trim();
+                if (val && !this.tags.includes(val)) {
+                    this.tags.push(val);
+                    this.render();
+                }
+            }
+
+            removeTag(index) {
+                this.tags.splice(index, 1);
+                this.render();
+            }
+
+            setTags(arr) {
+                this.tags = arr || [];
+                this.render();
+            }
+
+            getTags() {
+                return [...this.tags];
+            }
+
+            clear() {
+                this.tags = [];
+                this.render();
+            }
+
+            render() {
+                // Remove existing tag items
+                this.container.querySelectorAll('.tag-item').forEach(el => el.remove());
+                // Insert tag elements before the input
+                this.tags.forEach((tag, i) => {
+                    const el = document.createElement('span');
+                    el.className = 'tag-item';
+                    el.innerHTML = `${this.escapeHtml(tag)} <span class="tag-remove" data-index="${i}">&times;</span>`;
+                    el.querySelector('.tag-remove').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.removeTag(i);
+                    });
+                    this.container.insertBefore(el, this.input);
+                });
+            }
+
+            escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize tag inputs
+        const tagBrandKeywords = new TagInput('brand-keywords-container', 'brand-keywords-input');
+        const tagBrandAvoid = new TagInput('brand-avoid-container', 'brand-avoid-input');
+        const tagOfferPains = new TagInput('offer-pains-container', 'offer-pains-input');
+        const tagOfferDesires = new TagInput('offer-desires-container', 'offer-desires-input');
+        const tagOfferProof = new TagInput('offer-proof-container', 'offer-proof-input');
+        const tagOfferObjections = new TagInput('offer-objections-container', 'offer-objections-input');
+
+        // ─── Logo Upload ────────────────────────────────────────
+        function handleLogoSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            document.getElementById('brand-logo-name').textContent = file.name;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                brandLogoDataUrl = e.target.result;
+                const preview = document.getElementById('brand-logo-preview');
+                preview.src = brandLogoDataUrl;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function uploadLogoToStorage(dataUrl, filename) {
+            try {
+                // Convert data URL to blob
+                const res = await fetch(dataUrl);
+                const blob = await res.blob();
+
+                const uploadUrl = `${CONFIG.SUPABASE_URL}/storage/v1/object/assets/brand-logos/${filename}`;
+                const uploadRes = await fetch(uploadUrl, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': CONFIG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+                        'Content-Type': blob.type
+                    },
+                    body: blob
+                });
+
+                if (uploadRes.ok) {
+                    return `${CONFIG.SUPABASE_URL}/storage/v1/object/public/assets/brand-logos/${filename}`;
+                }
+                throw new Error('Storage upload failed');
+            } catch (err) {
+                console.warn('Logo storage upload failed, using data URL:', err);
+                return dataUrl; // Fallback to data URL
+            }
+        }
+
+        // ─── Load Data ──────────────────────────────────────────
+        async function loadBrands() {
+            try {
+                brands = await sbGet('brand_profiles');
+                renderBrands();
+                populateBrandDropdowns();
+                updateStats();
+            } catch (e) {
+                console.warn('Failed to load brands, using sample data:', e);
+                brands = getSampleBrands();
+                renderBrands();
+                populateBrandDropdowns();
+                updateStats();
+            }
+        }
+
+        async function loadOffers() {
+            try {
+                offers = await sbGet('offer_contexts');
+                renderOffers();
+                updateStats();
+            } catch (e) {
+                console.warn('Failed to load offers, using sample data:', e);
+                offers = getSampleOffers();
+                renderOffers();
+                updateStats();
+            }
+        }
+
+        function getSampleBrands() {
+            return [
+                {
+                    id: 'sample-brand-1',
+                    name: 'Quantum Botanics',
+                    brand_colors: { primary: '#2d5016', secondary: '#f5f0e8', accent: '#d4a843' },
+                    fonts: 'Playfair Display, Inter',
+                    tone: 'premium, scientific, warm',
+                    voice_guidelines: 'Speak like a trusted advisor who genuinely cares. Use second person. Cite research without being dry. Never use hype language.',
+                    visual_style: 'Clean botanical illustrations, earth tones, editorial photography',
+                    target_audience: 'Health-conscious women 30-55 frustrated with mainstream supplements, open to herbal and natural solutions',
+                    brand_keywords: ['herbal', 'science-backed', 'premium', 'cellular', 'botanical'],
+                    avoid_words: ['cheap', 'miracle', 'guaranteed', 'lose weight fast'],
+                    logo_url: null,
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: 'sample-brand-2',
+                    name: 'NeuroPeak Labs',
+                    brand_colors: { primary: '#1a1a2e', secondary: '#e8e8ff', accent: '#7c3aed' },
+                    fonts: 'Space Grotesk, JetBrains Mono',
+                    tone: 'authoritative, cutting-edge, direct',
+                    voice_guidelines: 'Speak with confidence and precision. Use data and specifics. Avoid fluffy language. Talk to sophisticated biohackers.',
+                    visual_style: 'Dark UI, neon accents, neural network imagery, clean data visualizations',
+                    target_audience: 'Male biohackers and entrepreneurs 25-45, performance-obsessed, willing to pay premium for edge',
+                    brand_keywords: ['nootropics', 'performance', 'cognitive', 'biohacking', 'optimize'],
+                    avoid_words: ['natural', 'organic', 'gentle', 'relaxing'],
+                    logo_url: null,
+                    created_at: new Date(Date.now() - 86400000).toISOString()
+                }
+            ];
+        }
+
+        function getSampleOffers() {
+            return [
+                {
+                    id: 'sample-offer-1',
+                    name: 'LiverGuard Launch',
+                    brand_id: 'sample-brand-1',
+                    product_name: 'LiverGuard Pro',
+                    product_description: 'Comprehensive liver support formula with milk thistle, NAC, and artichoke extract. Designed for daily detox support.',
+                    offer_details: '$47 single bottle, $127 for 3 (best value), free shipping over $97, 60-day money-back guarantee',
+                    price_point: '$47',
+                    awareness_level: 'problem_aware',
+                    pain_points: ['fatigue after meals', 'brain fog', 'sluggish metabolism', 'bloating'],
+                    desires: ['more energy', 'clear thinking', 'healthy weight', 'feeling clean inside'],
+                    icp: 'Women 35-55 who have tried juice cleanses and detox teas but want something backed by science. Spends on supplements already.',
+                    unique_mechanism: 'Triple-phase liver support: Phase 1 detox enzymes, Phase 2 conjugation, Phase 3 elimination. Most products only address Phase 1.',
+                    proof_points: ['3 clinical studies', '89% reported more energy in 14 days', '4.8 star average'],
+                    objections: ['too expensive', 'already tried milk thistle', 'dont believe in detox', 'takes too long'],
+                    competitors: 'Amy Myers MD Liver Support, LiverMD by 1MD, generic milk thistle on Amazon',
+                    research_notes: 'The "phases of liver detox" angle is underused in the market. Most competitors just say "liver support" without explaining the mechanism.',
+                    niche: 'health',
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: 'sample-offer-2',
+                    name: 'NeuroFocus Stack',
+                    brand_id: 'sample-brand-2',
+                    product_name: 'NeuroFocus Daily',
+                    product_description: 'Nootropic stack combining Lions Mane, Alpha-GPC, and Bacopa for sustained cognitive performance without crashes.',
+                    offer_details: '$67/month subscription, first month $37 with code FOCUS, 90-day guarantee',
+                    price_point: '$67/mo',
+                    awareness_level: 'solution_aware',
+                    pain_points: ['afternoon brain fog', 'cant focus for long periods', 'coffee dependency', 'mental fatigue'],
+                    desires: ['laser focus', 'sustained energy', 'better memory', 'competitive edge'],
+                    icp: 'Male entrepreneurs and developers 25-40, already taking some supplements, want a cognitive edge for deep work sessions.',
+                    unique_mechanism: 'Dual-pathway activation: cholinergic system for immediate focus + neuroplasticity compounds for long-term brain building.',
+                    proof_points: ['12 peer-reviewed ingredients', 'used by 3 Y Combinator founders', '67% reorder rate'],
+                    objections: ['subscription model', 'too many ingredients', 'already take modafinil', 'skeptical of nootropics'],
+                    competitors: 'Thesis, Onnit Alpha Brain, Qualia Mind',
+                    research_notes: 'Leaning into the "builders compound" angle. Most nootropic brands target students — we target people who ship products.',
+                    niche: 'health',
+                    created_at: new Date(Date.now() - 86400000).toISOString()
+                }
+            ];
+        }
+
+        // ─── Render Functions ───────────────────────────────────
+        function renderBrands() {
+            const grid = document.getElementById('brands-grid');
+
+            if (brands.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <p>No brands yet. Create your first brand profile.</p>
+                        <button class="btn-new" onclick="openBrandModal()" style="margin-top:8px">+ New Brand</button>
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = brands.map(brand => {
+                const colors = brand.brand_colors || {};
+                const toneTrunc = (brand.tone || '').substring(0, 60) + ((brand.tone || '').length > 60 ? '...' : '');
+                const audienceTrunc = (brand.target_audience || '').substring(0, 80) + ((brand.target_audience || '').length > 80 ? '...' : '');
+
+                return `
+                <div class="card" onclick="openBrandModal('${brand.id}')">
+                    <div class="card-actions">
+                        <button class="card-btn edit" onclick="event.stopPropagation(); openBrandModal('${brand.id}')">Edit</button>
+                        <button class="card-btn delete" onclick="event.stopPropagation(); deleteBrand('${brand.id}')">Delete</button>
+                    </div>
+                    <div class="brand-name">${escapeHtml(brand.name)}</div>
+                    <div class="color-swatches">
+                        <div class="color-swatch" style="background: ${colors.primary || '#333'}"></div>
+                        <div class="color-swatch" style="background: ${colors.secondary || '#666'}"></div>
+                        <div class="color-swatch" style="background: ${colors.accent || '#999'}"></div>
+                    </div>
+                    ${toneTrunc ? `<div class="brand-label">Tone</div><div class="brand-tone">${escapeHtml(toneTrunc)}</div>` : ''}
+                    ${audienceTrunc ? `<div class="brand-label" style="margin-top:8px">Audience</div><div class="brand-audience">${escapeHtml(audienceTrunc)}</div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function renderOffers(filteredOffers) {
+            const grid = document.getElementById('offers-grid');
+            const data = filteredOffers || offers;
+
+            if (data.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <p>${filteredOffers ? 'No offers match this filter.' : 'No offers yet. Create your first offer context.'}</p>
+                        ${!filteredOffers ? '<button class="btn-new" onclick="openOfferModal()" style="margin-top:8px">+ New Offer</button>' : ''}
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = data.map(offer => {
+                const brandName = brands.find(b => b.id === offer.brand_id)?.name || 'Unlinked';
+                const awarenessMap = {
+                    'unaware': 'Unaware',
+                    'problem_aware': 'Problem Aware',
+                    'solution_aware': 'Solution Aware',
+                    'product_aware': 'Product Aware',
+                    'most_aware': 'Most Aware'
+                };
+                const awarenessLabel = awarenessMap[offer.awareness_level] || offer.awareness_level || 'Unknown';
+                const pains = offer.pain_points || [];
+
+                return `
+                <div class="card" onclick="openOfferModal('${offer.id}')">
+                    <div class="card-actions">
+                        <button class="card-btn edit" onclick="event.stopPropagation(); openOfferModal('${offer.id}')">Edit</button>
+                        <button class="card-btn delete" onclick="event.stopPropagation(); deleteOffer('${offer.id}')">Delete</button>
+                    </div>
+                    <div class="offer-name">${escapeHtml(offer.name)}</div>
+                    <div class="offer-product">${escapeHtml(offer.product_name || '')}</div>
+                    <div class="offer-meta">
+                        <span class="awareness-badge ${offer.awareness_level || 'unaware'}">${awarenessLabel}</span>
+                        ${pains.slice(0, 3).map(p => `<span class="pain-tag">${escapeHtml(p)}</span>`).join('')}
+                        ${pains.length > 3 ? `<span class="pain-tag" style="opacity:0.6">+${pains.length - 3}</span>` : ''}
+                    </div>
+                    <div class="offer-brand-link">Brand: <span>${escapeHtml(brandName)}</span></div>
+                </div>`;
+            }).join('');
+        }
+
+        function populateBrandDropdowns() {
+            // Offer brand filter
+            const filterSelect = document.getElementById('offer-brand-filter');
+            const currentFilter = filterSelect.value;
+            filterSelect.innerHTML = '<option value="">All Brands</option>' +
+                brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+            filterSelect.value = currentFilter;
+
+            // Offer modal brand select
+            const offerBrandSelect = document.getElementById('offer-brand');
+            const currentBrand = offerBrandSelect.value;
+            offerBrandSelect.innerHTML = '<option value="">-- Select Brand --</option>' +
+                brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+            offerBrandSelect.value = currentBrand;
+        }
+
+        function updateStats() {
+            document.getElementById('stat-brands').textContent = brands.length;
+            document.getElementById('stat-offers').textContent = offers.length;
+            document.getElementById('stat-active').textContent = offers.length; // All offers are considered active
+        }
+
+        function filterOffersByBrand() {
+            const brandId = document.getElementById('offer-brand-filter').value;
+            if (!brandId) {
+                renderOffers();
+            } else {
+                const filtered = offers.filter(o => o.brand_id === brandId);
+                renderOffers(filtered);
+            }
+        }
+
+        // ─── Brand Modal ────────────────────────────────────────
+        function openBrandModal(id) {
+            const modal = document.getElementById('brand-modal');
+            const isEdit = !!id;
+
+            document.getElementById('brand-modal-title').textContent = isEdit ? 'Edit Brand Profile' : 'New Brand Profile';
+            document.getElementById('brand-save-btn').textContent = isEdit ? 'Update Brand' : 'Save Brand';
+
+            // Reset form
+            document.getElementById('brand-id').value = '';
+            document.getElementById('brand-name').value = '';
+            document.getElementById('brand-color-primary').value = '#00ff88';
+            document.getElementById('hex-primary').textContent = '#00ff88';
+            document.getElementById('brand-color-secondary').value = '#111113';
+            document.getElementById('hex-secondary').textContent = '#111113';
+            document.getElementById('brand-color-accent').value = '#a855f7';
+            document.getElementById('hex-accent').textContent = '#a855f7';
+            document.getElementById('brand-fonts').value = '';
+            document.getElementById('brand-tone').value = '';
+            document.getElementById('brand-voice').value = '';
+            document.getElementById('brand-visual').value = '';
+            document.getElementById('brand-audience').value = '';
+            document.getElementById('brand-logo-name').textContent = 'No file chosen';
+            document.getElementById('brand-logo-preview').style.display = 'none';
+            document.getElementById('brand-logo-file').value = '';
+            brandLogoDataUrl = null;
+            tagBrandKeywords.clear();
+            tagBrandAvoid.clear();
+
+            if (isEdit) {
+                const brand = brands.find(b => b.id === id);
+                if (!brand) return;
+
+                document.getElementById('brand-id').value = brand.id;
+                document.getElementById('brand-name').value = brand.name || '';
+                if (brand.brand_colors) {
+                    document.getElementById('brand-color-primary').value = brand.brand_colors.primary || '#00ff88';
+                    document.getElementById('hex-primary').textContent = brand.brand_colors.primary || '#00ff88';
+                    document.getElementById('brand-color-secondary').value = brand.brand_colors.secondary || '#111113';
+                    document.getElementById('hex-secondary').textContent = brand.brand_colors.secondary || '#111113';
+                    document.getElementById('brand-color-accent').value = brand.brand_colors.accent || '#a855f7';
+                    document.getElementById('hex-accent').textContent = brand.brand_colors.accent || '#a855f7';
+                }
+                document.getElementById('brand-fonts').value = brand.fonts || '';
+                document.getElementById('brand-tone').value = brand.tone || '';
+                document.getElementById('brand-voice').value = brand.voice_guidelines || '';
+                document.getElementById('brand-visual').value = brand.visual_style || '';
+                document.getElementById('brand-audience').value = brand.target_audience || '';
+                tagBrandKeywords.setTags(brand.brand_keywords || []);
+                tagBrandAvoid.setTags(brand.avoid_words || []);
+
+                if (brand.logo_url) {
+                    brandLogoDataUrl = brand.logo_url;
+                    document.getElementById('brand-logo-preview').src = brand.logo_url;
+                    document.getElementById('brand-logo-preview').style.display = 'block';
+                    document.getElementById('brand-logo-name').textContent = 'Current logo';
+                }
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeBrandModal() {
+            document.getElementById('brand-modal').classList.remove('active');
+        }
+
+        async function saveBrand() {
+            const name = document.getElementById('brand-name').value.trim();
+            if (!name) {
+                showToast('Brand name is required', true);
+                return;
+            }
+
+            const id = document.getElementById('brand-id').value;
+            const saveBtn = document.getElementById('brand-save-btn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            // Handle logo upload
+            let logoUrl = brandLogoDataUrl;
+            if (brandLogoDataUrl && brandLogoDataUrl.startsWith('data:')) {
+                const filename = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now()}.png`;
+                logoUrl = await uploadLogoToStorage(brandLogoDataUrl, filename);
+            }
+
+            const body = {
+                name,
+                brand_colors: {
+                    primary: document.getElementById('brand-color-primary').value,
+                    secondary: document.getElementById('brand-color-secondary').value,
+                    accent: document.getElementById('brand-color-accent').value
+                },
+                fonts: document.getElementById('brand-fonts').value.trim() || null,
+                tone: document.getElementById('brand-tone').value.trim() || null,
+                voice_guidelines: document.getElementById('brand-voice').value.trim() || null,
+                visual_style: document.getElementById('brand-visual').value.trim() || null,
+                target_audience: document.getElementById('brand-audience').value.trim() || null,
+                brand_keywords: tagBrandKeywords.getTags(),
+                avoid_words: tagBrandAvoid.getTags(),
+                logo_url: logoUrl || null
+            };
+
+            try {
+                if (id) {
+                    await sbPatch('brand_profiles', id, body);
+                    showToast('Brand updated');
+                } else {
+                    await sbPost('brand_profiles', body);
+                    showToast('Brand created');
+                }
+                closeBrandModal();
+                await loadBrands();
+            } catch (e) {
+                console.error('Save brand failed:', e);
+                // If it's a sample brand, update locally
+                if (id && id.startsWith('sample-')) {
+                    const idx = brands.findIndex(b => b.id === id);
+                    if (idx >= 0) brands[idx] = { ...brands[idx], ...body };
+                    showToast('Brand updated (local)');
+                    closeBrandModal();
+                    renderBrands();
+                    populateBrandDropdowns();
+                } else if (!id) {
+                    body.id = 'sample-brand-' + Date.now();
+                    body.created_at = new Date().toISOString();
+                    brands.unshift(body);
+                    showToast('Brand created (local)');
+                    closeBrandModal();
+                    renderBrands();
+                    populateBrandDropdowns();
+                    updateStats();
+                } else {
+                    showToast('Save failed: ' + e.message, true);
+                }
+            }
+
+            saveBtn.disabled = false;
+            saveBtn.textContent = id ? 'Update Brand' : 'Save Brand';
+        }
+
+        async function deleteBrand(id) {
+            if (!confirm('Delete this brand profile? This cannot be undone.')) return;
+
+            try {
+                await sbDelete('brand_profiles', id);
+                showToast('Brand deleted');
+                await loadBrands();
+            } catch (e) {
+                // Handle sample data deletion
+                brands = brands.filter(b => b.id !== id);
+                renderBrands();
+                populateBrandDropdowns();
+                updateStats();
+                showToast('Brand deleted (local)');
+            }
+        }
+
+        // ─── Offer Modal ────────────────────────────────────────
+        function openOfferModal(id) {
+            const modal = document.getElementById('offer-modal');
+            const isEdit = !!id;
+
+            document.getElementById('offer-modal-title').textContent = isEdit ? 'Edit Offer Context' : 'New Offer Context';
+            document.getElementById('offer-save-btn').textContent = isEdit ? 'Update Offer' : 'Save Offer';
+
+            // Reset form
+            document.getElementById('offer-id').value = '';
+            document.getElementById('offer-name').value = '';
+            document.getElementById('offer-brand').value = '';
+            document.getElementById('offer-product-name').value = '';
+            document.getElementById('offer-product-desc').value = '';
+            document.getElementById('offer-details').value = '';
+            document.getElementById('offer-price').value = '';
+            document.getElementById('offer-awareness').value = 'unaware';
+            document.getElementById('offer-icp').value = '';
+            document.getElementById('offer-mechanism').value = '';
+            document.getElementById('offer-competitors').value = '';
+            document.getElementById('offer-notes').value = '';
+            document.getElementById('offer-niche').value = 'health';
+            tagOfferPains.clear();
+            tagOfferDesires.clear();
+            tagOfferProof.clear();
+            tagOfferObjections.clear();
+
+            // Re-populate brand dropdown
+            populateBrandDropdowns();
+
+            if (isEdit) {
+                const offer = offers.find(o => o.id === id);
+                if (!offer) return;
+
+                document.getElementById('offer-id').value = offer.id;
+                document.getElementById('offer-name').value = offer.name || '';
+                document.getElementById('offer-brand').value = offer.brand_id || '';
+                document.getElementById('offer-product-name').value = offer.product_name || '';
+                document.getElementById('offer-product-desc').value = offer.product_description || '';
+                document.getElementById('offer-details').value = offer.offer_details || '';
+                document.getElementById('offer-price').value = offer.price_point || '';
+                document.getElementById('offer-awareness').value = offer.awareness_level || 'unaware';
+                document.getElementById('offer-icp').value = offer.icp || '';
+                document.getElementById('offer-mechanism').value = offer.unique_mechanism || '';
+                document.getElementById('offer-competitors').value = offer.competitors || '';
+                document.getElementById('offer-notes').value = offer.research_notes || '';
+                document.getElementById('offer-niche').value = offer.niche || 'health';
+                tagOfferPains.setTags(offer.pain_points || []);
+                tagOfferDesires.setTags(offer.desires || []);
+                tagOfferProof.setTags(offer.proof_points || []);
+                tagOfferObjections.setTags(offer.objections || []);
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeOfferModal() {
+            document.getElementById('offer-modal').classList.remove('active');
+        }
+
+        async function saveOffer() {
+            const name = document.getElementById('offer-name').value.trim();
+            const productName = document.getElementById('offer-product-name').value.trim();
+
+            if (!name) {
+                showToast('Offer name is required', true);
+                return;
+            }
+            if (!productName) {
+                showToast('Product name is required', true);
+                return;
+            }
+
+            const id = document.getElementById('offer-id').value;
+            const saveBtn = document.getElementById('offer-save-btn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            const body = {
+                name,
+                brand_id: document.getElementById('offer-brand').value || null,
+                product_name: productName,
+                product_description: document.getElementById('offer-product-desc').value.trim() || null,
+                offer_details: document.getElementById('offer-details').value.trim() || null,
+                price_point: document.getElementById('offer-price').value.trim() || null,
+                awareness_level: document.getElementById('offer-awareness').value,
+                pain_points: tagOfferPains.getTags(),
+                desires: tagOfferDesires.getTags(),
+                icp: document.getElementById('offer-icp').value.trim() || null,
+                unique_mechanism: document.getElementById('offer-mechanism').value.trim() || null,
+                proof_points: tagOfferProof.getTags(),
+                objections: tagOfferObjections.getTags(),
+                competitors: document.getElementById('offer-competitors').value.trim() || null,
+                research_notes: document.getElementById('offer-notes').value.trim() || null,
+                niche: document.getElementById('offer-niche').value
+            };
+
+            try {
+                if (id) {
+                    await sbPatch('offer_contexts', id, body);
+                    showToast('Offer updated');
+                } else {
+                    await sbPost('offer_contexts', body);
+                    showToast('Offer created');
+                }
+                closeOfferModal();
+                await loadOffers();
+            } catch (e) {
+                console.error('Save offer failed:', e);
+                // Handle sample/local fallback
+                if (id && id.startsWith('sample-')) {
+                    const idx = offers.findIndex(o => o.id === id);
+                    if (idx >= 0) offers[idx] = { ...offers[idx], ...body };
+                    showToast('Offer updated (local)');
+                    closeOfferModal();
+                    renderOffers();
+                } else if (!id) {
+                    body.id = 'sample-offer-' + Date.now();
+                    body.created_at = new Date().toISOString();
+                    offers.unshift(body);
+                    showToast('Offer created (local)');
+                    closeOfferModal();
+                    renderOffers();
+                    updateStats();
+                } else {
+                    showToast('Save failed: ' + e.message, true);
+                }
+            }
+
+            saveBtn.disabled = false;
+            saveBtn.textContent = id ? 'Update Offer' : 'Save Offer';
+        }
+
+        async function deleteOffer(id) {
+            if (!confirm('Delete this offer context? This cannot be undone.')) return;
+
+            try {
+                await sbDelete('offer_contexts', id);
+                showToast('Offer deleted');
+                await loadOffers();
+            } catch (e) {
+                offers = offers.filter(o => o.id !== id);
+                renderOffers();
+                updateStats();
+                showToast('Offer deleted (local)');
+            }
+        }
+
+        // ─── Modal Close on Outside Click ───────────────────────
+        document.getElementById('brand-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeBrandModal();
+        });
+
+        document.getElementById('offer-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeOfferModal();
+        });
+
+        // Close modals with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeBrandModal();
+                closeOfferModal();
+            }
+        });
+
+        // ─── Utility ────────────────────────────────────────────
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ─── Initialize ─────────────────────────────────────────
+        loadBrands();
+        loadOffers();
+    </script>
+</body>
+</html>

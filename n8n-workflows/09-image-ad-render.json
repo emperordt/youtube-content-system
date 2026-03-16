@@ -1,0 +1,150 @@
+{
+  "name": "09 - Image Ad Render (NanoBanana)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "image-ad-render",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook: Image Ad Render",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://wqclspynbdghfsosqygg.supabase.co/rest/v1/image_ad_swipes?id=eq.{{ $json.body.swipe_id }}&limit=1",
+        "method": "GET",
+        "headers": {
+          "apikey": "YOUR_SUPABASE_SERVICE_KEY",
+          "Authorization": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+        },
+        "options": {}
+      },
+      "name": "Fetch Swipe Reference",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 200],
+      "notes": "Fetch the swipe that serves as the visual style reference. Its recreation_prompt + image_url are used for NanoBanana."
+    },
+    {
+      "parameters": {
+        "url": "=https://wqclspynbdghfsosqygg.supabase.co/rest/v1/brand_profiles?id=eq.{{ $json.body.brand_id }}&limit=1",
+        "method": "GET",
+        "headers": {
+          "apikey": "YOUR_SUPABASE_SERVICE_KEY",
+          "Authorization": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+        },
+        "options": {}
+      },
+      "name": "Fetch Brand",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Build NanoBanana prompts for each copy variant\nconst webhook = $node['Webhook: Image Ad Render'].json.body;\nconst swipe = ($node['Fetch Swipe Reference'].json || [])[0] || {};\nconst brand = ($node['Fetch Brand'].json || [])[0] || {};\nconst variants = webhook.variants || [];\nconst format = webhook.format || '1080x1080';\n\n// Parse format to dimensions\nconst dims = {\n  '1080x1080': { width: 1080, height: 1080 },\n  '1080x1920': { width: 1080, height: 1920 },\n  '1200x628': { width: 1200, height: 628 }\n};\nconst { width, height } = dims[format] || dims['1080x1080'];\n\n// Build a prompt for each variant\nconst items = variants.map((v, i) => {\n  const basePrompt = swipe.recreation_prompt || 'Clean, modern ad layout';\n  const brandColors = brand.brand_colors || {};\n  \n  const prompt = `Create an image ad with the following specifications:\n\nVISUAL STYLE (from reference): ${basePrompt}\n\nBRAND COLORS: Primary: ${brandColors.primary || '#000'}, Secondary: ${brandColors.secondary || '#fff'}, Accent: ${brandColors.accent || '#00ff88'}\nBRAND VISUAL STYLE: ${brand.visual_style || 'Clean and professional'}\n\nCOPY TO INCLUDE:\nHEADLINE: ${v.headline}\nBODY: ${v.body_copy}\nCTA BUTTON: ${v.cta}\n\nDimensions: ${width}x${height}\nThe text must be clearly readable. Use the brand colors. Match the layout style of the reference.`;\n\n  return {\n    json: {\n      variant_index: i,\n      copy_variant: v,\n      prompt,\n      reference_image_url: swipe.image_url || null,\n      width,\n      height,\n      generation_id: webhook.generation_id\n    }\n  };\n});\n\nreturn items;"
+      },
+      "name": "Prepare Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [700, 300],
+      "notes": "Constructs a NanoBanana prompt for each variant, combining the swipe's recreation_prompt + brand colors + copy text."
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "notes": "Process variants one at a time to avoid rate limits on NanoBanana API."
+    },
+    {
+      "parameters": {
+        "url": "https://api.nanobanana.com/v1/generate",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer YOUR_NANOBANANA_API_KEY",
+          "Content-Type": "application/json"
+        },
+        "body": "={{ JSON.stringify({ prompt: $json.prompt, width: $json.width, height: $json.height, reference_image: $json.reference_image_url || undefined, num_images: 1 }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "NanoBanana: Generate Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1100, 300],
+      "notes": "TODO: Replace URL and auth with actual NanoBanana API endpoint. Sends prompt + optional reference image for style-matched generation."
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process NanoBanana response and prepare for Supabase insert\nconst prev = $input.first().json;\n// NanoBanana response format may vary — adapt this parsing\nconst imageUrl = prev.output_url || prev.image_url || prev.images?.[0]?.url || `https://placeholder.com/generated-ad-${Date.now()}.png`;\n\nreturn [{\n  json: {\n    generation_id: prev.generation_id,\n    image_url: imageUrl,\n    copy_variant: prev.copy_variant,\n    image_prompt: prev.prompt,\n    reference_image_url: prev.reference_image_url,\n    performance_tag: 'untested',\n    is_selected: false\n  }\n}];"
+      },
+      "name": "Process Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1300, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://wqclspynbdghfsosqygg.supabase.co/rest/v1/image_ad_outputs",
+        "method": "POST",
+        "headers": {
+          "apikey": "YOUR_SUPABASE_SERVICE_KEY",
+          "Authorization": "Bearer YOUR_SUPABASE_SERVICE_KEY",
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "name": "Supabase: Insert Output",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Collect all generated outputs and return as response\nconst items = $input.all();\nconst images = items.map(item => ({\n  id: item.json[0]?.id || item.json.id,\n  image_url: item.json[0]?.image_url || item.json.image_url,\n  copy_variant: item.json[0]?.copy_variant || item.json.copy_variant,\n  image_prompt: item.json[0]?.image_prompt || item.json.image_prompt\n}));\n\nreturn [{ json: { success: true, images } }];"
+      },
+      "name": "Collect Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1700, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "name": "Respond: Generated Images",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Image Ad Render": {
+      "main": [[
+        { "node": "Fetch Swipe Reference", "type": "main", "index": 0 },
+        { "node": "Fetch Brand", "type": "main", "index": 0 }
+      ]]
+    },
+    "Fetch Swipe Reference": { "main": [[{ "node": "Prepare Prompts", "type": "main", "index": 0 }]] },
+    "Fetch Brand": { "main": [[{ "node": "Prepare Prompts", "type": "main", "index": 0 }]] },
+    "Prepare Prompts": { "main": [[{ "node": "Split In Batches", "type": "main", "index": 0 }]] },
+    "Split In Batches": { "main": [[{ "node": "NanoBanana: Generate Image", "type": "main", "index": 0 }]] },
+    "NanoBanana: Generate Image": { "main": [[{ "node": "Process Result", "type": "main", "index": 0 }]] },
+    "Process Result": { "main": [[{ "node": "Supabase: Insert Output", "type": "main", "index": 0 }]] },
+    "Supabase: Insert Output": { "main": [[{ "node": "Split In Batches", "type": "main", "index": 0 }], [{ "node": "Collect Results", "type": "main", "index": 0 }]] },
+    "Collect Results": { "main": [[{ "node": "Respond: Generated Images", "type": "main", "index": 0 }]] }
+  }
+}
