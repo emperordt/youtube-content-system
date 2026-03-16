@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Angle Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --danger-dim: #ff444420;
+            --warning: #ffaa00;
+            --warning-dim: #ffaa0020;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --blue: #3b82f6;
+            --blue-dim: #3b82f620;
+            --orange: #f97316;
+            --orange-dim: #f9731620;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ===== NAV ===== */
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .nav-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 14px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-toggle.active { border-color: var(--accent); color: var(--accent); }
+
+        .nav-panel {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 200px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            border-radius: 0 0 0 12px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 99;
+            box-shadow: -4px 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .nav-panel.open { display: flex; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+        /* ===== LAYOUT ===== */
+        .container {
+            padding: 92px 48px 48px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .page-header { margin-bottom: 32px; }
+        .page-title { font-size: 32px; font-weight: 600; }
+        .page-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* ===== TOP SECTION — Two-column config ===== */
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .input-group:last-child { margin-bottom: 0; }
+
+        .input-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"], input[type="number"], select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: var(--accent);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a0a0a5' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+
+        select option {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* Benefit rows */
+        .benefit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .benefit-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .benefit-row input {
+            flex: 1;
+        }
+
+        .btn-remove {
+            width: 32px;
+            height: 32px;
+            background: var(--danger-dim);
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .btn-remove:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-add {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-top: 4px;
+        }
+
+        .btn-add:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        /* ===== MIDDLE SECTION — Selection Matrix ===== */
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .count-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .matrix-column h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .matrix-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toggle-card {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .toggle-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .toggle-card.selected {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .toggle-card .tc-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .toggle-card .tc-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .toggle-card.selected .tc-desc {
+            color: var(--text-secondary);
+        }
+
+        /* ===== CALCULATION DISPLAY ===== */
+        .calc-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 32px;
+            margin-bottom: 32px;
+        }
+
+        .calc-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .calc-operand {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .calc-operand .num {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .calc-operator {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .calc-result {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .calc-result .num {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--warning);
+        }
+
+        .calc-secondary {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-muted);
+            padding-top: 4px;
+            border-top: 1px solid var(--border);
+        }
+
+        .calc-secondary .num {
+            font-weight: 700;
+            color: var(--purple);
+            font-size: 18px;
+        }
+
+        /* ===== BOTTOM SECTION ===== */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 24px;
+        }
+
+        /* Angle Grid */
+        .angle-grid-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .angle-grid-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .angle-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-purple {
+            background: var(--purple);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .btn-purple:hover {
+            opacity: 0.9;
+        }
+
+        .btn-full {
+            width: 100%;
+            padding: 14px;
+            font-size: 13px;
+        }
+
+        .angle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+            max-height: 700px;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin-bottom: 16px;
+        }
+
+        .angle-grid::-webkit-scrollbar { width: 6px; }
+        .angle-grid::-webkit-scrollbar-track { background: transparent; }
+        .angle-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .angle-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .angle-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .angle-card.selected {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .angle-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .tag-purple { background: var(--purple-dim); color: var(--purple); }
+        .tag-blue { background: var(--blue-dim); color: var(--blue); }
+        .tag-green { background: var(--accent-dim); color: var(--accent); }
+        .tag-orange { background: var(--orange-dim); color: var(--orange); }
+
+        .angle-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .angle-card.selected .angle-desc {
+            color: var(--text-primary);
+        }
+
+        /* Selected count bar */
+        .selected-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .selected-bar-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .selected-bar-count span {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* Budget Panel */
+        .budget-panel {
+            position: sticky;
+            top: 92px;
+        }
+
+        .budget-section {
+            margin-bottom: 24px;
+        }
+
+        .budget-section:last-child { margin-bottom: 0; }
+
+        .budget-section h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .budget-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .budget-row:last-child { border-bottom: none; }
+
+        .budget-row-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .budget-row-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .budget-row-value.accent { color: var(--accent); }
+        .budget-row-value.warning { color: var(--warning); }
+        .budget-row-value.purple { color: var(--purple); }
+
+        .budget-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .budget-total-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .budget-total-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* Funnel Visualization */
+        .funnel {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin-top: 12px;
+        }
+
+        .funnel-stage {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            position: relative;
+        }
+
+        .funnel-bar {
+            height: 24px;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            min-width: 24px;
+        }
+
+        .funnel-stage:nth-child(1) .funnel-bar { background: var(--blue); }
+        .funnel-stage:nth-child(2) .funnel-bar { background: var(--purple); }
+        .funnel-stage:nth-child(3) .funnel-bar { background: var(--orange); }
+        .funnel-stage:nth-child(4) .funnel-bar { background: var(--warning); }
+        .funnel-stage:nth-child(5) .funnel-bar { background: var(--accent); }
+
+        .funnel-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            min-width: 120px;
+        }
+
+        .funnel-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            min-width: 30px;
+        }
+
+        .funnel-arrow {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 0 16px;
+        }
+
+        /* Portfolio split */
+        .portfolio-item {
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+
+        .portfolio-item:last-child { margin-bottom: 0; }
+
+        .portfolio-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .portfolio-item-title {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .portfolio-item-pct {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .portfolio-item-detail {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== AI Button Glow ===== */
+        .btn-ai {
+            background: linear-gradient(135deg, var(--purple), var(--blue));
+            color: #fff;
+            font-weight: 700;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-ai::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        .btn-ai:hover { opacity: 0.9; }
+
+        /* Loading state */
+        .btn-ai.loading { opacity: 0.6; pointer-events: none; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent);
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .budget-panel {
+                position: static;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .matrix-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 76px 16px 24px;
+            }
+
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .angle-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .calc-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+    <div class="nav-brand">CONTENT_ENGINE//v1</div>
+    <button class="nav-toggle" id="nav-toggle">Menu</button>
+</nav>
+<div class="nav-panel" id="nav-panel">
+    <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+    <a href="02-swipe-file.html" class="nav-link">Swipe File</a>
+    <a href="08-twitter-generator.html" class="nav-link">TW Generate</a>
+    <a href="11-twitter-swipes.html" class="nav-link">TW Swipes</a>
+    <a href="09-twitter-scraper.html" class="nav-link">TW Scraper</a>
+    <a href="10-hook-bank.html" class="nav-link">TW Hooks</a>
+    <a href="06-ad-swipes.html" class="nav-link">Ad Video</a>
+    <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+    <a href="12-brand-profiles.html" class="nav-link">Brands</a>
+    <a href="13-image-ad-generator.html" class="nav-link">Img Ad Gen</a>
+    <a href="14-image-ad-review.html" class="nav-link">Img Ad Review</a>
+    <a href="15-funnel-calculator.html" class="nav-link">Funnel Math</a>
+    <a href="16-copy-scorer.html" class="nav-link">Copy Scorer</a>
+    <a href="17-angle-generator.html" class="nav-link active">Angle Gen</a>
+    <a href="05-history.html" class="nav-link">History</a>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Creative Angle Generator</h1>
+        <p class="page-subtitle">Multiply your angles using Life Force 8 &times; Lead Types &times; Benefits</p>
+    </div>
+
+    <!-- ===== TOP SECTION — Input Configuration ===== -->
+    <div class="config-grid">
+        <!-- Left: Product Benefits -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Core Product Benefits</h3>
+                <span class="input-label" id="benefit-count">0 benefits</span>
+            </div>
+            <div class="card-body">
+                <div class="benefit-list" id="benefit-list"></div>
+                <button class="btn-add" id="btn-add-benefit">+ Add Benefit</button>
+            </div>
+        </div>
+
+        <!-- Right: Target Context -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Target Context</h3>
+            </div>
+            <div class="card-body">
+                <div class="input-group">
+                    <label class="input-label">Product Name</label>
+                    <input type="text" id="product-name" placeholder="e.g. Lockd, FunnelPro, etc.">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Niche</label>
+                    <select id="niche">
+                        <option value="health">Health</option>
+                        <option value="saas">SaaS</option>
+                        <option value="ecom">Ecommerce</option>
+                        <option value="info">Info Products</option>
+                        <option value="finance">Finance</option>
+                        <option value="herbalism">Herbalism</option>
+                        <option value="marketing" selected>Marketing</option>
+                        <option value="fitness">Fitness</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Target CPA ($)</label>
+                    <input type="number" id="target-cpa" placeholder="50" value="50">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Monthly Creative Budget ($)</label>
+                    <input type="number" id="monthly-budget" placeholder="10000" value="10000">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MIDDLE SECTION — Selection Matrix ===== -->
+    <div class="section-title">Selection Matrix <span class="count-badge" id="total-selected-badge">0 selected</span></div>
+
+    <div class="matrix-grid">
+        <!-- Column 1: Life Force 8 -->
+        <div class="matrix-column">
+            <h3>Life Force 8</h3>
+            <div class="matrix-cards" id="lf8-cards"></div>
+        </div>
+
+        <!-- Column 2: Lead Types -->
+        <div class="matrix-column">
+            <h3>Lead Types (Masterson)</h3>
+            <div class="matrix-cards" id="lead-cards"></div>
+        </div>
+
+        <!-- Column 3: Hook Archetypes -->
+        <div class="matrix-column">
+            <h3>Hook Archetypes</h3>
+            <div class="matrix-cards" id="hook-cards"></div>
+        </div>
+    </div>
+
+    <!-- ===== CALCULATION DISPLAY ===== -->
+    <div class="calc-bar" id="calc-bar">
+        <div class="calc-row">
+            <div class="calc-operand"><span class="num" id="calc-benefits">0</span> Benefits</div>
+            <div class="calc-operator">&times;</div>
+            <div class="calc-operand"><span class="num" id="calc-lf8">0</span> Life Forces</div>
+            <div class="calc-operator">&times;</div>
+            <div class="calc-operand"><span class="num" id="calc-leads">0</span> Lead Types</div>
+            <div class="calc-operator">=</div>
+            <div class="calc-result"><span class="num" id="calc-base-total">0</span> possible angles</div>
+        </div>
+        <div class="calc-secondary">
+            &times; <span class="num" id="calc-hooks">0</span> Hook Archetypes = <span class="num" id="calc-grand-total">0</span> unique creative concepts
+        </div>
+    </div>
+
+    <!-- ===== BOTTOM SECTION ===== -->
+    <div class="bottom-grid">
+
+        <!-- Left: Angle Grid -->
+        <div>
+            <div class="angle-grid-header">
+                <h3>Angle Combinations</h3>
+                <div class="angle-actions">
+                    <button class="btn btn-secondary" id="btn-select-all">Select All</button>
+                    <button class="btn btn-secondary" id="btn-clear-selected">Clear</button>
+                    <button class="btn btn-primary" id="btn-copy-selected">Copy Selected</button>
+                </div>
+            </div>
+
+            <div class="selected-bar">
+                <div class="selected-bar-count"><span id="selected-count">0</span> / 40 angles selected</div>
+                <button class="btn btn-secondary" id="btn-random-40" style="font-size:11px; padding:6px 10px;">Random 40</button>
+            </div>
+
+            <div class="angle-grid" id="angle-grid"></div>
+
+            <button class="btn btn-ai btn-full" id="btn-ai-expand">GENERATE WITH AI &mdash; Expand selected angles into creative briefs</button>
+        </div>
+
+        <!-- Right: Budget Math -->
+        <div>
+            <div class="card budget-panel">
+                <div class="card-header">
+                    <h3>Creative Testing Budget</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Testing math -->
+                    <div class="budget-section">
+                        <h4>Testing Math</h4>
+                        <div class="budget-row">
+                            <span class="budget-row-label">CPA Bracket</span>
+                            <span class="budget-row-value" id="bm-bracket">--</span>
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label">Multiplier</span>
+                            <span class="budget-row-value" id="bm-multiplier">--</span>
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label">Min Spend / Creative</span>
+                            <span class="budget-row-value accent" id="bm-min-spend">--</span>
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label">Daily Budget / Creative</span>
+                            <span class="budget-row-value" id="bm-daily">--</span>
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label">Total Testing Budget</span>
+                            <span class="budget-row-value warning" id="bm-total-test">--</span>
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label">Expected Winners (25%)</span>
+                            <span class="budget-row-value accent" id="bm-winners">--</span>
+                        </div>
+                        <div class="budget-row">
+                            <span class="budget-row-label">Cost Per Winner</span>
+                            <span class="budget-row-value purple" id="bm-cost-winner">--</span>
+                        </div>
+                    </div>
+
+                    <!-- 40/20/12/8 Funnel -->
+                    <div class="budget-section">
+                        <h4>Creative Funnel (40/20/12/8)</h4>
+                        <div class="funnel" id="funnel-viz"></div>
+                    </div>
+
+                    <!-- Creative Investment Portfolio -->
+                    <div class="budget-section">
+                        <h4>Creative Investment Portfolio</h4>
+                        <div class="portfolio-item">
+                            <div class="portfolio-item-header">
+                                <span class="portfolio-item-title">50% Control Variations</span>
+                                <span class="portfolio-item-pct">50%</span>
+                            </div>
+                            <div class="portfolio-item-detail" id="port-control">-- concepts at $--</div>
+                        </div>
+                        <div class="portfolio-item">
+                            <div class="portfolio-item-header">
+                                <span class="portfolio-item-title">30% Data-Driven Tests</span>
+                                <span class="portfolio-item-pct">30%</span>
+                            </div>
+                            <div class="portfolio-item-detail" id="port-data">-- concepts at $--</div>
+                        </div>
+                        <div class="portfolio-item">
+                            <div class="portfolio-item-header">
+                                <span class="portfolio-item-title">20% Innovation Tests</span>
+                                <span class="portfolio-item-pct">20%</span>
+                            </div>
+                            <div class="portfolio-item-detail" id="port-innovation">-- concepts at $--</div>
+                        </div>
+
+                        <div class="budget-total">
+                            <span class="budget-total-label">Total Monthly Investment</span>
+                            <span class="budget-total-value" id="port-total">$0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+const LIFE_FORCES = [
+    { id: 'lf1', name: 'Survival / Life Extension', desc: 'Stay alive, be healthy, live longer', selected: true },
+    { id: 'lf2', name: 'Enjoyment of Food & Life', desc: 'Pleasure, comfort, enjoyment', selected: true },
+    { id: 'lf3', name: 'Freedom from Fear & Pain', desc: 'Escape danger, avoid suffering', selected: true },
+    { id: 'lf4', name: 'Sexual Companionship', desc: 'Attraction, relationships', selected: true },
+    { id: 'lf5', name: 'Comfortable Living', desc: 'Ease, luxury, convenience', selected: false },
+    { id: 'lf6', name: 'Superiority / Winning', desc: 'Competition, status, achievement', selected: false },
+    { id: 'lf7', name: 'Care for Loved Ones', desc: 'Family, protection, legacy', selected: false },
+    { id: 'lf8', name: 'Social Approval', desc: 'Recognition, belonging, respect', selected: false },
+];
+
+const LEAD_TYPES = [
+    { id: 'lt1', name: 'Offer Lead', desc: 'Most Aware: Direct deal/price/CTA', selected: false },
+    { id: 'lt2', name: 'Promise Lead', desc: 'Product Aware: Outcome/transformation focus', selected: false },
+    { id: 'lt3', name: 'Problem-Solution', desc: 'Problem Aware: Pain \u2192 bridge \u2192 solution', selected: true },
+    { id: 'lt4', name: 'Big Secret', desc: 'Solution Aware: Hidden mechanism/insider knowledge', selected: true },
+    { id: 'lt5', name: 'Proclamation', desc: 'Problem Aware: Bold contrarian statement', selected: false },
+    { id: 'lt6', name: 'Story Lead', desc: 'Unaware: Narrative entry, no selling', selected: true },
+];
+
+const HOOK_ARCHETYPES = [
+    { id: 'ha1', name: 'Bold Specific Claim', desc: '$50M from one presentation', selected: true },
+    { id: 'ha2', name: 'Visual Proof', desc: 'Show the check / show the result', selected: false },
+    { id: 'ha3', name: 'Pattern Interrupt + Contrarian', desc: 'Call out the BS, then pivot', selected: false },
+    { id: 'ha4', name: 'Transformation Story', desc: 'Name, age, before \u2192 after', selected: true },
+    { id: 'ha5', name: 'Named Condition', desc: 'Stanford calls it [condition name]', selected: false },
+];
+
+// Angle description templates per lead type
+const ANGLE_TEMPLATES = {
+    'Offer Lead': [
+        'OFFER: Get [benefit] now \u2014 limited deal for those who want [life force]',
+        'OFFER: [benefit] is on sale, and it taps into your drive for [life force]',
+    ],
+    'Promise Lead': [
+        'PROMISE: Imagine [benefit] unlocking [life force] in your life',
+        'PROMISE: What if [benefit] gave you the [life force] you\'ve been chasing?',
+    ],
+    'Problem-Solution': [
+        'PROBLEM-SOLUTION: How [benefit] satisfies your need for [life force]',
+        'PROBLEM-SOLUTION: Struggling with [life force]? Here\'s how [benefit] fixes it',
+    ],
+    'Big Secret': [
+        'BIG SECRET: The hidden [life force] advantage of [benefit] that nobody talks about',
+        'BIG SECRET: Insiders know [benefit] unlocks [life force] \u2014 here\'s the mechanism',
+    ],
+    'Proclamation': [
+        'PROCLAMATION: Everyone is wrong about [life force] \u2014 [benefit] proves it',
+        'PROCLAMATION: Stop chasing [life force] the hard way. [benefit] changes everything',
+    ],
+    'Story Lead': [
+        'STORY: The [life force] story behind discovering [benefit]',
+        'STORY: How one person found [life force] through [benefit] \u2014 no pitch, just truth',
+    ],
+};
+
+// State
+let benefits = ['', '', ''];
+let selectedAngles = new Set();
+const placeholders = ['Saves time', 'Increases revenue', 'Reduces stress', 'Eliminates confusion', 'Builds confidence'];
+
+// ===== NAV =====
+document.getElementById('nav-toggle').addEventListener('click', function() {
+    const panel = document.getElementById('nav-panel');
+    panel.classList.toggle('open');
+    this.classList.toggle('active');
+});
+
+document.addEventListener('click', function(e) {
+    const panel = document.getElementById('nav-panel');
+    const toggle = document.getElementById('nav-toggle');
+    if (!panel.contains(e.target) && !toggle.contains(e.target)) {
+        panel.classList.remove('open');
+        toggle.classList.remove('active');
+    }
+});
+
+// ===== BENEFITS =====
+function renderBenefits() {
+    const list = document.getElementById('benefit-list');
+    list.innerHTML = '';
+    benefits.forEach((b, i) => {
+        const row = document.createElement('div');
+        row.className = 'benefit-row';
+        row.innerHTML = `
+            <input type="text" value="${escapeHtml(b)}" placeholder="${placeholders[i % placeholders.length]}"
+                   data-idx="${i}" class="benefit-input">
+            <button class="btn-remove" data-idx="${i}">&times;</button>
+        `;
+        list.appendChild(row);
+    });
+
+    // Bind events
+    list.querySelectorAll('.benefit-input').forEach(inp => {
+        inp.addEventListener('input', (e) => {
+            benefits[parseInt(e.target.dataset.idx)] = e.target.value;
+            recalculate();
+        });
+    });
+    list.querySelectorAll('.btn-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const idx = parseInt(e.currentTarget.dataset.idx);
+            benefits.splice(idx, 1);
+            if (benefits.length === 0) benefits.push('');
+            renderBenefits();
+            recalculate();
+        });
+    });
+
+    document.getElementById('benefit-count').textContent = getActiveBenefits().length + ' benefits';
+}
+
+document.getElementById('btn-add-benefit').addEventListener('click', () => {
+    benefits.push('');
+    renderBenefits();
+    // Focus the new input
+    const inputs = document.querySelectorAll('.benefit-input');
+    if (inputs.length > 0) inputs[inputs.length - 1].focus();
+});
+
+function getActiveBenefits() {
+    return benefits.filter(b => b.trim().length > 0);
+}
+
+// ===== TOGGLE CARDS =====
+function renderToggleCards(data, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'toggle-card' + (item.selected ? ' selected' : '');
+        card.dataset.id = item.id;
+        card.innerHTML = `
+            <div class="tc-name">${item.name}</div>
+            <div class="tc-desc">${item.desc}</div>
+        `;
+        card.addEventListener('click', () => {
+            item.selected = !item.selected;
+            card.classList.toggle('selected');
+            recalculate();
+        });
+        container.appendChild(card);
+    });
+}
+
+// ===== CALCULATION =====
+function recalculate() {
+    const activeBenefits = getActiveBenefits();
+    const selectedLF = LIFE_FORCES.filter(l => l.selected);
+    const selectedLT = LEAD_TYPES.filter(l => l.selected);
+    const selectedHA = HOOK_ARCHETYPES.filter(h => h.selected);
+
+    const bCount = activeBenefits.length;
+    const lfCount = selectedLF.length;
+    const ltCount = selectedLT.length;
+    const haCount = selectedHA.length;
+
+    const baseTotal = bCount * lfCount * ltCount;
+    const grandTotal = baseTotal * (haCount || 1);
+
+    // Update calc bar
+    document.getElementById('calc-benefits').textContent = bCount;
+    document.getElementById('calc-lf8').textContent = lfCount;
+    document.getElementById('calc-leads').textContent = ltCount;
+    document.getElementById('calc-base-total').textContent = baseTotal.toLocaleString();
+    document.getElementById('calc-hooks').textContent = haCount;
+    document.getElementById('calc-grand-total').textContent = grandTotal.toLocaleString();
+
+    // Update total selected badge
+    const totalSel = lfCount + ltCount + haCount;
+    document.getElementById('total-selected-badge').textContent = totalSel + ' selected';
+
+    // Regenerate angle grid
+    generateAngles(activeBenefits, selectedLF, selectedLT);
+
+    // Update budget math
+    updateBudgetMath();
+}
+
+// ===== ANGLE GENERATION =====
+function generateAngles(activeBenefits, selectedLF, selectedLT) {
+    const grid = document.getElementById('angle-grid');
+    grid.innerHTML = '';
+
+    if (activeBenefits.length === 0 || selectedLF.length === 0 || selectedLT.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:48px;font-family:JetBrains Mono,monospace;font-size:13px;">Add benefits and select options above to generate angles</div>';
+        return;
+    }
+
+    const angles = [];
+
+    activeBenefits.forEach(benefit => {
+        selectedLF.forEach(lf => {
+            selectedLT.forEach(lt => {
+                const templates = ANGLE_TEMPLATES[lt.name] || ANGLE_TEMPLATES['Problem-Solution'];
+                const template = templates[Math.floor(Math.random() * templates.length)];
+                const desc = template
+                    .replace(/\[benefit\]/g, benefit.toLowerCase())
+                    .replace(/\[life force\]/g, lf.name.toLowerCase().split(' / ')[0]);
+
+                angles.push({
+                    id: `${benefit}-${lf.id}-${lt.id}`,
+                    benefit,
+                    lifeForce: lf.name,
+                    leadType: lt.name,
+                    desc,
+                });
+            });
+        });
+    });
+
+    // Clean selected angles that no longer exist
+    const validIds = new Set(angles.map(a => a.id));
+    selectedAngles.forEach(id => {
+        if (!validIds.has(id)) selectedAngles.delete(id);
+    });
+
+    angles.forEach(angle => {
+        const card = document.createElement('div');
+        card.className = 'angle-card' + (selectedAngles.has(angle.id) ? ' selected' : '');
+        card.dataset.id = angle.id;
+        card.innerHTML = `
+            <div class="angle-tags">
+                <span class="tag tag-purple">${escapeHtml(angle.benefit)}</span>
+                <span class="tag tag-blue">${escapeHtml(angle.lifeForce)}</span>
+                <span class="tag tag-green">${escapeHtml(angle.leadType)}</span>
+            </div>
+            <div class="angle-desc">${escapeHtml(angle.desc)}</div>
+        `;
+        card.addEventListener('click', () => {
+            if (selectedAngles.has(angle.id)) {
+                selectedAngles.delete(angle.id);
+                card.classList.remove('selected');
+            } else {
+                if (selectedAngles.size >= 40) {
+                    showToast('Maximum 40 angles selected');
+                    return;
+                }
+                selectedAngles.add(angle.id);
+                card.classList.add('selected');
+            }
+            updateSelectedCount();
+            updateBudgetMath();
+        });
+        grid.appendChild(card);
+    });
+
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    document.getElementById('selected-count').textContent = selectedAngles.size;
+}
+
+// ===== BUDGET MATH =====
+function getMultiplier(cpa) {
+    if (cpa <= 20) return 3;
+    if (cpa <= 50) return 2.5;
+    if (cpa <= 100) return 2;
+    if (cpa <= 250) return 1.75;
+    return 1.5;
+}
+
+function getBracketLabel(cpa) {
+    if (cpa <= 20) return '$0-20';
+    if (cpa <= 50) return '$21-50';
+    if (cpa <= 100) return '$51-100';
+    if (cpa <= 250) return '$101-250';
+    return '$250+';
+}
+
+function updateBudgetMath() {
+    const cpa = parseFloat(document.getElementById('target-cpa').value) || 0;
+    const monthlyBudget = parseFloat(document.getElementById('monthly-budget').value) || 0;
+    const count = selectedAngles.size || 0;
+
+    const multiplier = getMultiplier(cpa);
+    const minSpend = cpa * multiplier;
+    const dailyBudget = minSpend / 7;
+    const totalTest = minSpend * count;
+    const expectedWinners = Math.max(1, Math.round(count * 0.25));
+    const costPerWinner = count > 0 ? totalTest / expectedWinners : 0;
+
+    document.getElementById('bm-bracket').textContent = getBracketLabel(cpa);
+    document.getElementById('bm-multiplier').textContent = multiplier + 'x';
+    document.getElementById('bm-min-spend').textContent = '$' + minSpend.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0});
+    document.getElementById('bm-daily').textContent = '$' + dailyBudget.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0});
+    document.getElementById('bm-total-test').textContent = '$' + totalTest.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0});
+    document.getElementById('bm-winners').textContent = expectedWinners;
+    document.getElementById('bm-cost-winner').textContent = '$' + costPerWinner.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0});
+
+    // Funnel: 40/20/12/8 style, scaled from selected count
+    const funnelData = [
+        { label: 'Angles', count: count, pct: '100%' },
+        { label: 'Scripts (50%)', count: Math.round(count * 0.5), pct: '50%' },
+        { label: 'Productions (60%)', count: Math.round(count * 0.5 * 0.6), pct: '30%' },
+        { label: 'Launched (67%)', count: Math.round(count * 0.5 * 0.6 * 0.67), pct: '20%' },
+        { label: 'Winners (25%)', count: Math.max(count > 0 ? 1 : 0, Math.round(count * 0.5 * 0.6 * 0.67 * 0.25)), pct: '' },
+    ];
+
+    const maxCount = funnelData[0].count || 1;
+    const funnelViz = document.getElementById('funnel-viz');
+    funnelViz.innerHTML = '';
+
+    funnelData.forEach((stage, i) => {
+        const pctWidth = Math.max(10, (stage.count / maxCount) * 100);
+        const stageEl = document.createElement('div');
+        stageEl.className = 'funnel-stage';
+        stageEl.innerHTML = `
+            <span class="funnel-num">${stage.count}</span>
+            <div class="funnel-bar" style="width:${pctWidth}%"></div>
+            <span class="funnel-label">${stage.label}</span>
+        `;
+        funnelViz.appendChild(stageEl);
+
+        if (i < funnelData.length - 1) {
+            const arrow = document.createElement('div');
+            arrow.className = 'funnel-arrow';
+            arrow.textContent = '\u25BC';
+            funnelViz.appendChild(arrow);
+        }
+    });
+
+    // Portfolio split
+    const controlCount = Math.round(count * 0.5);
+    const dataCount = Math.round(count * 0.3);
+    const innovCount = count - controlCount - dataCount;
+
+    const controlBudget = monthlyBudget * 0.5;
+    const dataBudget = monthlyBudget * 0.3;
+    const innovBudget = monthlyBudget * 0.2;
+
+    const controlCostPer = controlCount > 0 ? controlBudget / controlCount : 0;
+    const dataCostPer = dataCount > 0 ? dataBudget / dataCount : 0;
+    const innovCostPer = innovCount > 0 ? innovBudget / innovCount : 0;
+
+    document.getElementById('port-control').textContent = controlCount + ' concepts at $' + controlCostPer.toLocaleString(undefined, {maximumFractionDigits:0}) + ' each';
+    document.getElementById('port-data').textContent = dataCount + ' concepts at $' + dataCostPer.toLocaleString(undefined, {maximumFractionDigits:0}) + ' each';
+    document.getElementById('port-innovation').textContent = innovCount + ' concepts at $' + innovCostPer.toLocaleString(undefined, {maximumFractionDigits:0}) + ' each';
+    document.getElementById('port-total').textContent = '$' + monthlyBudget.toLocaleString(undefined, {maximumFractionDigits:0});
+}
+
+// ===== BUTTON ACTIONS =====
+
+// Select All
+document.getElementById('btn-select-all').addEventListener('click', () => {
+    const cards = document.querySelectorAll('.angle-card');
+    let count = 0;
+    cards.forEach(card => {
+        if (count >= 40) return;
+        if (!selectedAngles.has(card.dataset.id)) {
+            if (selectedAngles.size >= 40) return;
+            selectedAngles.add(card.dataset.id);
+            card.classList.add('selected');
+        }
+        count++;
+    });
+    updateSelectedCount();
+    updateBudgetMath();
+});
+
+// Clear
+document.getElementById('btn-clear-selected').addEventListener('click', () => {
+    selectedAngles.clear();
+    document.querySelectorAll('.angle-card.selected').forEach(c => c.classList.remove('selected'));
+    updateSelectedCount();
+    updateBudgetMath();
+});
+
+// Random 40
+document.getElementById('btn-random-40').addEventListener('click', () => {
+    selectedAngles.clear();
+    document.querySelectorAll('.angle-card.selected').forEach(c => c.classList.remove('selected'));
+
+    const cards = Array.from(document.querySelectorAll('.angle-card'));
+    // Fisher-Yates shuffle
+    for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+
+    const toSelect = cards.slice(0, Math.min(40, cards.length));
+    toSelect.forEach(card => {
+        selectedAngles.add(card.dataset.id);
+        card.classList.add('selected');
+    });
+
+    updateSelectedCount();
+    updateBudgetMath();
+});
+
+// Copy Selected
+document.getElementById('btn-copy-selected').addEventListener('click', () => {
+    if (selectedAngles.size === 0) {
+        showToast('No angles selected');
+        return;
+    }
+
+    const product = document.getElementById('product-name').value || 'Product';
+    const niche = document.getElementById('niche').value;
+
+    let text = `Creative Angles for ${product} (${niche})\n`;
+    text += '='.repeat(50) + '\n\n';
+
+    let idx = 1;
+    document.querySelectorAll('.angle-card.selected').forEach(card => {
+        const tags = card.querySelectorAll('.tag');
+        const desc = card.querySelector('.angle-desc').textContent;
+        text += `${idx}. [${tags[0].textContent}] [${tags[1].textContent}] [${tags[2].textContent}]\n`;
+        text += `   ${desc}\n\n`;
+        idx++;
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied ' + selectedAngles.size + ' angles to clipboard');
+    }).catch(() => {
+        showToast('Failed to copy');
+    });
+});
+
+// AI Expand
+document.getElementById('btn-ai-expand').addEventListener('click', async () => {
+    if (selectedAngles.size === 0) {
+        showToast('Select angles first');
+        return;
+    }
+
+    const btn = document.getElementById('btn-ai-expand');
+    btn.classList.add('loading');
+    btn.textContent = 'GENERATING...';
+
+    const product = document.getElementById('product-name').value || 'Product';
+    const niche = document.getElementById('niche').value;
+
+    // Collect selected angle data
+    const angles = [];
+    document.querySelectorAll('.angle-card.selected').forEach(card => {
+        const tags = card.querySelectorAll('.tag');
+        const desc = card.querySelector('.angle-desc').textContent;
+        angles.push({
+            benefit: tags[0].textContent,
+            lifeForce: tags[1].textContent,
+            leadType: tags[2].textContent,
+            description: desc,
+        });
+    });
+
+    try {
+        const resp = await fetch('https://n8n.dtthomas.cloud/webhook/angle-expand', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ angles, product, niche }),
+        });
+
+        if (!resp.ok) throw new Error('Webhook error');
+
+        const data = await resp.json();
+        showToast('AI briefs generated! Check console for output.');
+        console.log('AI Expanded Angles:', data);
+
+        // If response has expanded briefs, update the cards
+        if (data.briefs && Array.isArray(data.briefs)) {
+            const selectedCards = document.querySelectorAll('.angle-card.selected');
+            data.briefs.forEach((brief, i) => {
+                if (selectedCards[i]) {
+                    const descEl = selectedCards[i].querySelector('.angle-desc');
+                    descEl.textContent = brief;
+                    descEl.style.fontSize = '12px';
+                }
+            });
+        }
+    } catch (err) {
+        console.warn('AI expand failed, using local descriptions:', err);
+        showToast('AI unavailable \u2014 using auto-generated descriptions');
+    }
+
+    btn.classList.remove('loading');
+    btn.textContent = 'GENERATE WITH AI \u2014 Expand selected angles into creative briefs';
+});
+
+// ===== CPA / Budget listeners =====
+document.getElementById('target-cpa').addEventListener('input', updateBudgetMath);
+document.getElementById('monthly-budget').addEventListener('input', updateBudgetMath);
+
+// ===== UTILS =====
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ===== INIT =====
+renderBenefits();
+renderToggleCards(LIFE_FORCES, 'lf8-cards');
+renderToggleCards(LEAD_TYPES, 'lead-cards');
+renderToggleCards(HOOK_ARCHETYPES, 'hook-cards');
+recalculate();
+</script>
+</body>
+</html>

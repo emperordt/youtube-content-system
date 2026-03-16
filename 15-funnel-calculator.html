@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funnel Projections Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border: #2a2a2d;
+            --border-hover: #3a3a3d;
+            --text-primary: #fafafa;
+            --text-secondary: #a0a0a5;
+            --text-muted: #606065;
+            --accent: #00ff88;
+            --accent-dim: #00ff8820;
+            --accent-hover: #00ffaa;
+            --danger: #ff4444;
+            --danger-dim: #ff444420;
+            --warning: #ffaa00;
+            --warning-dim: #ffaa0020;
+            --purple: #a855f7;
+            --purple-dim: #a855f720;
+            --blue: #3b82f6;
+            --blue-dim: #3b82f620;
+            --orange: #f97316;
+            --orange-dim: #f9731620;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ===== NAV ===== */
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+        }
+
+        .nav-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 14px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-toggle.active { border-color: var(--accent); color: var(--accent); }
+
+        .nav-panel {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 200px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            border-radius: 0 0 0 12px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 99;
+            box-shadow: -4px 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .nav-panel.open { display: flex; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+        /* ===== LAYOUT ===== */
+        .container {
+            padding: 92px 48px 48px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* ===== SHARED INPUTS ===== */
+        .shared-inputs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input,
+        .input-group select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            transition: border-color 0.15s ease;
+            width: 100%;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .input-group select {
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23606065' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+
+        .input-group select option {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* ===== SCENARIO GRID ===== */
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .scenario-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scenario-header {
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .scenario-header.worst {
+            background: var(--danger-dim);
+            color: var(--danger);
+            border-bottom-color: var(--danger);
+        }
+
+        .scenario-header.average {
+            background: var(--warning-dim);
+            color: var(--warning);
+            border-bottom-color: var(--warning);
+        }
+
+        .scenario-header.best {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .scenario-inputs {
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .scenario-input-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .scenario-input-row label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            flex: 1;
+            white-space: nowrap;
+        }
+
+        .scenario-input-row input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            width: 90px;
+            text-align: right;
+            transition: border-color 0.15s ease;
+        }
+
+        .scenario-input-row input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .scenario-input-row .unit {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            width: 16px;
+            text-align: left;
+        }
+
+        /* ===== CALCULATED OUTPUTS ===== */
+        .scenario-outputs {
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .output-section-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            margin-top: 4px;
+        }
+
+        .output-metric {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .output-metric .metric-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .output-metric .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .output-metric.highlight {
+            padding: 14px;
+        }
+
+        .output-metric.highlight .metric-value {
+            font-size: 20px;
+        }
+
+        .output-metric.big-highlight {
+            padding: 16px 14px;
+            border: 1px solid var(--border);
+        }
+
+        .output-metric.big-highlight .metric-value {
+            font-size: 24px;
+        }
+
+        .metric-value.positive { color: var(--accent); }
+        .metric-value.negative { color: var(--danger); }
+        .metric-value.amber { color: var(--warning); }
+
+        /* ===== SCENARIO FOOTER ===== */
+        .scenario-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-accent {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-accent:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .btn-danger {
+            background: var(--danger-dim);
+            border-color: transparent;
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            border-color: var(--danger);
+        }
+
+        /* ===== CREATIVE TESTING SECTION ===== */
+        .testing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .testing-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .testing-outputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .testing-metric {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .testing-metric .metric-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .testing-metric .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* ===== ANGLE CALCULATOR ===== */
+        .angle-inputs {
+            display: grid;
+            grid-template-columns: 1fr 2fr 2fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .checkbox-group h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+        }
+
+        .checkbox-item input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            width: 4px;
+            height: 8px;
+            border: solid var(--accent);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .angle-result {
+            text-align: center;
+            padding: 24px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .angle-result .big-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 56px;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .angle-result .big-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .angle-result .funnel-line {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+
+        .funnel-arrow {
+            color: var(--accent);
+            margin: 0 4px;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent);
+            z-index: 200;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .scenario-grid {
+                grid-template-columns: 1fr;
+            }
+            .shared-inputs-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .testing-grid {
+                grid-template-columns: 1fr;
+            }
+            .angle-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 76px 16px 24px;
+            }
+            .shared-inputs-grid {
+                grid-template-columns: 1fr;
+            }
+            .testing-outputs {
+                grid-template-columns: 1fr;
+            }
+            .actions-bar {
+                flex-direction: column;
+            }
+            .actions-bar .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">CONTENT_ENGINE//v1</div>
+        <button class="nav-toggle" id="nav-toggle">Menu</button>
+    </nav>
+    <div class="nav-panel" id="nav-panel">
+        <a href="01-generation-hub.html" class="nav-link">YT Generate</a>
+        <a href="02-swipe-file.html" class="nav-link">Swipe File</a>
+        <a href="08-twitter-generator.html" class="nav-link">TW Generate</a>
+        <a href="11-twitter-swipes.html" class="nav-link">TW Swipes</a>
+        <a href="09-twitter-scraper.html" class="nav-link">TW Scraper</a>
+        <a href="10-hook-bank.html" class="nav-link">TW Hooks</a>
+        <a href="06-ad-swipes.html" class="nav-link">Ad Video</a>
+        <a href="07-ad-generator.html" class="nav-link">Ad Gen</a>
+        <a href="12-brand-profiles.html" class="nav-link">Brands</a>
+        <a href="13-image-ad-generator.html" class="nav-link">Img Ad Gen</a>
+        <a href="14-image-ad-review.html" class="nav-link">Img Ad Review</a>
+        <a href="15-funnel-calculator.html" class="nav-link active">Funnel Math</a>
+        <a href="05-history.html" class="nav-link">History</a>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Funnel Projections Calculator</h1>
+            <p>Model worst, average, and best case scenarios for any funnel</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="actions-bar">
+            <button class="btn btn-danger" onclick="resetDefaults()">Reset to Defaults</button>
+            <button class="btn btn-accent" onclick="copySummary()">Copy Summary</button>
+        </div>
+
+        <!-- Shared Inputs -->
+        <div class="card">
+            <div class="card-title"><span class="icon" style="background: var(--blue);"></span>Shared Funnel Parameters</div>
+            <div class="shared-inputs-grid">
+                <div class="input-group">
+                    <label>Monthly Ad Spend</label>
+                    <input type="text" id="shared-spend" value="$40,000" oninput="recalcAll()" onblur="formatCurrency(this)">
+                </div>
+                <div class="input-group">
+                    <label>Offer Price / Deal Value</label>
+                    <input type="text" id="shared-deal" value="$5,000" oninput="recalcAll()" onblur="formatCurrency(this)">
+                </div>
+                <div class="input-group">
+                    <label>Funnel Type</label>
+                    <select id="shared-funnel-type">
+                        <option>Call Funnel</option>
+                        <option>VSL Funnel</option>
+                        <option>Webinar Funnel</option>
+                        <option>Low Ticket + Backend</option>
+                        <option>Direct to Checkout</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Platform</label>
+                    <select id="shared-platform">
+                        <option>Facebook</option>
+                        <option>YouTube</option>
+                        <option>TikTok</option>
+                        <option>Google</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Three Scenarios -->
+        <div class="scenario-grid">
+            <!-- WORST CASE -->
+            <div class="scenario-card" id="scenario-worst">
+                <div class="scenario-header worst">Worst Case</div>
+                <div class="scenario-inputs">
+                    <div class="scenario-input-row">
+                        <label>CTR</label>
+                        <input type="text" data-key="ctr" value="0.8" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>CPC</label>
+                        <input type="text" data-key="cpc" value="3.00" oninput="recalcAll()">
+                        <span class="unit">$</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>CPM</label>
+                        <input type="text" data-key="cpm" value="" placeholder="auto" oninput="recalcAll()" data-overridden="false">
+                        <span class="unit">$</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Opt-in Rate</label>
+                        <input type="text" data-key="optin" value="10" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Lead &rarr; Booked</label>
+                        <input type="text" data-key="leadToBooked" value="8" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Show Rate</label>
+                        <input type="text" data-key="showRate" value="40" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Close Rate (showed)</label>
+                        <input type="text" data-key="closeRate" value="10" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Set Rate</label>
+                        <input type="text" data-key="setRate" value="5" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+                <div class="scenario-outputs" id="outputs-worst"></div>
+                <div class="scenario-footer" id="footer-worst"></div>
+            </div>
+
+            <!-- AVERAGE CASE -->
+            <div class="scenario-card" id="scenario-average">
+                <div class="scenario-header average">Average Case</div>
+                <div class="scenario-inputs">
+                    <div class="scenario-input-row">
+                        <label>CTR</label>
+                        <input type="text" data-key="ctr" value="1.2" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>CPC</label>
+                        <input type="text" data-key="cpc" value="2.00" oninput="recalcAll()">
+                        <span class="unit">$</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>CPM</label>
+                        <input type="text" data-key="cpm" value="" placeholder="auto" oninput="recalcAll()" data-overridden="false">
+                        <span class="unit">$</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Opt-in Rate</label>
+                        <input type="text" data-key="optin" value="15" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Lead &rarr; Booked</label>
+                        <input type="text" data-key="leadToBooked" value="12" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Show Rate</label>
+                        <input type="text" data-key="showRate" value="55" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Close Rate (showed)</label>
+                        <input type="text" data-key="closeRate" value="15" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Set Rate</label>
+                        <input type="text" data-key="setRate" value="7" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+                <div class="scenario-outputs" id="outputs-average"></div>
+                <div class="scenario-footer" id="footer-average"></div>
+            </div>
+
+            <!-- BEST CASE -->
+            <div class="scenario-card" id="scenario-best">
+                <div class="scenario-header best">Best Case</div>
+                <div class="scenario-inputs">
+                    <div class="scenario-input-row">
+                        <label>CTR</label>
+                        <input type="text" data-key="ctr" value="1.8" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>CPC</label>
+                        <input type="text" data-key="cpc" value="1.50" oninput="recalcAll()">
+                        <span class="unit">$</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>CPM</label>
+                        <input type="text" data-key="cpm" value="" placeholder="auto" oninput="recalcAll()" data-overridden="false">
+                        <span class="unit">$</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Opt-in Rate</label>
+                        <input type="text" data-key="optin" value="20" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Lead &rarr; Booked</label>
+                        <input type="text" data-key="leadToBooked" value="17" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Show Rate</label>
+                        <input type="text" data-key="showRate" value="70" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Close Rate (showed)</label>
+                        <input type="text" data-key="closeRate" value="22" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="scenario-input-row">
+                        <label>Set Rate</label>
+                        <input type="text" data-key="setRate" value="10" oninput="recalcAll()">
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+                <div class="scenario-outputs" id="outputs-best"></div>
+                <div class="scenario-footer" id="footer-best"></div>
+            </div>
+        </div>
+
+        <!-- Creative Testing Budget -->
+        <div class="card">
+            <div class="card-title"><span class="icon" style="background: var(--purple);"></span>Creative Testing Budget Calculator</div>
+            <div class="testing-grid">
+                <div class="testing-inputs">
+                    <div class="input-group">
+                        <label>Target CPA (auto from avg scenario)</label>
+                        <input type="text" id="testing-cpa" value="$0" oninput="recalcTesting()" onblur="formatCurrency(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>Number of Creatives to Test</label>
+                        <input type="text" id="testing-creatives" value="8" oninput="recalcTesting()">
+                    </div>
+                </div>
+                <div class="testing-outputs" id="testing-outputs"></div>
+            </div>
+        </div>
+
+        <!-- Creative Angle Calculator -->
+        <div class="card">
+            <div class="card-title"><span class="icon" style="background: var(--orange);"></span>Creative Angle Calculator</div>
+            <div class="angle-inputs">
+                <div class="input-group">
+                    <label>Core Product Benefits</label>
+                    <input type="text" id="angle-benefits" value="3" oninput="recalcAngles()">
+                </div>
+                <div class="checkbox-group">
+                    <h4>Life Force 8 Angles</h4>
+                    <label class="checkbox-item"><input type="checkbox" class="lf8" checked onchange="recalcAngles()"> Survival</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lf8" checked onchange="recalcAngles()"> Food / Pleasure</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lf8" checked onchange="recalcAngles()"> Freedom from Fear</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lf8" onchange="recalcAngles()"> Sexual Companionship</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lf8" checked onchange="recalcAngles()"> Comfortable Living</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lf8" onchange="recalcAngles()"> Superiority / Winning</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lf8" onchange="recalcAngles()"> Care for Loved Ones</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lf8" onchange="recalcAngles()"> Social Approval</label>
+                </div>
+                <div class="checkbox-group">
+                    <h4>Lead Types</h4>
+                    <label class="checkbox-item"><input type="checkbox" class="lead-type" checked onchange="recalcAngles()"> Offer Lead</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lead-type" checked onchange="recalcAngles()"> Promise Lead</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lead-type" checked onchange="recalcAngles()"> Problem-Solution</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lead-type" checked onchange="recalcAngles()"> Big Secret</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lead-type" checked onchange="recalcAngles()"> Proclamation</label>
+                    <label class="checkbox-item"><input type="checkbox" class="lead-type" checked onchange="recalcAngles()"> Story Lead</label>
+                </div>
+            </div>
+            <div class="angle-result" id="angle-result"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard</div>
+
+    <script>
+        // ===== NAV TOGGLE =====
+        const navToggle = document.getElementById('nav-toggle');
+        const navPanel = document.getElementById('nav-panel');
+        navToggle.addEventListener('click', () => {
+            navPanel.classList.toggle('open');
+            navToggle.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!navPanel.contains(e.target) && !navToggle.contains(e.target)) {
+                navPanel.classList.remove('open');
+                navToggle.classList.remove('active');
+            }
+        });
+
+        // ===== HELPERS =====
+        function parseCurrency(str) {
+            return parseFloat(String(str).replace(/[^0-9.\-]/g, '')) || 0;
+        }
+
+        function fmtCurrency(n) {
+            if (n < 0) return '-$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        function fmtCurrencyDecimal(n) {
+            if (n < 0) return '-$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function fmtNumber(n) {
+            return Math.round(n).toLocaleString('en-US');
+        }
+
+        function fmtPct(n) {
+            return n.toFixed(1) + '%';
+        }
+
+        function fmtX(n) {
+            return n.toFixed(2) + 'x';
+        }
+
+        function formatCurrency(el) {
+            const val = parseCurrency(el.value);
+            if (!isNaN(val) && val > 0) {
+                el.value = fmtCurrency(val);
+            }
+        }
+
+        // ===== SCENARIO READING =====
+        function getScenarioInputs(scenarioId) {
+            const card = document.getElementById('scenario-' + scenarioId);
+            const inputs = card.querySelectorAll('.scenario-inputs input');
+            const vals = {};
+            inputs.forEach(inp => {
+                const key = inp.getAttribute('data-key');
+                if (key === 'cpm') {
+                    if (inp.value.trim() !== '' && inp.dataset.overridden === 'true') {
+                        vals.cpmOverride = parseFloat(inp.value) || 0;
+                    } else {
+                        vals.cpmOverride = null;
+                    }
+                } else {
+                    vals[key] = parseFloat(inp.value) || 0;
+                }
+            });
+            return vals;
+        }
+
+        // Handle CPM override detection
+        document.querySelectorAll('input[data-key="cpm"]').forEach(inp => {
+            inp.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    this.dataset.overridden = 'true';
+                } else {
+                    this.dataset.overridden = 'false';
+                }
+            });
+        });
+
+        // ===== MAIN CALCULATION =====
+        function calcScenario(scenarioId) {
+            const spend = parseCurrency(document.getElementById('shared-spend').value);
+            const dealValue = parseCurrency(document.getElementById('shared-deal').value);
+            const s = getScenarioInputs(scenarioId);
+
+            // CPM: auto-calculate from CPC and CTR, or use override
+            let cpm;
+            if (s.cpmOverride !== null) {
+                cpm = s.cpmOverride;
+            } else {
+                cpm = s.ctr > 0 ? (s.cpc / s.ctr) * 100 : 0;
+            }
+
+            // Update CPM display if not overridden
+            const card = document.getElementById('scenario-' + scenarioId);
+            const cpmInput = card.querySelector('input[data-key="cpm"]');
+            if (cpmInput.dataset.overridden !== 'true') {
+                cpmInput.value = '';
+                cpmInput.placeholder = cpm.toFixed(2);
+            }
+
+            // Core funnel math
+            const impressions = cpm > 0 ? spend / (cpm / 1000) : 0;
+            const clicks = impressions * (s.ctr / 100);
+            const leads = clicks * (s.optin / 100);
+            const cpl = leads > 0 ? spend / leads : 0;
+            const bookedCalls = leads * (s.leadToBooked / 100);
+            const costPerCall = bookedCalls > 0 ? spend / bookedCalls : 0;
+            const showedCalls = bookedCalls * (s.showRate / 100);
+            const newCustomers = showedCalls * (s.closeRate / 100);
+            const closeRateAllCalls = bookedCalls > 0 ? (newCustomers / bookedCalls) * 100 : 0;
+            const cpa = newCustomers > 0 ? spend / newCustomers : 0;
+            const revenue = newCustomers * dealValue;
+            const profit = revenue - spend;
+            const roas = spend > 0 ? revenue / spend : 0;
+
+            return { spend, dealValue, cpm, impressions, clicks, leads, cpl, bookedCalls, costPerCall, showedCalls, newCustomers, closeRateAllCalls, cpa, revenue, profit, roas };
+        }
+
+        function roasClass(roas) {
+            if (roas < 1) return 'negative';
+            if (roas < 2) return 'amber';
+            return 'positive';
+        }
+
+        function profitClass(profit) {
+            return profit >= 0 ? 'positive' : 'negative';
+        }
+
+        function renderOutputs(scenarioId, r) {
+            const container = document.getElementById('outputs-' + scenarioId);
+            container.innerHTML = `
+                <div class="output-section-title">Traffic</div>
+                <div class="output-metric">
+                    <span class="metric-label">Impressions</span>
+                    <span class="metric-value">${fmtNumber(r.impressions)}</span>
+                </div>
+                <div class="output-metric">
+                    <span class="metric-label">Clicks</span>
+                    <span class="metric-value">${fmtNumber(r.clicks)}</span>
+                </div>
+                <div class="output-metric">
+                    <span class="metric-label">CPM</span>
+                    <span class="metric-value">${fmtCurrencyDecimal(r.cpm)}</span>
+                </div>
+
+                <div class="output-section-title">Leads</div>
+                <div class="output-metric">
+                    <span class="metric-label">Leads</span>
+                    <span class="metric-value">${fmtNumber(r.leads)}</span>
+                </div>
+                <div class="output-metric">
+                    <span class="metric-label">CPL</span>
+                    <span class="metric-value">${fmtCurrencyDecimal(r.cpl)}</span>
+                </div>
+
+                <div class="output-section-title">Calls</div>
+                <div class="output-metric">
+                    <span class="metric-label">Booked Calls</span>
+                    <span class="metric-value">${fmtNumber(r.bookedCalls)}</span>
+                </div>
+                <div class="output-metric">
+                    <span class="metric-label">Cost / Call</span>
+                    <span class="metric-value">${fmtCurrencyDecimal(r.costPerCall)}</span>
+                </div>
+                <div class="output-metric">
+                    <span class="metric-label">Showed Calls</span>
+                    <span class="metric-value">${fmtNumber(r.showedCalls)}</span>
+                </div>
+                <div class="output-metric">
+                    <span class="metric-label">Close % (all calls)</span>
+                    <span class="metric-value">${fmtPct(r.closeRateAllCalls)}</span>
+                </div>
+
+                <div class="output-section-title">Results</div>
+                <div class="output-metric highlight">
+                    <span class="metric-label">New Customers</span>
+                    <span class="metric-value">${fmtNumber(r.newCustomers)}</span>
+                </div>
+                <div class="output-metric highlight">
+                    <span class="metric-label">CPA</span>
+                    <span class="metric-value">${fmtCurrency(r.cpa)}</span>
+                </div>
+                <div class="output-metric big-highlight">
+                    <span class="metric-label">Revenue</span>
+                    <span class="metric-value ${profitClass(r.revenue - r.spend)}">${fmtCurrency(r.revenue)}</span>
+                </div>
+                <div class="output-metric big-highlight">
+                    <span class="metric-label">Profit</span>
+                    <span class="metric-value ${profitClass(r.profit)}">${r.profit >= 0 ? fmtCurrency(r.profit) : fmtCurrency(r.profit)}</span>
+                </div>
+                <div class="output-metric big-highlight">
+                    <span class="metric-label">ROAS</span>
+                    <span class="metric-value ${roasClass(r.roas)}">${fmtX(r.roas)}</span>
+                </div>
+            `;
+
+            // Footer summary
+            const footer = document.getElementById('footer-' + scenarioId);
+            const spendStr = fmtCurrency(r.spend);
+            const custStr = Math.round(r.newCustomers);
+            const revStr = fmtCurrency(r.revenue);
+            const roasStr = fmtX(r.roas);
+            footer.textContent = `At ${spendStr} spend → ${custStr} customers → ${revStr} revenue → ${roasStr} ROAS`;
+        }
+
+        // ===== CREATIVE TESTING =====
+        function getMultiplier(cpa) {
+            if (cpa < 100) return 3.75;
+            if (cpa < 150) return 3.0;
+            if (cpa < 250) return 2.25;
+            return 1.75;
+        }
+
+        function recalcTesting() {
+            const cpa = parseCurrency(document.getElementById('testing-cpa').value);
+            const creatives = parseInt(document.getElementById('testing-creatives').value) || 0;
+
+            const multiplier = getMultiplier(cpa);
+            const minSpendPerCreative = cpa * multiplier;
+            const dailyBudgetPerCreative = minSpendPerCreative / 7;
+            const totalTestingBudget = minSpendPerCreative * creatives;
+            const expectedWinners = Math.max(1, Math.round(creatives * 0.25));
+            const costPerWinner = expectedWinners > 0 ? totalTestingBudget / expectedWinners : 0;
+
+            const bracket = cpa < 100 ? '< $100 → 3.75x' : cpa < 150 ? '$100-149 → 3.0x' : cpa < 250 ? '$150-249 → 2.25x' : '$250+ → 1.75x';
+
+            const container = document.getElementById('testing-outputs');
+            container.innerHTML = `
+                <div class="testing-metric">
+                    <div class="metric-label">CPA Bracket</div>
+                    <div class="metric-value" style="font-size:14px; color: var(--purple);">${bracket}</div>
+                </div>
+                <div class="testing-metric">
+                    <div class="metric-label">Min Spend / Creative</div>
+                    <div class="metric-value">${fmtCurrency(minSpendPerCreative)}</div>
+                </div>
+                <div class="testing-metric">
+                    <div class="metric-label">Daily Budget / Creative</div>
+                    <div class="metric-value">${fmtCurrency(dailyBudgetPerCreative)}</div>
+                </div>
+                <div class="testing-metric">
+                    <div class="metric-label">Total Testing Budget</div>
+                    <div class="metric-value" style="color: var(--warning);">${fmtCurrency(totalTestingBudget)}</div>
+                </div>
+                <div class="testing-metric">
+                    <div class="metric-label">Expected Winners (25%)</div>
+                    <div class="metric-value" style="color: var(--accent);">${expectedWinners}</div>
+                </div>
+                <div class="testing-metric">
+                    <div class="metric-label">Cost Per Winner</div>
+                    <div class="metric-value">${fmtCurrency(costPerWinner)}</div>
+                </div>
+            `;
+        }
+
+        // ===== ANGLE CALCULATOR =====
+        function recalcAngles() {
+            const benefits = parseInt(document.getElementById('angle-benefits').value) || 0;
+            const lf8Count = document.querySelectorAll('.lf8:checked').length;
+            const leadTypeCount = document.querySelectorAll('.lead-type:checked').length;
+            const total = benefits * lf8Count * leadTypeCount;
+
+            const container = document.getElementById('angle-result');
+            container.innerHTML = `
+                <div class="big-number">${total.toLocaleString()}</div>
+                <div class="big-label">possible angle combinations</div>
+                <div class="funnel-line">
+                    Filter through ICE scoring to find your top ideas<br>
+                    <strong>${total}</strong> ideas
+                    <span class="funnel-arrow">&rarr;</span> <strong>${Math.round(total * 0.28)}</strong> top ideas
+                    <span class="funnel-arrow">&rarr;</span> <strong>${Math.round(total * 0.14)}</strong> scripts
+                    <span class="funnel-arrow">&rarr;</span> <strong>${Math.round(total * 0.08)}</strong> productions
+                    <span class="funnel-arrow">&rarr;</span> <strong>${Math.round(total * 0.056)}</strong> launches
+                    <span class="funnel-arrow">&rarr;</span> <strong>${Math.max(1, Math.round(total * 0.02))}</strong> winners
+                </div>
+            `;
+        }
+
+        // ===== MASTER RECALC =====
+        function recalcAll() {
+            const worstR = calcScenario('worst');
+            const avgR = calcScenario('average');
+            const bestR = calcScenario('best');
+
+            renderOutputs('worst', worstR);
+            renderOutputs('average', avgR);
+            renderOutputs('best', bestR);
+
+            // Auto-populate testing CPA from average scenario
+            const testingCpaInput = document.getElementById('testing-cpa');
+            testingCpaInput.value = fmtCurrency(Math.round(avgR.cpa));
+
+            recalcTesting();
+            recalcAngles();
+        }
+
+        // ===== RESET DEFAULTS =====
+        function resetDefaults() {
+            document.getElementById('shared-spend').value = '$40,000';
+            document.getElementById('shared-deal').value = '$5,000';
+            document.getElementById('shared-funnel-type').selectedIndex = 0;
+            document.getElementById('shared-platform').selectedIndex = 0;
+
+            const defaults = {
+                worst:   { ctr: '0.8', cpc: '3.00', optin: '10', leadToBooked: '8',  showRate: '40', closeRate: '10', setRate: '5'  },
+                average: { ctr: '1.2', cpc: '2.00', optin: '15', leadToBooked: '12', showRate: '55', closeRate: '15', setRate: '7'  },
+                best:    { ctr: '1.8', cpc: '1.50', optin: '20', leadToBooked: '17', showRate: '70', closeRate: '22', setRate: '10' }
+            };
+
+            ['worst', 'average', 'best'].forEach(id => {
+                const card = document.getElementById('scenario-' + id);
+                const inputs = card.querySelectorAll('.scenario-inputs input');
+                inputs.forEach(inp => {
+                    const key = inp.getAttribute('data-key');
+                    if (key === 'cpm') {
+                        inp.value = '';
+                        inp.dataset.overridden = 'false';
+                    } else if (defaults[id][key] !== undefined) {
+                        inp.value = defaults[id][key];
+                    }
+                });
+            });
+
+            document.getElementById('testing-creatives').value = '8';
+            document.getElementById('angle-benefits').value = '3';
+
+            // Reset LF8 checkboxes — first 4 checked
+            const lf8 = document.querySelectorAll('.lf8');
+            lf8.forEach((cb, i) => { cb.checked = (i === 0 || i === 1 || i === 2 || i === 4); });
+
+            // Reset lead types — all checked
+            document.querySelectorAll('.lead-type').forEach(cb => { cb.checked = true; });
+
+            recalcAll();
+        }
+
+        // ===== COPY SUMMARY =====
+        function copySummary() {
+            const spend = parseCurrency(document.getElementById('shared-spend').value);
+            const deal = parseCurrency(document.getElementById('shared-deal').value);
+            const funnelType = document.getElementById('shared-funnel-type').value;
+            const platform = document.getElementById('shared-platform').value;
+
+            function scenarioSummary(label, r) {
+                return `${label}:
+  Impressions: ${fmtNumber(r.impressions)}
+  Clicks: ${fmtNumber(r.clicks)}
+  Leads: ${fmtNumber(r.leads)} (CPL: ${fmtCurrencyDecimal(r.cpl)})
+  Booked Calls: ${fmtNumber(r.bookedCalls)} (Cost/Call: ${fmtCurrencyDecimal(r.costPerCall)})
+  Showed Calls: ${fmtNumber(r.showedCalls)}
+  New Customers: ${Math.round(r.newCustomers)}
+  CPA: ${fmtCurrency(r.cpa)}
+  Revenue: ${fmtCurrency(r.revenue)}
+  Profit: ${fmtCurrency(r.profit)}
+  ROAS: ${fmtX(r.roas)}`;
+            }
+
+            const worstR = calcScenario('worst');
+            const avgR = calcScenario('average');
+            const bestR = calcScenario('best');
+
+            const text = `FUNNEL PROJECTIONS
+==================
+Ad Spend: ${fmtCurrency(spend)} | Deal Value: ${fmtCurrency(deal)}
+Funnel: ${funnelType} | Platform: ${platform}
+
+${scenarioSummary('WORST CASE', worstR)}
+
+${scenarioSummary('AVERAGE CASE', avgR)}
+
+${scenarioSummary('BEST CASE', bestR)}
+`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Copied to clipboard');
+            }).catch(() => {
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast('Copied to clipboard');
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // ===== INIT =====
+        recalcAll();
+    </script>
+</body>
+</html>
