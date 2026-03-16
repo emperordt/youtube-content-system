@@ -472,8 +472,9 @@
             background: var(--bg-tertiary);
             padding: 16px;
             border-radius: 8px;
-            max-height: 200px;
-            overflow-y: auto;
+            max-height: none;
+            overflow-y: visible;
+            white-space: pre-wrap;
             font-size: 13px;
         }
 
@@ -778,6 +779,7 @@
 
                 <div class="modal-actions">
                     <button class="modal-btn secondary" onclick="copyHook()">Copy Hook</button>
+                    <button class="modal-btn secondary" onclick="copyTranscript()">Copy Transcript</button>
                     <button class="modal-btn primary" onclick="useAsTemplate()">Use as Template →</button>
                     <button class="modal-btn danger" onclick="deleteAd()">Delete</button>
                 </div>
@@ -1105,6 +1107,13 @@
             if (selectedAd?.hook_text) {
                 navigator.clipboard.writeText(selectedAd.hook_text);
                 alert('Hook copied!');
+            }
+        }
+
+        function copyTranscript() {
+            if (selectedAd?.transcript) {
+                navigator.clipboard.writeText(selectedAd.transcript);
+                alert('Transcript copied!');
             }
         }
 
