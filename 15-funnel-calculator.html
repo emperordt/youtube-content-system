@@ -185,7 +185,7 @@
         /* ===== SHARED INPUTS ===== */
         .shared-inputs-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 16px;
         }
 
@@ -235,6 +235,10 @@
         .input-group select option {
             background: var(--bg-tertiary);
             color: var(--text-primary);
+        }
+
+        .input-group.hidden {
+            display: none;
         }
 
         /* ===== SCENARIO GRID ===== */
@@ -357,6 +361,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 8px;
         }
 
         .output-metric .metric-label {
@@ -372,6 +377,9 @@
             font-size: 14px;
             font-weight: 700;
             color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .output-metric.highlight {
@@ -394,6 +402,34 @@
         .metric-value.positive { color: var(--accent); }
         .metric-value.negative { color: var(--danger); }
         .metric-value.amber { color: var(--warning); }
+
+        /* ===== BENCHMARK BADGES ===== */
+        .benchmark-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .benchmark-badge.gray {
+            background: #3a3a3d40;
+            color: #888;
+            border: 1px solid #3a3a3d;
+        }
+        .benchmark-badge.amber {
+            background: var(--warning-dim);
+            color: var(--warning);
+            border: 1px solid #ffaa0040;
+        }
+        .benchmark-badge.green {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid #00ff8840;
+        }
 
         /* ===== SCENARIO FOOTER ===== */
         .scenario-footer {
@@ -659,7 +695,7 @@
 <body>
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">CONTENT_ENGINE//v1</div>
-        
+
     <div class="sidebar-section">
         <div class="sidebar-section-label">YOUTUBE</div>
         <a href="01-generation-hub.html" class="sidebar-link">Generate</a>
@@ -719,23 +755,27 @@
         <!-- Shared Inputs -->
         <div class="card">
             <div class="card-title"><span class="icon" style="background: var(--blue);"></span>Shared Funnel Parameters</div>
-            <div class="shared-inputs-grid">
+            <div class="shared-inputs-grid" id="shared-inputs-grid">
                 <div class="input-group">
                     <label>Monthly Ad Spend</label>
                     <input type="text" id="shared-spend" value="$40,000" oninput="recalcAll()" onblur="formatCurrency(this)">
                 </div>
                 <div class="input-group">
-                    <label>Offer Price / Deal Value</label>
+                    <label id="deal-label">Offer Price / Deal Value</label>
                     <input type="text" id="shared-deal" value="$5,000" oninput="recalcAll()" onblur="formatCurrency(this)">
+                </div>
+                <div class="input-group" id="backend-price-group" style="display:none;">
+                    <label>Backend Offer Price</label>
+                    <input type="text" id="shared-backend-price" value="$2,997" oninput="recalcAll()" onblur="formatCurrency(this)">
                 </div>
                 <div class="input-group">
                     <label>Funnel Type</label>
-                    <select id="shared-funnel-type">
-                        <option>Call Funnel</option>
-                        <option>VSL Funnel</option>
-                        <option>Webinar Funnel</option>
-                        <option>Low Ticket + Backend</option>
-                        <option>Direct to Checkout</option>
+                    <select id="shared-funnel-type" onchange="onFunnelTypeChange()">
+                        <option value="call">Call Funnel</option>
+                        <option value="low_ticket">Low Ticket + Backend</option>
+                        <option value="vsl">VSL Funnel</option>
+                        <option value="webinar">Webinar Funnel</option>
+                        <option value="direct">Direct to Checkout</option>
                     </select>
                 </div>
                 <div class="input-group">
@@ -750,155 +790,8 @@
             </div>
         </div>
 
-        <!-- Three Scenarios -->
-        <div class="scenario-grid">
-            <!-- WORST CASE -->
-            <div class="scenario-card" id="scenario-worst">
-                <div class="scenario-header worst">Worst Case</div>
-                <div class="scenario-inputs">
-                    <div class="scenario-input-row">
-                        <label>CTR</label>
-                        <input type="text" data-key="ctr" value="0.8" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>CPC</label>
-                        <input type="text" data-key="cpc" value="3.00" oninput="recalcAll()">
-                        <span class="unit">$</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>CPM</label>
-                        <input type="text" data-key="cpm" value="" placeholder="auto" oninput="recalcAll()" data-overridden="false">
-                        <span class="unit">$</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Opt-in Rate</label>
-                        <input type="text" data-key="optin" value="10" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Lead &rarr; Booked</label>
-                        <input type="text" data-key="leadToBooked" value="8" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Show Rate</label>
-                        <input type="text" data-key="showRate" value="40" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Close Rate (showed)</label>
-                        <input type="text" data-key="closeRate" value="10" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Set Rate</label>
-                        <input type="text" data-key="setRate" value="5" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                </div>
-                <div class="scenario-outputs" id="outputs-worst"></div>
-                <div class="scenario-footer" id="footer-worst"></div>
-            </div>
-
-            <!-- AVERAGE CASE -->
-            <div class="scenario-card" id="scenario-average">
-                <div class="scenario-header average">Average Case</div>
-                <div class="scenario-inputs">
-                    <div class="scenario-input-row">
-                        <label>CTR</label>
-                        <input type="text" data-key="ctr" value="1.2" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>CPC</label>
-                        <input type="text" data-key="cpc" value="2.00" oninput="recalcAll()">
-                        <span class="unit">$</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>CPM</label>
-                        <input type="text" data-key="cpm" value="" placeholder="auto" oninput="recalcAll()" data-overridden="false">
-                        <span class="unit">$</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Opt-in Rate</label>
-                        <input type="text" data-key="optin" value="15" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Lead &rarr; Booked</label>
-                        <input type="text" data-key="leadToBooked" value="12" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Show Rate</label>
-                        <input type="text" data-key="showRate" value="55" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Close Rate (showed)</label>
-                        <input type="text" data-key="closeRate" value="15" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Set Rate</label>
-                        <input type="text" data-key="setRate" value="7" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                </div>
-                <div class="scenario-outputs" id="outputs-average"></div>
-                <div class="scenario-footer" id="footer-average"></div>
-            </div>
-
-            <!-- BEST CASE -->
-            <div class="scenario-card" id="scenario-best">
-                <div class="scenario-header best">Best Case</div>
-                <div class="scenario-inputs">
-                    <div class="scenario-input-row">
-                        <label>CTR</label>
-                        <input type="text" data-key="ctr" value="1.8" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>CPC</label>
-                        <input type="text" data-key="cpc" value="1.50" oninput="recalcAll()">
-                        <span class="unit">$</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>CPM</label>
-                        <input type="text" data-key="cpm" value="" placeholder="auto" oninput="recalcAll()" data-overridden="false">
-                        <span class="unit">$</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Opt-in Rate</label>
-                        <input type="text" data-key="optin" value="20" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Lead &rarr; Booked</label>
-                        <input type="text" data-key="leadToBooked" value="17" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Show Rate</label>
-                        <input type="text" data-key="showRate" value="70" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Close Rate (showed)</label>
-                        <input type="text" data-key="closeRate" value="22" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="scenario-input-row">
-                        <label>Set Rate</label>
-                        <input type="text" data-key="setRate" value="10" oninput="recalcAll()">
-                        <span class="unit">%</span>
-                    </div>
-                </div>
-                <div class="scenario-outputs" id="outputs-best"></div>
-                <div class="scenario-footer" id="footer-best"></div>
-            </div>
-        </div>
+        <!-- Three Scenarios (built dynamically) -->
+        <div class="scenario-grid" id="scenario-grid"></div>
 
         <!-- Creative Testing Budget -->
         <div class="card">
@@ -954,7 +847,7 @@
     <div class="toast" id="toast">Copied to clipboard</div>
 
     <script>
-        // Sidebar toggle
+        // ===== SIDEBAR TOGGLE =====
         document.getElementById('sidebar-toggle').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('open');
         });
@@ -998,77 +891,6 @@
             }
         }
 
-        // ===== SCENARIO READING =====
-        function getScenarioInputs(scenarioId) {
-            const card = document.getElementById('scenario-' + scenarioId);
-            const inputs = card.querySelectorAll('.scenario-inputs input');
-            const vals = {};
-            inputs.forEach(inp => {
-                const key = inp.getAttribute('data-key');
-                if (key === 'cpm') {
-                    if (inp.value.trim() !== '' && inp.dataset.overridden === 'true') {
-                        vals.cpmOverride = parseFloat(inp.value) || 0;
-                    } else {
-                        vals.cpmOverride = null;
-                    }
-                } else {
-                    vals[key] = parseFloat(inp.value) || 0;
-                }
-            });
-            return vals;
-        }
-
-        // Handle CPM override detection
-        document.querySelectorAll('input[data-key="cpm"]').forEach(inp => {
-            inp.addEventListener('input', function() {
-                if (this.value.trim() !== '') {
-                    this.dataset.overridden = 'true';
-                } else {
-                    this.dataset.overridden = 'false';
-                }
-            });
-        });
-
-        // ===== MAIN CALCULATION =====
-        function calcScenario(scenarioId) {
-            const spend = parseCurrency(document.getElementById('shared-spend').value);
-            const dealValue = parseCurrency(document.getElementById('shared-deal').value);
-            const s = getScenarioInputs(scenarioId);
-
-            // CPM: auto-calculate from CPC and CTR, or use override
-            let cpm;
-            if (s.cpmOverride !== null) {
-                cpm = s.cpmOverride;
-            } else {
-                cpm = s.ctr > 0 ? (s.cpc / s.ctr) * 100 : 0;
-            }
-
-            // Update CPM display if not overridden
-            const card = document.getElementById('scenario-' + scenarioId);
-            const cpmInput = card.querySelector('input[data-key="cpm"]');
-            if (cpmInput.dataset.overridden !== 'true') {
-                cpmInput.value = '';
-                cpmInput.placeholder = cpm.toFixed(2);
-            }
-
-            // Core funnel math
-            const impressions = cpm > 0 ? spend / (cpm / 1000) : 0;
-            const clicks = impressions * (s.ctr / 100);
-            const leads = clicks * (s.optin / 100);
-            const cpl = leads > 0 ? spend / leads : 0;
-            const bookedCalls = leads * (s.leadToBooked / 100);
-            const costPerCall = bookedCalls > 0 ? spend / bookedCalls : 0;
-            const showedCalls = bookedCalls * (s.showRate / 100);
-            const newCustomers = showedCalls * (s.closeRate / 100);
-            const closeRateAllCalls = bookedCalls > 0 ? (newCustomers / bookedCalls) * 100 : 0;
-            const cpa = newCustomers > 0 ? spend / newCustomers : 0;
-            const revenue = newCustomers * dealValue;
-            const profit = revenue - spend;
-            const roas = spend > 0 ? revenue / spend : 0;
-
-            return { spend, dealValue, cpm, impressions, clicks, leads, cpl, bookedCalls, costPerCall, showedCalls, newCustomers, closeRateAllCalls, cpa, revenue, profit, roas };
-        }
-
         function roasClass(roas) {
             if (roas < 1) return 'negative';
             if (roas < 2) return 'amber';
@@ -1079,84 +901,596 @@
             return profit >= 0 ? 'positive' : 'negative';
         }
 
-        function renderOutputs(scenarioId, r) {
-            const container = document.getElementById('outputs-' + scenarioId);
-            container.innerHTML = `
-                <div class="output-section-title">Traffic</div>
-                <div class="output-metric">
-                    <span class="metric-label">Impressions</span>
-                    <span class="metric-value">${fmtNumber(r.impressions)}</span>
-                </div>
-                <div class="output-metric">
-                    <span class="metric-label">Clicks</span>
-                    <span class="metric-value">${fmtNumber(r.clicks)}</span>
-                </div>
-                <div class="output-metric">
-                    <span class="metric-label">CPM</span>
-                    <span class="metric-value">${fmtCurrencyDecimal(r.cpm)}</span>
-                </div>
-
-                <div class="output-section-title">Leads</div>
-                <div class="output-metric">
-                    <span class="metric-label">Leads</span>
-                    <span class="metric-value">${fmtNumber(r.leads)}</span>
-                </div>
-                <div class="output-metric">
-                    <span class="metric-label">CPL</span>
-                    <span class="metric-value">${fmtCurrencyDecimal(r.cpl)}</span>
-                </div>
-
-                <div class="output-section-title">Calls</div>
-                <div class="output-metric">
-                    <span class="metric-label">Booked Calls</span>
-                    <span class="metric-value">${fmtNumber(r.bookedCalls)}</span>
-                </div>
-                <div class="output-metric">
-                    <span class="metric-label">Cost / Call</span>
-                    <span class="metric-value">${fmtCurrencyDecimal(r.costPerCall)}</span>
-                </div>
-                <div class="output-metric">
-                    <span class="metric-label">Showed Calls</span>
-                    <span class="metric-value">${fmtNumber(r.showedCalls)}</span>
-                </div>
-                <div class="output-metric">
-                    <span class="metric-label">Close % (all calls)</span>
-                    <span class="metric-value">${fmtPct(r.closeRateAllCalls)}</span>
-                </div>
-
-                <div class="output-section-title">Results</div>
-                <div class="output-metric highlight">
-                    <span class="metric-label">New Customers</span>
-                    <span class="metric-value">${fmtNumber(r.newCustomers)}</span>
-                </div>
-                <div class="output-metric highlight">
-                    <span class="metric-label">CPA</span>
-                    <span class="metric-value">${fmtCurrency(r.cpa)}</span>
-                </div>
-                <div class="output-metric big-highlight">
-                    <span class="metric-label">Revenue</span>
-                    <span class="metric-value ${profitClass(r.revenue - r.spend)}">${fmtCurrency(r.revenue)}</span>
-                </div>
-                <div class="output-metric big-highlight">
-                    <span class="metric-label">Profit</span>
-                    <span class="metric-value ${profitClass(r.profit)}">${r.profit >= 0 ? fmtCurrency(r.profit) : fmtCurrency(r.profit)}</span>
-                </div>
-                <div class="output-metric big-highlight">
-                    <span class="metric-label">ROAS</span>
-                    <span class="metric-value ${roasClass(r.roas)}">${fmtX(r.roas)}</span>
-                </div>
-            `;
-
-            // Footer summary
-            const footer = document.getElementById('footer-' + scenarioId);
-            const spendStr = fmtCurrency(r.spend);
-            const custStr = Math.round(r.newCustomers);
-            const revStr = fmtCurrency(r.revenue);
-            const roasStr = fmtX(r.roas);
-            footer.textContent = `At ${spendStr} spend → ${custStr} customers → ${revStr} revenue → ${roasStr} ROAS`;
+        function safeDivide(a, b) {
+            return b > 0 ? a / b : 0;
         }
 
-        // ===== CREATIVE TESTING =====
+        // ===== BENCHMARK BADGE HELPER =====
+        // ranges: { good: [lo, hi], great: [lo, hi] } — value in range => badge
+        // direction: 'higher' means higher is better, 'lower' means lower is better
+        function benchmarkBadge(value, ranges, direction) {
+            if (!ranges) return '';
+            const { good, great } = ranges;
+            let level = 'gray';
+            let label = 'Below';
+
+            if (direction === 'higher') {
+                if (value >= great[0]) { level = 'green'; label = 'Great'; }
+                else if (value >= good[0]) { level = 'amber'; label = 'Good'; }
+            } else if (direction === 'lower') {
+                // lower is better: great threshold is lower
+                if (value <= great[1]) { level = 'green'; label = 'Great'; }
+                else if (value <= good[1]) { level = 'amber'; label = 'Good'; }
+            } else if (direction === 'range') {
+                // Check great first (it's the higher tier)
+                if (value >= great[0] && value <= great[1]) { level = 'green'; label = 'Great'; }
+                else if (value >= good[0] && value <= good[1]) { level = 'amber'; label = 'Good'; }
+            }
+
+            return `<span class="benchmark-badge ${level}">${label}</span>`;
+        }
+
+
+        // =======================================================
+        // FUNNEL CONFIGURATIONS
+        // =======================================================
+        const FUNNEL_CONFIGS = {
+
+            // ---- CALL FUNNEL ----
+            call: {
+                name: 'Call Funnel',
+                dealLabel: 'Offer Price / Deal Value',
+                showBackend: false,
+                inputs: [
+                    { key: 'ctr',       label: 'CTR',                    unit: '%', worst: 0.8,  avg: 1.2,  best: 1.8,  step: 0.1 },
+                    { key: 'cpc',       label: 'CPC',                    unit: '$', worst: 3.00, avg: 2.00, best: 1.50, step: 0.10 },
+                    { key: 'optin',     label: 'Opt-in Rate',            unit: '%', worst: 10,   avg: 15,   best: 20,   step: 1 },
+                    { key: 'appPct',    label: 'App %',                  unit: '%', worst: 2,    avg: 5,    best: 12,   step: 0.5 },
+                    { key: 'callPct',   label: 'Call %',                 unit: '%', worst: 50,   avg: 65,   best: 85,   step: 1 },
+                    { key: 'showRate',  label: 'Show Rate',              unit: '%', worst: 25,   avg: 50,   best: 70,   step: 1 },
+                    { key: 'closeRate', label: 'Close Rate (showed)',    unit: '%', worst: 5,    avg: 12,   best: 20,   step: 1 },
+                    { key: 'setRate',   label: 'Set Rate',               unit: '%', worst: 3,    avg: 7,    best: 10,   step: 0.5 }
+                ],
+                calculate: function(spend, dealValue, s) {
+                    const clicks = safeDivide(spend, s.cpc);
+                    const impressions = s.ctr > 0 ? safeDivide(spend, (s.cpc / (s.ctr / 100))) : 0;
+                    const leads = clicks * (s.optin / 100);
+                    const cpl = safeDivide(spend, leads);
+                    const applications = leads * (s.appPct / 100);
+                    const bookedCalls = applications * (s.callPct / 100);
+                    const costPerCall = safeDivide(spend, bookedCalls);
+                    const showedCalls = bookedCalls * (s.showRate / 100);
+                    const closeRateAll = bookedCalls > 0 ? (showedCalls * (s.closeRate / 100)) / bookedCalls * 100 : 0;
+                    const newCustomers = showedCalls * (s.closeRate / 100);
+                    const cpa = safeDivide(spend, newCustomers);
+                    const revenue = newCustomers * dealValue;
+                    const profit = revenue - spend;
+                    const roas = safeDivide(revenue, spend);
+
+                    return {
+                        sections: [
+                            { title: 'Traffic', metrics: [
+                                { label: 'Impressions', value: fmtNumber(impressions) },
+                                { label: 'Clicks', value: fmtNumber(clicks) },
+                            ]},
+                            { title: 'Leads', metrics: [
+                                { label: 'Leads', value: fmtNumber(leads) },
+                                { label: 'CPL', value: fmtCurrencyDecimal(cpl) },
+                                { label: 'Applications', value: fmtNumber(applications), benchmarkKey: 'appPct', benchmarkVal: s.appPct },
+                            ]},
+                            { title: 'Calls', metrics: [
+                                { label: 'Booked Calls', value: fmtNumber(bookedCalls), benchmarkKey: 'callPct', benchmarkVal: s.callPct },
+                                { label: 'Cost / Call', value: fmtCurrencyDecimal(costPerCall) },
+                                { label: 'Showed Calls', value: fmtNumber(showedCalls), benchmarkKey: 'showRate', benchmarkVal: s.showRate },
+                                { label: 'Close % (all calls)', value: fmtPct(closeRateAll), benchmarkKey: 'closeRate', benchmarkVal: s.closeRate },
+                            ]},
+                            { title: 'Results', metrics: [
+                                { label: 'New Customers', value: fmtNumber(newCustomers), highlight: true },
+                                { label: 'CPA', value: fmtCurrency(cpa), highlight: true, benchmarkKey: 'cpa', benchmarkVal: cpa },
+                                { label: 'Revenue', value: fmtCurrency(revenue), big: true, colorClass: profitClass(profit) },
+                                { label: 'Profit', value: profit >= 0 ? fmtCurrency(profit) : fmtCurrency(profit), big: true, colorClass: profitClass(profit) },
+                                { label: 'Upfront CES ROAS', value: fmtX(roas), big: true, colorClass: roasClass(roas), benchmarkKey: 'roas', benchmarkVal: roas },
+                            ]}
+                        ],
+                        summaryValues: { spend, newCustomers, revenue, roas, cpa, profit },
+                        summaryText: `At ${fmtCurrency(spend)} spend -> ${Math.round(newCustomers)} customers -> ${fmtCurrency(revenue)} revenue -> ${fmtX(roas)} ROAS`
+                    };
+                },
+                benchmarks: {
+                    appPct:    { good: [2, 4],   great: [10, 17],  direction: 'higher' },
+                    callPct:   { good: [50, 65], great: [85, 100], direction: 'higher' },
+                    showRate:  { good: [25, 35], great: [70, 75],  direction: 'higher' },
+                    closeRate: { good: [5, 10],  great: [20, 100], direction: 'higher' },
+                    roas:      { good: [1, 2],   great: [4, 100],  direction: 'higher' },
+                    cpa:       null // dynamic, based on deal value
+                },
+                getBenchmarks: function(dealValue) {
+                    const b = { ...this.benchmarks };
+                    // CPA: Good = breakeven (= deal value), Great = 10% of contract
+                    b.cpa = { good: [dealValue * 0.5, dealValue], great: [0, dealValue * 0.1], direction: 'lower' };
+                    return b;
+                },
+                copySummary: function(r) {
+                    const s = r.summaryValues;
+                    return `  Clicks: ${fmtNumber(safeDivide(s.spend, 0))}
+  Leads: (see calculator)
+  CPA: ${fmtCurrency(s.cpa)}
+  Revenue: ${fmtCurrency(s.revenue)}
+  Profit: ${fmtCurrency(s.profit)}
+  ROAS: ${fmtX(s.roas)}`;
+                }
+            },
+
+            // ---- LOW TICKET + BACKEND ----
+            low_ticket: {
+                name: 'Low Ticket + Backend',
+                dealLabel: 'FE Price',
+                showBackend: true,
+                inputs: [
+                    { key: 'ctr',           label: 'CTR',                   unit: '%', worst: 1.0,  avg: 1.5,  best: 2.5,  step: 0.1 },
+                    { key: 'cpc',           label: 'CPC',                   unit: '$', worst: 2.50, avg: 1.50, best: 0.80, step: 0.10 },
+                    { key: 'optin',         label: 'Opt-in / LP Conv',      unit: '%', worst: 15,   avg: 25,   best: 40,   step: 1 },
+                    { key: 'feConv',        label: 'FE Conversion Rate',    unit: '%', worst: 1.5,  avg: 3,    best: 6,    step: 0.5 },
+                    { key: 'bumpRate',      label: 'Bump Take Rate',        unit: '%', worst: 20,   avg: 40,   best: 65,   step: 1 },
+                    { key: 'upsellRate',    label: 'Upsell 1 Take Rate',    unit: '%', worst: 8,    avg: 15,   best: 30,   step: 1 },
+                    { key: 'buyerToCall',   label: 'Buyer to Booked Call',  unit: '%', worst: 10,   avg: 18,   best: 28,   step: 1 },
+                    { key: 'showRate',      label: 'Show Rate',             unit: '%', worst: 40,   avg: 55,   best: 70,   step: 1 },
+                    { key: 'closeRate',     label: 'Close Rate (showed)',   unit: '%', worst: 10,   avg: 18,   best: 28,   step: 1 }
+                ],
+                calculate: function(spend, dealValue, s, backendPrice) {
+                    const fePrice = dealValue;
+                    const clicks = safeDivide(spend, s.cpc);
+                    const leads = clicks * (s.optin / 100);
+                    const cpl = safeDivide(spend, leads);
+                    const feBuyers = leads * (s.feConv / 100);
+                    const feRevenue = feBuyers * fePrice;
+                    const bumpRevenue = feBuyers * (s.bumpRate / 100) * (fePrice * 0.5);
+                    const upsellRevenue = feBuyers * (s.upsellRate / 100) * (fePrice * 3);
+                    const totalFeRevenue = feRevenue + bumpRevenue + upsellRevenue;
+                    const day1Liquidation = spend > 0 ? (totalFeRevenue / spend) * 100 : 0;
+                    const feAOV = safeDivide(totalFeRevenue, feBuyers);
+                    const feCPA = safeDivide(spend, feBuyers);
+                    const bookedCalls = feBuyers * (s.buyerToCall / 100);
+                    const costPerCall = safeDivide(spend, bookedCalls);
+                    const showed = bookedCalls * (s.showRate / 100);
+                    const beCustomers = showed * (s.closeRate / 100);
+                    const beRevenue = beCustomers * backendPrice;
+                    const totalRevenue = totalFeRevenue + beRevenue;
+                    const profit = totalRevenue - spend;
+                    const day1ROAS = safeDivide(totalFeRevenue, spend);
+                    const day30ROAS = safeDivide(totalRevenue, spend);
+
+                    return {
+                        sections: [
+                            { title: 'Traffic', metrics: [
+                                { label: 'Clicks', value: fmtNumber(clicks) },
+                                { label: 'Leads', value: fmtNumber(leads) },
+                                { label: 'CPL', value: fmtCurrencyDecimal(cpl) },
+                            ]},
+                            { title: 'Front End', metrics: [
+                                { label: 'FE Buyers', value: fmtNumber(feBuyers) },
+                                { label: 'FE Revenue', value: fmtCurrency(feRevenue) },
+                                { label: 'Bump Revenue', value: fmtCurrency(bumpRevenue), benchmarkKey: 'bumpRate', benchmarkVal: s.bumpRate },
+                                { label: 'Upsell Revenue', value: fmtCurrency(upsellRevenue), benchmarkKey: 'upsellRate', benchmarkVal: s.upsellRate },
+                                { label: 'Total FE Revenue', value: fmtCurrency(totalFeRevenue), highlight: true },
+                                { label: 'Day 1 Liquidation', value: fmtPct(day1Liquidation), highlight: true, benchmarkKey: 'day1Liq', benchmarkVal: day1Liquidation },
+                                { label: 'FE AOV', value: fmtCurrencyDecimal(feAOV) },
+                                { label: 'FE CPA', value: fmtCurrencyDecimal(feCPA) },
+                            ]},
+                            { title: 'Backend', metrics: [
+                                { label: 'Booked Calls', value: fmtNumber(bookedCalls), benchmarkKey: 'buyerToCall', benchmarkVal: s.buyerToCall },
+                                { label: 'Cost / Call', value: fmtCurrencyDecimal(costPerCall) },
+                                { label: 'Showed', value: fmtNumber(showed) },
+                                { label: 'BE Customers', value: fmtNumber(beCustomers) },
+                                { label: 'BE Revenue', value: fmtCurrency(beRevenue) },
+                            ]},
+                            { title: 'Results', metrics: [
+                                { label: 'Total Revenue', value: fmtCurrency(totalRevenue), big: true, colorClass: profitClass(profit) },
+                                { label: 'Profit', value: fmtCurrency(profit), big: true, colorClass: profitClass(profit) },
+                                { label: 'Day 1 ROAS', value: fmtX(day1ROAS), big: true, colorClass: roasClass(day1ROAS) },
+                                { label: 'Day 30 ROAS', value: fmtX(day30ROAS), big: true, colorClass: roasClass(day30ROAS) },
+                            ]}
+                        ],
+                        summaryValues: { spend, feBuyers, beCustomers, totalFeRevenue, totalRevenue, profit, feCPA, day1ROAS, day30ROAS, cpa: feCPA },
+                        summaryText: `At ${fmtCurrency(spend)} spend -> ${Math.round(feBuyers)} FE buyers + ${Math.round(beCustomers)} BE customers -> ${fmtCurrency(totalRevenue)} total rev -> ${fmtX(day30ROAS)} D30 ROAS`
+                    };
+                },
+                benchmarks: {
+                    day1Liq:     { good: [40, 60],  great: [90, 110],  direction: 'range' },
+                    bumpRate:    { good: [30, 50],  great: [60, 100],  direction: 'higher' },
+                    upsellRate:  { good: [10, 20],  great: [25, 35],   direction: 'higher' },
+                    buyerToCall: { good: [15, 20],  great: [25, 100],  direction: 'higher' },
+                },
+                getBenchmarks: function(dealValue) {
+                    return this.benchmarks;
+                },
+                copySummary: function(r) {
+                    const s = r.summaryValues;
+                    return `  FE Buyers: ${fmtNumber(s.feBuyers)}
+  FE Revenue: ${fmtCurrency(s.totalFeRevenue)}
+  BE Customers: ${Math.round(s.beCustomers)}
+  Total Revenue: ${fmtCurrency(s.totalRevenue)}
+  Profit: ${fmtCurrency(s.profit)}
+  Day 1 ROAS: ${fmtX(s.day1ROAS)}
+  Day 30 ROAS: ${fmtX(s.day30ROAS)}`;
+                }
+            },
+
+            // ---- VSL FUNNEL ----
+            vsl: {
+                name: 'VSL Funnel',
+                dealLabel: 'Offer Price',
+                showBackend: false,
+                inputs: [
+                    { key: 'ctr',           label: 'CTR',                       unit: '%', worst: 0.8,  avg: 1.2,  best: 2.0,  step: 0.1 },
+                    { key: 'cpc',           label: 'CPC',                       unit: '$', worst: 3.00, avg: 2.00, best: 1.20, step: 0.10 },
+                    { key: 'optin',         label: 'LP Conv / Opt-in Rate',     unit: '%', worst: 12,   avg: 20,   best: 30,   step: 1 },
+                    { key: 'vslViewRate',   label: 'VSL View Rate',             unit: '%', worst: 20,   avg: 35,   best: 50,   step: 1 },
+                    { key: 'offerViewRate', label: 'Offer View Rate',           unit: '%', worst: 10,   avg: 20,   best: 35,   step: 1 },
+                    { key: 'appRate',       label: 'App / Purchase Rate',       unit: '%', worst: 5,    avg: 12,   best: 22,   step: 1 },
+                    { key: 'showRate',      label: 'Show Rate',                 unit: '%', worst: 35,   avg: 55,   best: 70,   step: 1 },
+                    { key: 'closeRate',     label: 'Close Rate (showed)',       unit: '%', worst: 8,    avg: 15,   best: 25,   step: 1 }
+                ],
+                calculate: function(spend, dealValue, s) {
+                    const clicks = safeDivide(spend, s.cpc);
+                    const leads = clicks * (s.optin / 100);
+                    const cpl = safeDivide(spend, leads);
+                    const vslViewers = leads * (s.vslViewRate / 100);
+                    const offerViewers = vslViewers * (s.offerViewRate / 100);
+                    const applications = offerViewers * (s.appRate / 100);
+                    const bookedCalls = applications;
+                    const costPerCall = safeDivide(spend, bookedCalls);
+                    const showed = bookedCalls * (s.showRate / 100);
+                    const newCustomers = showed * (s.closeRate / 100);
+                    const cpa = safeDivide(spend, newCustomers);
+                    const revenue = newCustomers * dealValue;
+                    const profit = revenue - spend;
+                    const roas = safeDivide(revenue, spend);
+
+                    return {
+                        sections: [
+                            { title: 'Traffic', metrics: [
+                                { label: 'Clicks', value: fmtNumber(clicks) },
+                                { label: 'Leads', value: fmtNumber(leads) },
+                                { label: 'CPL', value: fmtCurrencyDecimal(cpl) },
+                            ]},
+                            { title: 'VSL Flow', metrics: [
+                                { label: 'VSL Viewers', value: fmtNumber(vslViewers) },
+                                { label: 'Offer Viewers', value: fmtNumber(offerViewers) },
+                                { label: 'Applications', value: fmtNumber(applications) },
+                            ]},
+                            { title: 'Calls', metrics: [
+                                { label: 'Booked Calls', value: fmtNumber(bookedCalls) },
+                                { label: 'Cost / Call', value: fmtCurrencyDecimal(costPerCall) },
+                                { label: 'Showed', value: fmtNumber(showed) },
+                            ]},
+                            { title: 'Results', metrics: [
+                                { label: 'New Customers', value: fmtNumber(newCustomers), highlight: true },
+                                { label: 'CPA', value: fmtCurrency(cpa), highlight: true },
+                                { label: 'Revenue', value: fmtCurrency(revenue), big: true, colorClass: profitClass(profit) },
+                                { label: 'Profit', value: fmtCurrency(profit), big: true, colorClass: profitClass(profit) },
+                                { label: 'ROAS', value: fmtX(roas), big: true, colorClass: roasClass(roas) },
+                            ]}
+                        ],
+                        summaryValues: { spend, newCustomers, revenue, profit, cpa, roas },
+                        summaryText: `At ${fmtCurrency(spend)} spend -> ${Math.round(newCustomers)} customers -> ${fmtCurrency(revenue)} revenue -> ${fmtX(roas)} ROAS`
+                    };
+                },
+                benchmarks: {},
+                getBenchmarks: function() { return {}; },
+                copySummary: function(r) {
+                    const s = r.summaryValues;
+                    return `  New Customers: ${Math.round(s.newCustomers)}
+  CPA: ${fmtCurrency(s.cpa)}
+  Revenue: ${fmtCurrency(s.revenue)}
+  Profit: ${fmtCurrency(s.profit)}
+  ROAS: ${fmtX(s.roas)}`;
+                }
+            },
+
+            // ---- WEBINAR FUNNEL ----
+            webinar: {
+                name: 'Webinar Funnel',
+                dealLabel: 'Offer Price',
+                showBackend: false,
+                inputs: [
+                    { key: 'ctr',            label: 'CTR',                   unit: '%', worst: 0.8,  avg: 1.2,  best: 1.8,  step: 0.1 },
+                    { key: 'cpc',            label: 'CPC',                   unit: '$', worst: 3.50, avg: 2.00, best: 1.20, step: 0.10 },
+                    { key: 'regRate',        label: 'Registration Rate',     unit: '%', worst: 20,   avg: 35,   best: 50,   step: 1 },
+                    { key: 'webShowRate',    label: 'Webinar Show Rate',     unit: '%', worst: 15,   avg: 30,   best: 45,   step: 1 },
+                    { key: 'stayRate',       label: 'Stay to Pitch',         unit: '%', worst: 40,   avg: 60,   best: 80,   step: 1 },
+                    { key: 'pitchToApp',     label: 'Pitch to App/Purchase', unit: '%', worst: 3,    avg: 8,    best: 15,   step: 0.5 },
+                    { key: 'callShowRate',   label: 'Call Show Rate',        unit: '%', worst: 40,   avg: 55,   best: 70,   step: 1 },
+                    { key: 'closeRate',      label: 'Close Rate (showed)',   unit: '%', worst: 10,   avg: 18,   best: 28,   step: 1 }
+                ],
+                calculate: function(spend, dealValue, s) {
+                    const clicks = safeDivide(spend, s.cpc);
+                    const registrations = clicks * (s.regRate / 100);
+                    const costPerReg = safeDivide(spend, registrations);
+                    const attendees = registrations * (s.webShowRate / 100);
+                    const stayedToPitch = attendees * (s.stayRate / 100);
+                    const applications = stayedToPitch * (s.pitchToApp / 100);
+                    const bookedCalls = applications;
+                    const costPerCall = safeDivide(spend, bookedCalls);
+                    const showedCalls = bookedCalls * (s.callShowRate / 100);
+                    const newCustomers = showedCalls * (s.closeRate / 100);
+                    const cpa = safeDivide(spend, newCustomers);
+                    const revenue = newCustomers * dealValue;
+                    const profit = revenue - spend;
+                    const roas = safeDivide(revenue, spend);
+
+                    return {
+                        sections: [
+                            { title: 'Traffic', metrics: [
+                                { label: 'Clicks', value: fmtNumber(clicks) },
+                            ]},
+                            { title: 'Webinar', metrics: [
+                                { label: 'Registrations', value: fmtNumber(registrations) },
+                                { label: 'Cost / Registration', value: fmtCurrencyDecimal(costPerReg) },
+                                { label: 'Webinar Attendees', value: fmtNumber(attendees) },
+                                { label: 'Stayed to Pitch', value: fmtNumber(stayedToPitch) },
+                                { label: 'Applications', value: fmtNumber(applications) },
+                            ]},
+                            { title: 'Calls', metrics: [
+                                { label: 'Booked Calls', value: fmtNumber(bookedCalls) },
+                                { label: 'Cost / Call', value: fmtCurrencyDecimal(costPerCall) },
+                                { label: 'Showed Calls', value: fmtNumber(showedCalls) },
+                            ]},
+                            { title: 'Results', metrics: [
+                                { label: 'New Customers', value: fmtNumber(newCustomers), highlight: true },
+                                { label: 'CPA', value: fmtCurrency(cpa), highlight: true },
+                                { label: 'Revenue', value: fmtCurrency(revenue), big: true, colorClass: profitClass(profit) },
+                                { label: 'Profit', value: fmtCurrency(profit), big: true, colorClass: profitClass(profit) },
+                                { label: 'ROAS', value: fmtX(roas), big: true, colorClass: roasClass(roas) },
+                            ]}
+                        ],
+                        summaryValues: { spend, newCustomers, revenue, profit, cpa, roas },
+                        summaryText: `At ${fmtCurrency(spend)} spend -> ${Math.round(newCustomers)} customers -> ${fmtCurrency(revenue)} revenue -> ${fmtX(roas)} ROAS`
+                    };
+                },
+                benchmarks: {},
+                getBenchmarks: function() { return {}; },
+                copySummary: function(r) {
+                    const s = r.summaryValues;
+                    return `  New Customers: ${Math.round(s.newCustomers)}
+  CPA: ${fmtCurrency(s.cpa)}
+  Revenue: ${fmtCurrency(s.revenue)}
+  Profit: ${fmtCurrency(s.profit)}
+  ROAS: ${fmtX(s.roas)}`;
+                }
+            },
+
+            // ---- DIRECT TO CHECKOUT ----
+            direct: {
+                name: 'Direct to Checkout',
+                dealLabel: 'Product Price',
+                showBackend: false,
+                inputs: [
+                    { key: 'ctr',           label: 'CTR',                   unit: '%', worst: 0.8,  avg: 1.5,  best: 2.5,  step: 0.1 },
+                    { key: 'cpc',           label: 'CPC',                   unit: '$', worst: 2.00, avg: 1.00, best: 0.50, step: 0.10 },
+                    { key: 'lpConv',        label: 'LP Conversion Rate',    unit: '%', worst: 1.5,  avg: 3,    best: 6,    step: 0.5 },
+                    { key: 'atcRate',       label: 'Add to Cart Rate',      unit: '%', worst: 5,    avg: 10,   best: 18,   step: 1 },
+                    { key: 'cartToPurchase',label: 'Cart to Purchase Rate', unit: '%', worst: 20,   avg: 35,   best: 55,   step: 1 },
+                    { key: 'aovMultiplier', label: 'AOV Multiplier',        unit: 'x', worst: 1.0,  avg: 1.3,  best: 1.6,  step: 0.1 }
+                ],
+                calculate: function(spend, dealValue, s) {
+                    const productPrice = dealValue;
+                    const clicks = safeDivide(spend, s.cpc);
+                    const addToCarts = clicks * (s.atcRate / 100);
+                    const purchases = addToCarts * (s.cartToPurchase / 100);
+                    const aov = productPrice * s.aovMultiplier;
+                    const revenue = purchases * aov;
+                    const cpa = safeDivide(spend, purchases);
+                    const profit = revenue - spend;
+                    const roas = safeDivide(revenue, spend);
+
+                    return {
+                        sections: [
+                            { title: 'Traffic', metrics: [
+                                { label: 'Clicks', value: fmtNumber(clicks) },
+                            ]},
+                            { title: 'Conversion', metrics: [
+                                { label: 'Add to Carts', value: fmtNumber(addToCarts) },
+                                { label: 'Purchases', value: fmtNumber(purchases) },
+                                { label: 'AOV', value: fmtCurrencyDecimal(aov) },
+                                { label: 'CPA', value: fmtCurrencyDecimal(cpa), highlight: true },
+                            ]},
+                            { title: 'Results', metrics: [
+                                { label: 'Revenue', value: fmtCurrency(revenue), big: true, colorClass: profitClass(profit) },
+                                { label: 'Profit', value: fmtCurrency(profit), big: true, colorClass: profitClass(profit) },
+                                { label: 'ROAS', value: fmtX(roas), big: true, colorClass: roasClass(roas) },
+                            ]}
+                        ],
+                        summaryValues: { spend, purchases, revenue, profit, cpa, roas },
+                        summaryText: `At ${fmtCurrency(spend)} spend -> ${Math.round(purchases)} purchases -> ${fmtCurrency(revenue)} revenue -> ${fmtX(roas)} ROAS`
+                    };
+                },
+                benchmarks: {},
+                getBenchmarks: function() { return {}; },
+                copySummary: function(r) {
+                    const s = r.summaryValues;
+                    return `  Purchases: ${Math.round(s.purchases)}
+  CPA: ${fmtCurrency(s.cpa)}
+  Revenue: ${fmtCurrency(s.revenue)}
+  Profit: ${fmtCurrency(s.profit)}
+  ROAS: ${fmtX(s.roas)}`;
+                }
+            }
+        };
+
+
+        // =======================================================
+        // DYNAMIC SCENARIO BUILDING
+        // =======================================================
+        const SCENARIOS = ['worst', 'average', 'best'];
+        const SCENARIO_LABELS = { worst: 'Worst Case', average: 'Average Case', best: 'Best Case' };
+        const SCENARIO_KEY_MAP = { worst: 'worst', average: 'avg', best: 'best' };
+
+        // Store last calculated results for copy summary
+        let lastResults = {};
+
+        function getCurrentFunnelType() {
+            return document.getElementById('shared-funnel-type').value;
+        }
+
+        function getConfig() {
+            return FUNNEL_CONFIGS[getCurrentFunnelType()];
+        }
+
+        function buildScenarioCards() {
+            const config = getConfig();
+            const grid = document.getElementById('scenario-grid');
+            grid.innerHTML = '';
+
+            SCENARIOS.forEach(scenario => {
+                const scenarioKey = SCENARIO_KEY_MAP[scenario];
+                const card = document.createElement('div');
+                card.className = 'scenario-card';
+                card.id = 'scenario-' + scenario;
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'scenario-header ' + scenario;
+                header.textContent = SCENARIO_LABELS[scenario];
+                card.appendChild(header);
+
+                // Inputs
+                const inputsDiv = document.createElement('div');
+                inputsDiv.className = 'scenario-inputs';
+
+                config.inputs.forEach(inp => {
+                    const row = document.createElement('div');
+                    row.className = 'scenario-input-row';
+
+                    const label = document.createElement('label');
+                    label.textContent = inp.label;
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.setAttribute('data-key', inp.key);
+                    input.value = inp[scenarioKey];
+                    input.step = inp.step;
+                    input.addEventListener('input', recalcAll);
+
+                    const unit = document.createElement('span');
+                    unit.className = 'unit';
+                    unit.textContent = inp.unit;
+
+                    row.appendChild(label);
+                    row.appendChild(input);
+                    row.appendChild(unit);
+                    inputsDiv.appendChild(row);
+                });
+
+                card.appendChild(inputsDiv);
+
+                // Outputs container
+                const outputsDiv = document.createElement('div');
+                outputsDiv.className = 'scenario-outputs';
+                outputsDiv.id = 'outputs-' + scenario;
+                card.appendChild(outputsDiv);
+
+                // Footer
+                const footer = document.createElement('div');
+                footer.className = 'scenario-footer';
+                footer.id = 'footer-' + scenario;
+                card.appendChild(footer);
+
+                grid.appendChild(card);
+            });
+        }
+
+        function getScenarioInputs(scenarioId) {
+            const card = document.getElementById('scenario-' + scenarioId);
+            if (!card) return {};
+            const inputs = card.querySelectorAll('.scenario-inputs input');
+            const vals = {};
+            inputs.forEach(inp => {
+                const key = inp.getAttribute('data-key');
+                vals[key] = parseFloat(inp.value) || 0;
+            });
+            return vals;
+        }
+
+        function calcScenario(scenarioId) {
+            const config = getConfig();
+            const spend = parseCurrency(document.getElementById('shared-spend').value);
+            const dealValue = parseCurrency(document.getElementById('shared-deal').value);
+            const backendPrice = parseCurrency(document.getElementById('shared-backend-price').value);
+            const s = getScenarioInputs(scenarioId);
+
+            if (config.showBackend) {
+                return config.calculate(spend, dealValue, s, backendPrice);
+            }
+            return config.calculate(spend, dealValue, s);
+        }
+
+        function renderOutputs(scenarioId, result) {
+            const config = getConfig();
+            const dealValue = parseCurrency(document.getElementById('shared-deal').value);
+            const benchmarks = config.getBenchmarks ? config.getBenchmarks(dealValue) : {};
+            const container = document.getElementById('outputs-' + scenarioId);
+            if (!container) return;
+
+            let html = '';
+
+            result.sections.forEach(section => {
+                html += `<div class="output-section-title">${section.title}</div>`;
+                section.metrics.forEach(m => {
+                    let cls = 'output-metric';
+                    if (m.big) cls += ' big-highlight';
+                    else if (m.highlight) cls += ' highlight';
+
+                    let colorClass = m.colorClass || '';
+
+                    // Benchmark badge
+                    let badge = '';
+                    if (m.benchmarkKey && benchmarks[m.benchmarkKey]) {
+                        const bm = benchmarks[m.benchmarkKey];
+                        badge = benchmarkBadge(m.benchmarkVal, bm, bm.direction);
+                    }
+
+                    html += `<div class="${cls}">
+                        <span class="metric-label">${m.label}</span>
+                        <span class="metric-value ${colorClass}">${m.value}${badge}</span>
+                    </div>`;
+                });
+            });
+
+            container.innerHTML = html;
+
+            // Footer
+            const footer = document.getElementById('footer-' + scenarioId);
+            if (footer) {
+                footer.textContent = result.summaryText;
+            }
+        }
+
+
+        // =======================================================
+        // FUNNEL TYPE CHANGE
+        // =======================================================
+        function onFunnelTypeChange() {
+            const config = getConfig();
+
+            // Update deal value label
+            document.getElementById('deal-label').textContent = config.dealLabel;
+
+            // Show/hide backend price
+            const backendGroup = document.getElementById('backend-price-group');
+            backendGroup.style.display = config.showBackend ? '' : 'none';
+
+            // Rebuild scenario cards with new inputs
+            buildScenarioCards();
+
+            // Recalculate
+            recalcAll();
+        }
+
+
+        // =======================================================
+        // CREATIVE TESTING (unchanged)
+        // =======================================================
         function getMultiplier(cpa) {
             if (cpa < 100) return 3.75;
             if (cpa < 150) return 3.0;
@@ -1175,7 +1509,7 @@
             const expectedWinners = Math.max(1, Math.round(creatives * 0.25));
             const costPerWinner = expectedWinners > 0 ? totalTestingBudget / expectedWinners : 0;
 
-            const bracket = cpa < 100 ? '< $100 → 3.75x' : cpa < 150 ? '$100-149 → 3.0x' : cpa < 250 ? '$150-249 → 2.25x' : '$250+ → 1.75x';
+            const bracket = cpa < 100 ? '< $100 -> 3.75x' : cpa < 150 ? '$100-149 -> 3.0x' : cpa < 250 ? '$150-249 -> 2.25x' : '$250+ -> 1.75x';
 
             const container = document.getElementById('testing-outputs');
             container.innerHTML = `
@@ -1206,7 +1540,10 @@
             `;
         }
 
-        // ===== ANGLE CALCULATOR =====
+
+        // =======================================================
+        // ANGLE CALCULATOR (unchanged)
+        // =======================================================
         function recalcAngles() {
             const benefits = parseInt(document.getElementById('angle-benefits').value) || 0;
             const lf8Count = document.querySelectorAll('.lf8:checked').length;
@@ -1229,105 +1566,94 @@
             `;
         }
 
-        // ===== MASTER RECALC =====
-        function recalcAll() {
-            const worstR = calcScenario('worst');
-            const avgR = calcScenario('average');
-            const bestR = calcScenario('best');
 
-            renderOutputs('worst', worstR);
-            renderOutputs('average', avgR);
-            renderOutputs('best', bestR);
+        // =======================================================
+        // MASTER RECALC
+        // =======================================================
+        function recalcAll() {
+            lastResults = {};
+            let avgCpa = 0;
+
+            SCENARIOS.forEach(scenario => {
+                const result = calcScenario(scenario);
+                lastResults[scenario] = result;
+                renderOutputs(scenario, result);
+
+                if (scenario === 'average') {
+                    // Extract CPA for testing calculator from summary values
+                    const sv = result.summaryValues;
+                    avgCpa = sv.cpa || 0;
+                }
+            });
 
             // Auto-populate testing CPA from average scenario
             const testingCpaInput = document.getElementById('testing-cpa');
-            testingCpaInput.value = fmtCurrency(Math.round(avgR.cpa));
+            testingCpaInput.value = fmtCurrency(Math.round(avgCpa));
 
             recalcTesting();
             recalcAngles();
         }
 
-        // ===== RESET DEFAULTS =====
+
+        // =======================================================
+        // RESET DEFAULTS
+        // =======================================================
         function resetDefaults() {
             document.getElementById('shared-spend').value = '$40,000';
-            document.getElementById('shared-deal').value = '$5,000';
-            document.getElementById('shared-funnel-type').selectedIndex = 0;
+            document.getElementById('shared-funnel-type').value = 'call';
             document.getElementById('shared-platform').selectedIndex = 0;
 
-            const defaults = {
-                worst:   { ctr: '0.8', cpc: '3.00', optin: '10', leadToBooked: '8',  showRate: '40', closeRate: '10', setRate: '5'  },
-                average: { ctr: '1.2', cpc: '2.00', optin: '15', leadToBooked: '12', showRate: '55', closeRate: '15', setRate: '7'  },
-                best:    { ctr: '1.8', cpc: '1.50', optin: '20', leadToBooked: '17', showRate: '70', closeRate: '22', setRate: '10' }
-            };
-
-            ['worst', 'average', 'best'].forEach(id => {
-                const card = document.getElementById('scenario-' + id);
-                const inputs = card.querySelectorAll('.scenario-inputs input');
-                inputs.forEach(inp => {
-                    const key = inp.getAttribute('data-key');
-                    if (key === 'cpm') {
-                        inp.value = '';
-                        inp.dataset.overridden = 'false';
-                    } else if (defaults[id][key] !== undefined) {
-                        inp.value = defaults[id][key];
-                    }
-                });
-            });
+            // Reset deal value based on funnel type
+            document.getElementById('shared-deal').value = '$5,000';
+            document.getElementById('shared-backend-price').value = '$2,997';
 
             document.getElementById('testing-creatives').value = '8';
             document.getElementById('angle-benefits').value = '3';
 
-            // Reset LF8 checkboxes — first 4 checked
+            // Reset LF8 checkboxes
             const lf8 = document.querySelectorAll('.lf8');
             lf8.forEach((cb, i) => { cb.checked = (i === 0 || i === 1 || i === 2 || i === 4); });
 
-            // Reset lead types — all checked
+            // Reset lead types -- all checked
             document.querySelectorAll('.lead-type').forEach(cb => { cb.checked = true; });
 
-            recalcAll();
+            // Rebuild for Call Funnel
+            onFunnelTypeChange();
         }
 
-        // ===== COPY SUMMARY =====
+
+        // =======================================================
+        // COPY SUMMARY
+        // =======================================================
         function copySummary() {
             const spend = parseCurrency(document.getElementById('shared-spend').value);
             const deal = parseCurrency(document.getElementById('shared-deal').value);
-            const funnelType = document.getElementById('shared-funnel-type').value;
+            const config = getConfig();
+            const funnelType = config.name;
             const platform = document.getElementById('shared-platform').value;
 
-            function scenarioSummary(label, r) {
-                return `${label}:
-  Impressions: ${fmtNumber(r.impressions)}
-  Clicks: ${fmtNumber(r.clicks)}
-  Leads: ${fmtNumber(r.leads)} (CPL: ${fmtCurrencyDecimal(r.cpl)})
-  Booked Calls: ${fmtNumber(r.bookedCalls)} (Cost/Call: ${fmtCurrencyDecimal(r.costPerCall)})
-  Showed Calls: ${fmtNumber(r.showedCalls)}
-  New Customers: ${Math.round(r.newCustomers)}
-  CPA: ${fmtCurrency(r.cpa)}
-  Revenue: ${fmtCurrency(r.revenue)}
-  Profit: ${fmtCurrency(r.profit)}
-  ROAS: ${fmtX(r.roas)}`;
-            }
-
-            const worstR = calcScenario('worst');
-            const avgR = calcScenario('average');
-            const bestR = calcScenario('best');
-
-            const text = `FUNNEL PROJECTIONS
+            let text = `FUNNEL PROJECTIONS
 ==================
 Ad Spend: ${fmtCurrency(spend)} | Deal Value: ${fmtCurrency(deal)}
-Funnel: ${funnelType} | Platform: ${platform}
+Funnel: ${funnelType} | Platform: ${platform}\n`;
 
-${scenarioSummary('WORST CASE', worstR)}
-
-${scenarioSummary('AVERAGE CASE', avgR)}
-
-${scenarioSummary('BEST CASE', bestR)}
-`;
+            const labels = { worst: 'WORST CASE', average: 'AVERAGE CASE', best: 'BEST CASE' };
+            SCENARIOS.forEach(scenario => {
+                const r = lastResults[scenario];
+                if (!r) return;
+                text += `\n${labels[scenario]}:\n`;
+                // Build detail from sections
+                r.sections.forEach(section => {
+                    section.metrics.forEach(m => {
+                        text += `  ${m.label}: ${m.value}\n`;
+                    });
+                });
+                text += `  Summary: ${r.summaryText}\n`;
+            });
 
             navigator.clipboard.writeText(text).then(() => {
                 showToast('Copied to clipboard');
             }).catch(() => {
-                // Fallback
                 const ta = document.createElement('textarea');
                 ta.value = text;
                 document.body.appendChild(ta);
@@ -1345,8 +1671,11 @@ ${scenarioSummary('BEST CASE', bestR)}
             setTimeout(() => toast.classList.remove('show'), 2000);
         }
 
-        // ===== INIT =====
-        recalcAll();
+
+        // =======================================================
+        // INIT
+        // =======================================================
+        onFunnelTypeChange(); // builds cards and calculates for default (Call Funnel)
     </script>
 </body>
 </html>
